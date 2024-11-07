@@ -1,0 +1,100 @@
+{
+  "expo": {
+    "name": "YOUR APP NAME (e.g. Ship Mobile Fast)",
+    "slug": "YOUR APP SLUG (e.g. ship-mobile-fast)",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "YOUR APP SCHEME *important* (e.g. com.shipmobilefast.app)",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "associatedDomains": [
+        "applinks:YOUR DOMAIN (e.g. shipmobilefast.com)"
+      ],
+      "bundleIdentifier": "YOUR APP SCHEME *important* (e.g. com.shipmobilefast.app)",
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "instagram",
+          "instagram-stories",
+          "facebook",
+          "facebook-stories"
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#fff"
+      },
+      "package": "YOUR PACKAGE NAME *important* (e.g. com.shipmobilefast.app)",
+      "permissions": [
+        "com.google.android.gms.permission.AD_ID"
+      ],
+      // * IMPORTANT FOR GOOGLE AUTH ON ANDROID * //
+      "googleServicesFile": "./google-services.json",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "YOUR DOMAIN SCHEME (e.g. https)",
+              "host": "YOUR DOMAIN (e.g. shipmobilefast.com)",
+              "pathPrefix": "/"
+            },
+            {
+              "scheme": "YOUR APP SCHEME *important* (e.g. com.shipmobilefast.app)"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-localization",
+      "expo-apple-authentication",
+      "expo-notifications",
+      "expo-dev-client",
+      [
+        "expo-tracking-transparency",
+        {
+          "userTrackingPermission": "This identifier will be used to deliver personalized ads to you."
+        }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "YOUR GOOGLE ADMOB ANDROID APP ID (e.g. ca-app-pub-some-id)",
+          "iosAppId": "YOUR GOOGLE ADMOB IOS APP ID (e.g. ca-app-pub-some-id)"
+        }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          // We are going to use ios client id
+          "iosUrlScheme": "com.googleusercontent.apps.some-id"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+  }
+}

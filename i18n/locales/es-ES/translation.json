@@ -1,0 +1,234 @@
+{
+  "appName": "Ship Mobile Fast",
+  "language": "Idioma",
+  "success": "Éxito",
+  "error": "Error",
+  "loading": "Cargando...",
+  "notFound": "¡Ups! Página no encontrada",
+  "buttons": {
+    "delete": "Eliminar",
+    "cancel": "Cancelar",
+    "okay": "Aceptar",
+    "logout": "Cerrar sesión",
+    "getStarted": "Comenzar",
+    "next": "Siguiente",
+    "send": "Enviar",
+    "back": "Atrás",
+    "try": "Probar",
+    "getAccess": "Obtener acceso",
+    "continue": "Continuar",
+    "goToHomeScreen": "Ir a la página principal"
+  },
+  "placeholders": {
+    "email": "Su dirección de correo electrónico",
+    "password": "Su contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "search": "Buscar algo"
+  },
+  "header": {
+    "home": "Inicio",
+    "search": "Buscar",
+    "notifications": "Notificaciones",
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "language": "Configuración de idioma",
+    "theme": "Configuración de tema",
+    "privacy": "Política de privacidad",
+    "help": "Ayuda",
+    "logout": "Cerrar sesión",
+    "deleteAccount": "Eliminar cuenta"
+  },
+  "onboarding": {
+    "title1": "¡Hola! Bienvenido a Ship Mobile Fast.",
+    "desc1": "Ahorra cientos de horas de programación y completa tu aplicación en solo unos días.",
+    "title2": "¡Todo está listo dentro!",
+    "desc2": "Autenticación, Onboarding, Compras in-app, Sentry, Posthog, Google Admob, Notificaciones, Soporte multilingüe, Temas, Pantallas premium y mucho más.",
+    "title3": "Totalmente personalizable",
+    "desc3": "La aplicación está hecha con componentes completamente personalizables, lo que te permite modificar fácilmente la interfaz de usuario, los componentes y más.",
+    "title4": "¿Estás listo?",
+    "desc4": "Porque nos hemos encargado de todas las cosas aburridas. A ti solo te queda divertirte.",
+    "title5": "Entonces, ¿qué estás esperando?",
+    "desc5": "¡Adelante y empieza a ganar dinero con tu aplicación!"
+  },
+  "auth": {
+    "signInWithEmail": "Iniciar sesión con correo electrónico",
+    "termsOfService": "Al crear una cuenta, aceptas nuestros Términos de servicio y Política de privacidad.",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "signIn": "Iniciar sesión",
+    "signUp": "Crear cuenta",
+    "continueWithApple": "Continuar con Apple",
+    "continueWithGoogle": "Continuar con Google",
+    "continueWithEmail": "Continuar con correo electrónico",
+    "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+    "enterEmailToResetPassword": "Ingresa tu correo electrónico para restablecer tu contraseña",
+    "pleaseEnterEmail": "Por favor, ingresa tu correo electrónico",
+    "magicLinkSent": "Enlace mágico enviado",
+    "backToLogin": "Volver a iniciar sesión",
+    "emailPlaceholder": "Tu correo electrónico",
+    "passwordPlaceholder": "Tu contraseña",
+    "confirmPasswordPlaceholder": "Confirmar contraseña",
+    "continueWith": "Continuar con",
+    "or": "o",
+    "dontHaveAccount": "¿No tienes una cuenta?",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "emailRequired": "Correo electrónico requerido",
+    "invalidEmail": "Correo electrónico inválido",
+    "passwordRequired": "Contraseña requerida",
+    "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
+    "sendingEmail": "Enviando email...",
+    "signingOut": "Cerrando sesión...",
+    "signingUp": "Creando cuenta...",
+    "signingIn": "Iniciando sesión...",
+    "signingInWithGoogle": "Iniciando sesión con Google...",
+    "signingInWithApple": "Iniciando sesión con Apple...",
+    "sendMagicLink": "Enviar enlace mágico",
+    "sendPasswordReset": "Enviar enlace para restablecer contraseña",
+    "enterNewPassword": "Ingresa tu nueva contraseña",
+    "verifying": "Verificando...",
+    "sendingResetPasswordLink": "Enviando enlace para restablecer contraseña...",
+    "resetPassword": "Restablecer contraseña",
+    "pleaseCheckYourEmail": "Por favor, revisa tu correo electrónico, no olvides la carpeta de spam.",
+    "settingNewPassword": "Configurando nueva contraseña..."
+  },
+  "profile": {
+    "editProfile": "Editar perfil",
+    "subscription": "Suscripción",
+    "notifications": "Notificaciones",
+    "help": "Ayuda",
+    "settings": "Configuración",
+    "theme": "Tema"
+  },
+  "inAppPurchases": {
+    "title": "Prueba Ship Mobile Fast Pro \n por {{price}}",
+    "terms": "Las funciones pueden cambiar en cualquier momento. El pago se cargará a tu cuenta de App Store. Se renueva al precio completo después del período de oferta introductoria. Tu suscripción se renovará automáticamente en el intervalo seleccionado hasta que la canceles en la configuración de App Store. El monto del cargo puede cambiar con previo aviso. Puedes cancelarla en cualquier momento. Al tocar 'App Store', aceptas los Términos de suscripción de ShipMobileFast+ y la renovación automática.",
+    "cards": {
+      "ua": {
+        "title": "Proyecto ilimitado",
+        "description": "Obtén acceso ilimitado a todas las funciones premium y comienza a construir rápidamente. Puedes usarlo en proyectos ilimitados."
+      },
+      "iap": {
+        "title": "Compras in-app",
+        "description": "No pierdas días en la configuración de RevenueCat. Define el producto y ofrécelo a la venta a través del Paywall preconfigurado."
+      },
+      "admob": {
+        "title": "Admob",
+        "description": "Gana dinero con tu aplicación usando Google Ads. Con solo una línea de código."
+      },
+      "pf": {
+        "title": "Más de 20 pantallas premium personalizadas",
+        "description": "Chat (estilo WhatsApp), Swipe Up (estilo TikTok), Mini Blog (estilo Kroko), AI Chatbot (estilo ChatGPT), Swipe Cards (estilo Tinder), Camera App (estilo Snapchat), Flujo de autenticación, Búsqueda con superposición, Perfiles, Configuración, Eliminar cuenta, etc. Todo para que puedas lanzar tu proyecto muy rápidamente."
+      },
+      "i18n": {
+        "title": "i18n (Soporte multilingüe)",
+        "description": "Solo prepara tus traducciones. ¿Qué idiomas quieres?"
+      },
+      "themes": {
+        "title": "Temas",
+        "description": "Selector de tema Claro / Oscuro / Sistema"
+      },
+      "notifications": {
+        "title": "Notificaciones",
+        "description": "Notificaciones push con Expo Push Notification"
+      },
+      "auth": {
+        "title": "Flujo de autenticación",
+        "description": "Iniciar sesión, registrarse, restablecer contraseña, verificación de correo electrónico, todo funciona perfectamente."
+      },
+      "onboarding": {
+        "title": "Onboarding",
+        "description": "No necesitas pasar días luchando con el onboarding."
+      },
+      "settings": {
+        "title": "Configuración",
+        "description": "Todo luce natural."
+      },
+      "ss": {
+        "title": "Compartir en redes sociales",
+        "description": "Los usuarios pueden compartir características de tu aplicación en IG o FB."
+      },
+      "sentry": {
+        "title": "Sentry",
+        "description": "Captura y rastrea errores."
+      },
+      "segments": {
+        "title": "Posthog",
+        "description": "Rastrea y analiza el comportamiento de tus usuarios."
+      },
+      "cc": {
+        "title": "Componentes personalizados",
+        "description": "Todos los componentes son altamente personalizables. Puedes cambiar fácilmente colores, estilos y más. Estos botones no existen en internet. Porque si existieran, no habría tenido que hacerlos."
+      }
+    }
+  },
+  "settings": {
+    "titles": {
+      "privacy": "Política de privacidad",
+      "help": "Ayuda",
+      "notifications": "Notificaciones",
+      "language": "Idioma",
+      "theme": "Tema",
+      "logout": "Cerrar sesión",
+      "deleteAccount": "Eliminar cuenta"
+    },
+    "theme": {
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Sistema"
+    },
+    "help": {
+      "title": "Ayuda",
+      "description": "A continuación encontrarás preguntas frecuentes e información de soporte.",
+      "contactSupport": "Contáctanos para obtener ayuda",
+      "faqs": [
+        {
+          "question": "¿Cómo uso la aplicación?",
+          "answer": "Para usar la aplicación, puedes comenzar desde la pantalla principal..."
+        },
+        {
+          "question": "¿Cómo restablezco mi contraseña?",
+          "answer": "Para restablecer tu contraseña, haz clic en la opción '¿Olvidaste tu contraseña?'..."
+        },
+        {
+          "question": "¿Cómo recibo notificaciones?",
+          "answer": "Para recibir notificaciones, haz clic en la opción 'Notificaciones'..."
+        }
+      ]
+    },
+    "notifications": {
+      "pushToken": "Token de push",
+      "receivedNotifications": "Notificaciones recibidas",
+      "noNotifications": "Aún no hay notificaciones"
+    },
+    "deleteAccount": {
+      "title": "Eliminar cuenta",
+      "subtitle": "¿Estás seguro de que quieres eliminar tu cuenta?",
+      "delete": "Eliminar",
+      "deleteButton": "Eliminar cuenta",
+      "reasons": {
+        "privacy": "Privacidad",
+        "dissatisfaction": "Insatisfacción",
+        "tooManyAds": "Demasiados anuncios",
+        "competition": "Competencia",
+        "tooManyNotifications": "Demasiadas notificaciones",
+        "tooExpensive": "Demasiado caro",
+        "other": "Otro"
+      },
+      "deleteDialog": {
+        "title": "¿Estás seguro de que quieres eliminar tu cuenta?",
+        "description": "Esta acción no se puede deshacer. Tu cuenta se eliminará permanentemente y no podrá ser recuperada.",
+        "confirmDeleteAccount": "Por favor, confirma la eliminación de tu cuenta."
+      }
+    }
+  },
+  "home": {
+    "admob": "Admob (Google)",
+    "inAppPurchases": "Compras in-app",
+    "socialSharing": "Compartir en redes sociales",
+    "settings": "Configuración",
+    "languages": "Idiomas",
+    "notifications": "Notificaciones",
+    "theme": "Tema",
+    "language": "Idioma +4"
+  }
+}

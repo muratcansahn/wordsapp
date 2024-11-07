@@ -1,0 +1,235 @@
+{
+  "appName": "Ship Mobile Fast",
+  "language": "Language",
+  "success": "Success",
+  "error": "Error",
+  "loading": "Loading...",
+  "notFound": "Oops! Page not found",
+  "buttons": {
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "okay": "Okay",
+    "logout": "Logout",
+    "getStarted": "Get Started",
+    "next": "Next",
+    "send": "Send",
+    "back": "Back",
+    "try": "Try",
+    "getAccess": "Get Access",
+    "continue": "Continue",
+    "goToHomeScreen": "Go to home screen"
+  },
+  "placeholders": {
+    "email": "Your email address",
+    "password": "Your password",
+    "confirmPassword": "Confirm password",
+    "search": "Search for a something"
+  },
+  "header": {
+    "home": "Home",
+    "search": "Search",
+    "notifications": "Notifications",
+    "profile": "Profile",
+    "settings": "Settings",
+    "language": "Language Settings",
+    "theme": "Theme Settings",
+    "privacy": "Privacy Policy",
+    "help": "Help",
+    "logout": "Logout",
+    "deleteAccount": "Delete Account"
+  },
+  "onboarding": {
+    "title1": "Hey! Welcome to Ship Mobile Fast",
+    "desc1": "Save hundreds of hours of boring stuff\nand ship your app in just couple of days.",
+    "title2": "Everything is Ready!",
+    "desc2": "Such as authentication, In App Purchases, Stripe payments, Push Notifications, Languages, Themes and more.",
+    "title3": "Highly Customizable",
+    "desc3": "We've made the app highly customizable, so you can easily change the UI, components, and more.",
+    "title4": "Are You Ready?",
+    "desc4": "Because we've handled all the boring stuff.",
+    "title5": "So What Are You Waiting For?",
+    "desc5": "Let's start and make your app great again!"
+  },
+  "auth": {
+    "description": "Ship your mobile app in just days",
+    "signInWithEmail": "Sign In with Email",
+    "termsOfService": "By registering, you agree to the Terms of Service and Privacy Policy.",
+    "forgotPassword": "Forgot Password?",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "continueWithApple": "Continue with Apple",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithEmail": "Continue with Email",
+    "alreadyHaveAccount": "Already have an account?",
+    "enterEmailToResetPassword": "Enter your email to send a magic link",
+    "pleaseEnterEmail": "Please enter your email",
+    "magicLinkSent": "Magic link sent",
+    "backToLogin": "Back to Login",
+    "emailPlaceholder": "Your email address",
+    "passwordPlaceholder": "Your password",
+    "confirmPasswordPlaceholder": "Confirm password",
+    "continueWith": "Continue with",
+    "or": "or",
+    "dontHaveAccount": "Don't have an account?",
+    "email": "Email",
+    "password": "Password",
+    "emailRequired": "Email is required",
+    "invalidEmail": "Invalid email address",
+    "passwordRequired": "Password is required",
+    "passwordMinLength": "Password must be at least 6 characters",
+    "sendingEmail": "Sending email...",
+    "signingOut": "Signing out...",
+    "signingUp": "Signing up...",
+    "signingIn": "Signing in...",
+    "signingInWithGoogle": "Signing in with Google...",
+    "signingInWithApple": "Signing in with Apple...",
+    "sendMagicLink": "Send Magic Link",
+    "sendPasswordReset": "Send Password Reset Link",
+    "enterNewPassword": "Enter your new password",
+    "verifying": "Verifying...",
+    "sendingResetPasswordLink": "Sending reset password link...",
+    "resetPassword": "Reset Password",
+    "pleaseCheckYourEmail": "Please check your email, don't forget to check your spam folder.",
+    "settingNewPassword": "Setting new password..."
+  },
+  "profile": {
+    "editProfile": "Edit Profile",
+    "subscription": "Subscription",
+    "notifications": "Notifications",
+    "help": "Help",
+    "settings": "Settings",
+    "theme": "Theme"
+  },
+  "inAppPurchases": {
+    "title": "Try Ship Mobile Fast Pro \n for {{price}}",
+    "terms": "Features can change at any time. Payment will be charged to your App Store account. Renews at the full price after the introductory offer period. Your subscription will auto- renew at your selected interval until you cancel in App Store settings. Amount of the charge may change with notice. Cancel anytime. By tapping 'App Store', you agree to the ShipMobileFast+ Subscription Terms and the auto-renewal.",
+    "cards": {
+      "ua": {
+        "title": "Unlimited Projects",
+        "description": "Get unlimited access to all premium features and start building super fastly. You can use it unlimited times."
+      },
+      "iap": {
+        "title": "In App Purchases",
+        "description": "Save couple of days for implementing In App Purchases. You can sell anything in your app. Such as subscriptions, one-time purchases, consumable items, etc."
+      },
+      "admob": {
+        "title": "Admob",
+        "description": "Make money with Google Ads in your app with just one line code."
+      },
+      "pf": {
+        "title": "Custom Built +20 Premium Screens",
+        "description": "Chat (Whatsapp style), Swipe Up (Tiktok style), Mini Blog (Kroko style), AI Chatbot (Claude style), Swipe Cards (Tinder style), Camera App (Snapchat style), Auth Flow, Search with Overlay, Profiles, Settings, Delete Account, etc. All custom built for you."
+      },
+      "i18n": {
+        "title": "i18n (Internationalization)",
+        "description": "Internationalization with Expo Localization"
+      },
+      "themes": {
+        "title": "Themes",
+        "description": "Light / Dark / System Theme Switcher"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "description": "Push Notifications with Expo Push Notification"
+      },
+      "auth": {
+        "title": "Authentication",
+        "description": "Save couple of days for implementing Authentication."
+      },
+      "onboarding": {
+        "title": "Onboarding",
+        "description": "Save couple of days for implementing Onboarding."
+      },
+      "settings": {
+        "title": "Settings",
+        "description": "Native Look Settings Screen"
+      },
+      "ss": {
+        "title": "Share Socials",
+        "description": "Save couple of days for implementing Share Socials. Such as Facebook Story or Instagram Story"
+      },
+      "sentry": {
+        "title": "Sentry",
+        "description": "Error handling and monitoring."
+      },
+      "segments": {
+        "title": "Segments",
+        "description": "Data Segmentation for your app."
+      },
+      "cc": {
+        "title": "Custom Components",
+        "description": "All built in components are highly customizable. You can easily change the colors, styles, and more. You can not find this buttons on internet. Because if exists, I wasn't built myself."
+      }
+    }
+  },
+  "settings": {
+    "titles": {
+      "privacy": "Privacy Policy",
+      "help": "Help",
+      "notifications": "Notifications",
+      "language": "Language",
+      "theme": "Theme",
+      "logout": "Logout",
+      "deleteAccount": "Delete Account"
+    },
+    "theme": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "help": {
+      "title": "Help",
+      "description": "Below are frequently asked questions and support information.",
+      "contactSupport": "Contact Support",
+      "faqs": [
+        {
+          "question": "How do I use the app?",
+          "answer": "To use the app, you can start from the main screen..."
+        },
+        {
+          "question": "How do I reset my password?",
+          "answer": "To reset your password, click on the 'Forgot Password' option..."
+        },
+        {
+          "question": "How do I reset my password?",
+          "answer": "To reset your password, click on the 'Forgot Password' option..."
+        }
+      ]
+    },
+    "notifications": {
+      "pushToken": "Push Token",
+      "receivedNotifications": "Received Notifications",
+      "noNotifications": "No notifications yet"
+    },
+    "deleteAccount": {
+      "title": "Delete Account",
+      "subtitle": "Are you sure you want to delete your account?",
+      "delete": "Delete",
+      "deleteButton": "Delete Account",
+      "reasons": {
+        "privacy": "Privacy",
+        "dissatisfaction": "Dissatisfaction",
+        "tooManyAds": "Too many ads",
+        "competition": "Competition",
+        "tooManyNotifications": "Too many notifications",
+        "tooExpensive": "Too expensive",
+        "other": "Other"
+      },
+      "deleteDialog": {
+        "title": "Are you sure you want to delete your account?",
+        "description": "This action cannot be undone. Your account will be permanently deleted and you will not be able to recover it.",
+        "confirmDeleteAccount": "Please confirm delete your account."
+      }
+    }
+  },
+  "home": {
+    "admob": "Admob (Google)",
+    "inAppPurchases": "In-App Purchases",
+    "socialSharing": "Social Sharing",
+    "settings": "Settings",
+    "languages": "Languages",
+    "notifications": "Notifications",
+    "theme": "Theme",
+    "language": "Language"
+  }
+}

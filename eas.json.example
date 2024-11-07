@@ -1,0 +1,64 @@
+{
+  "cli": {
+    "version": ">= 12.4.1",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "extends": "production",
+      "autoIncrement": true,
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "YOUR_SUPABASE_URL",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "YOUR_SUPABASE_ANON_KEY",
+        "EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID": "YOUR_GOOGLE_OAUTH_CLIENT_ID",
+        "EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID": "YOUR_GOOGLE_OAUTH_IOS_CLIENT_ID",
+        "EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID": "YOUR_GOOGLE_OAUTH_ANDROID_CLIENT_ID",
+        "EXPO_PUBLIC_RC_APPLE_KEY": "YOUR_RC_APPLE_KEY",
+        "EXPO_PUBLIC_RC_GOOGLE_KEY": "YOUR_RC_GOOGLE_KEY",
+        "EXPO_PUBLIC_POSTHOG_API_KEY": "YOUR_POSTHOG_API_KEY",
+        "EXPO_PUBLIC_POSTHOG_HOST": "YOUR_POSTHOG_HOST",
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "YOUR_SUPABASE_URL",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "YOUR_SUPABASE_ANON_KEY",
+        "EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID": "YOUR_GOOGLE_OAUTH_CLIENT_ID",
+        "EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID": "YOUR_GOOGLE_OAUTH_IOS_CLIENT_ID",
+        "EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID": "YOUR_GOOGLE_OAUTH_ANDROID_CLIENT_ID",
+        "EXPO_PUBLIC_RC_APPLE_KEY": "YOUR_RC_APPLE_KEY",
+        "EXPO_PUBLIC_RC_GOOGLE_KEY": "YOUR_RC_GOOGLE_KEY",
+        "EXPO_PUBLIC_POSTHOG_API_KEY": "YOUR_POSTHOG_API_KEY",
+        "EXPO_PUBLIC_POSTHOG_HOST": "YOUR_POSTHOG_HOST",
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "YOUR_SUPABASE_URL",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "YOUR_SUPABASE_ANON_KEY",
+        "EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID": "YOUR_GOOGLE_OAUTH_CLIENT_ID",
+        "EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID": "YOUR_GOOGLE_OAUTH_IOS_CLIENT_ID",
+        "EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID": "YOUR_GOOGLE_OAUTH_ANDROID_CLIENT_ID",
+        "EXPO_PUBLIC_RC_APPLE_KEY": "YOUR_RC_APPLE_KEY",
+        "EXPO_PUBLIC_RC_GOOGLE_KEY": "YOUR_RC_GOOGLE_KEY",
+        "EXPO_PUBLIC_POSTHOG_API_KEY": "YOUR_POSTHOG_API_KEY",
+        "EXPO_PUBLIC_POSTHOG_HOST": "YOUR_POSTHOG_HOST",
+      }
+    }
+  }
+}

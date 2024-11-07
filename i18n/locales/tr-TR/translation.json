@@ -1,0 +1,234 @@
+{
+  "appName": "Ship Mobile Fast",
+  "language": "Dil",
+  "success": "Başarılı",
+  "error": "Hata",
+  "loading": "Yükleniyor...",
+  "notFound": "Oops! Sayfa bulunamadı",
+  "buttons": {
+    "delete": "Sil",
+    "cancel": "İptal",
+    "okay": "Tamam",
+    "logout": "Çıkış yap",
+    "getStarted": "Başla",
+    "next": "Sonraki",
+    "send": "Gönder",
+    "back": "Geri",
+    "try": "Dene",
+    "getAccess": "Erişim al",
+    "continue": "Devam et",
+    "goToHomeScreen": "Ana sayfaya git"
+  },
+  "placeholders": {
+    "email": "Email adresiniz",
+    "password": "Şifreniz",
+    "confirmPassword": "Şifreyi onayla",
+    "search": "Bir şeyler ara"
+  },
+  "header": {
+    "home": "Ana sayfa",
+    "search": "Ara",
+    "notifications": "Bildirimler",
+    "profile": "Profil",
+    "settings": "Ayarlar",
+    "language": "Dil ayarları",
+    "theme": "Tema ayarları",
+    "privacy": "Gizlilik politikası",
+    "help": "Yardım",
+    "logout": "Çıkış yap",
+    "deleteAccount": "Hesabınızı silin"
+  },
+  "onboarding": {
+    "title1": "Hey! Ship Mobile Fast'e hoş geldin.",
+    "desc1": "Yüzlerce saat kod yazmaktan kurtul\nve uygulamanı sadece birkaç günde tamamla.",
+    "title2": "Her şey içeride hazır!",
+    "desc2": "Auth, Onboarding, Uygulama İçi Satın Alım, Sentry, Posthog, Google Admob, Bildirimler, Çoklu Dil Desteği, Temalar, Premium Ekranlar ve daha fazlası.",
+    "title3": "Tamamen Özelleştirilebilir",
+    "desc3": "Uygulamayı tamamen özelleştirilebilir bileşenlerden hazırladık, böylece kullanıcı arayüzünü, bileşenleri ve daha fazlasını kolayca değiştirebilirsin.",
+    "title4": "Hazır mısın?",
+    "desc4": "Çünkü tüm sıkıcı şeyleri biz hallettik. Sana sadece eğlenmek kaldı.",
+    "title5": "O halde ne bekliyorsun?",
+    "desc5": "Hemen ilerle ve uygulamadan para kazanmaya başla!"
+  },
+  "auth": {
+    "signInWithEmail": "E-posta ile giriş yap",
+    "termsOfService": "Hesap oluşturduğunuzda, Hizmet Şartlarınızı ve Gizlilik Politikasını kabul etmiş olursunuz.",
+    "forgotPassword": "Şifremi unuttum?",
+    "signIn": "Giriş yap",
+    "signUp": "Hesap oluştur",
+    "continueWithApple": "Apple ile devam et",
+    "continueWithGoogle": "Google ile devam et",
+    "continueWithEmail": "E-posta ile devam et",
+    "alreadyHaveAccount": "Zaten bir hesabın var mı?",
+    "enterEmailToResetPassword": "Şifreni sıfırlamak için e-posta adresini gir",
+    "pleaseEnterEmail": "Lütfen e-posta adresini gir",
+    "magicLinkSent": "Sihirli link gönderildi",
+    "backToLogin": "Giriş sayfasına dön",
+    "emailPlaceholder": "E-posta adresin",
+    "passwordPlaceholder": "Şifren",
+    "confirmPasswordPlaceholder": "Şifreyi onayla",
+    "continueWith": "Devam et",
+    "or": "ya da",
+    "dontHaveAccount": "Hesabın yok mu?",
+    "email": "E-posta",
+    "password": "Şifre",
+    "emailRequired": "E-posta gerekli",
+    "invalidEmail": "Geçersiz e-posta adresi",
+    "passwordRequired": "Şifre gerekli",
+    "passwordMinLength": "Şifre en az 6 karakter olmalı",
+    "sendingEmail": "E-posta gönderiliyor...",
+    "signingOut": "Çıkış yapılıyor...",
+    "signingUp": "Hesap oluşturuluyor...",
+    "signingIn": "Giriş yapılıyor...",
+    "signingInWithGoogle": "Google ile giriş yapılıyor...",
+    "signingInWithApple": "Apple ile giriş yapılıyor...",
+    "sendMagicLink": "Sihirli link gönder",
+    "sendPasswordReset": "Şifre sıfırlama linki gönder",
+    "enterNewPassword": "Yeni şifreni gir",
+    "verifying": "Doğrulanıyor...",
+    "sendingResetPasswordLink": "Şifre sıfırlama linki gönderiliyor...",
+    "resetPassword": "Şifreyi sıfırla",
+    "pleaseCheckYourEmail": "Lütfen e-postanı kontrol et, spam klasörünü unutma.",
+    "settingNewPassword": "Yeni şifre ayarlanıyor..."
+  },
+  "profile": {
+    "editProfile": "Profili düzenle",
+    "subscription": "Abonelik",
+    "notifications": "Bildirimler",
+    "help": "Yardım",
+    "settings": "Ayarlar",
+    "theme": "Tema"
+  },
+  "inAppPurchases": {
+    "title": "Try Ship Mobile Fast Pro \n for {{price}}",
+    "terms": "Features can change at any time. Payment will be charged to your App Store account. Renews at the full price after the introductory offer period. Your subscription will auto- renew at your selected interval until you cancel in App Store settings. Amount of the charge may change with notice. Cancel anytime. By tapping 'App Store', you agree to the ShipMobileFast+ Subscription Terms and the auto-renewal.",
+    "cards": {
+      "ua": {
+        "title": "Sınırsız Proje",
+        "description": "Tüm premium özelliklere sınırsız erişim alın ve hızlıca inşa etmeye başlayın. Sınırsız projede kullanabilirsiniz."
+      },
+      "iap": {
+        "title": "In App Purchases",
+        "description": "RevenueCat kurulumu için günlerinizi harcamayın. Ürünü belirleyin ve hazır Paywall üzerinden satışa sunun."
+      },
+      "admob": {
+        "title": "Admob",
+        "description": "Uygulamanızda Google Ads ile para kazanın. Sadece bir satır kodla."
+      },
+      "pf": {
+        "title": "Özel Oluşturulmuş +20 Premium Ekranlar",
+        "description": "Chat (Whatsapp stili), Swipe Up (Tiktok stili), Mini Blog (Kroko stili), AI Chatbot (ChatGPT stili), Swipe Cards (Tinder stili), Camera App (Snapchat stili), Auth Flow, Search ile Overlay, Profiller, Ayarlar, Hesabı sil, vb. Tümü çok hızlı proje çıkarabilmen için.."
+      },
+      "i18n": {
+        "title": "i18n (Çoklu Dil Desteği)",
+        "description": "Sadece çevirilerinizi hazırlayın. Hangi dilleri istiyorsunuz?"
+      },
+      "themes": {
+        "title": "Temalar",
+        "description": "Açık / Koyu / Sistem Tema Değiştirici"
+      },
+      "notifications": {
+        "title": "Bildirimler",
+        "description": "Push Notifications with Expo Push Notification"
+      },
+      "auth": {
+        "title": "Auth Akışı",
+        "description": "Giriş yap, kayıt ol, şifre sıfırlama, e-posta doğrulama, hepsi harika çalışıyor."
+      },
+      "onboarding": {
+        "title": "Onboarding",
+        "description": "Onboarding için günlerce uğraşmana gerek yok."
+      },
+      "settings": {
+        "title": "Ayarlar",
+        "description": "Her şey doğal görünümünde."
+      },
+      "ss": {
+        "title": "Sosyal Paylaşım",
+        "description": "Uygulamandaki özellikleri kullanıcılar IG veya FB'de paylaşabilirler."
+      },
+      "sentry": {
+        "title": "Sentry",
+        "description": "Hataları yakalayın ve izleyin."
+      },
+      "segments": {
+        "title": "Posthog",
+        "description": "Kullanıcılarınızın davranışlarını izleyin ve analiz edin."
+      },
+      "cc": {
+        "title": "Özel Bileşenler",
+        "description": "Tüm bileşenler çok özelleştirilebilir. Renkleri, stilleri ve daha fazlasını kolayca değiştirebilirsiniz. Bu butonlar internette yok. Çünkü olsaydı yapmak zorunda kalmazdım."
+      }
+    }
+  },
+  "settings": {
+    "titles": {
+      "privacy": "Gizlilik Politikası",
+      "help": "Yardım",
+      "notifications": "Bildirimler",
+      "language": "Dil",
+      "theme": "Tema",
+      "logout": "Çıkış yap",
+      "deleteAccount": "Hesabı sil"
+    },
+    "theme": {
+      "light": "Açık",
+      "dark": "Koyu",
+      "system": "Sistem"
+    },
+    "help": {
+      "title": "Yardım",
+      "description": "Aşağıda sıkça sorulan sorular ve destek bilgileri yer almaktadır.",
+      "contactSupport": "Destek için bize ulaşın",
+      "faqs": [
+        {
+          "question": "Uygulamayı nasıl kullanırım?",
+          "answer": "Uygulamayı kullanmak için ana ekrandan başlayabilirsiniz..."
+        },
+        {
+          "question": "Şifremi nasıl sıfırlarım?",
+          "answer": "Şifrenizi sıfırlamak için 'Şifremi unuttum' seçeneğine tıklayın..."
+        },
+        {
+          "question": "Bildirimleri nasıl alırım?",
+          "answer": "Bildirimleri almak için 'Bildirimler' seçeneğine tıklayın..."
+        }
+      ]
+    },
+    "notifications": {
+      "pushToken": "Push Token",
+      "receivedNotifications": "Alınan bildirimler",
+      "noNotifications": "Henüz bildirim yok"
+    },
+    "deleteAccount": {
+      "title": "Hesabı sil",
+      "subtitle": "Hesabını silmek istediğine emin misin?",
+      "delete": "Sil",
+      "deleteButton": "Hesabı sil",
+      "reasons": {
+        "privacy": "Gizlilik",
+        "dissatisfaction": "Memnuniyetsizlik",
+        "tooManyAds": "Çok fazla reklam",
+        "competition": "Rekabet",
+        "tooManyNotifications": "Çok fazla bildirim",
+        "tooExpensive": "Çok pahalı",
+        "other": "Diğer"
+      },
+      "deleteDialog": {
+        "title": "Hesabını silmek istediğine emin misin?",
+        "description": "Bu işlem geri alınamaz. Hesabın kalıcı olarak silinecektir ve kurtarılamayacaktır.",
+        "confirmDeleteAccount": "Lütfen Hesabını silmeyi onayla."
+      }
+    }
+  },
+  "home": {
+    "admob": "Admob (Google)",
+    "inAppPurchases": "Uygulama İçi Satın Alım",
+    "socialSharing": "Sosyal Paylaşım",
+    "settings": "Ayarlar",
+    "languages": "Diller",
+    "notifications": "Bildirimler",
+    "theme": "Tema",
+    "language": "Dil +4"
+  }
+}
