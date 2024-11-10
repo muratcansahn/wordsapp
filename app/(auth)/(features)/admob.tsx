@@ -2,11 +2,11 @@ import React from 'react';
 import { StyleSheet, ScrollView } from 'react-native';
 import { ThemedText } from '@/components/common/typography';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+// import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
 import ShinyButton from '@/components/common/buttons/shiny-button';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
-import { useAdmob } from '@/hooks/useAdmob';
+// import { useAdmob } from '@/hooks/useAdmob';
 import {
   BORDER_RADIUS,
   BUTTON_HEIGHT,
@@ -17,7 +17,7 @@ import {
   PADDING,
 } from '@/constants/AppConstants';
 import Container from '@/components/common/container';
-import { admobConfig } from '@/services/admob/admobConfig';
+// import { admobConfig } from '@/services/admob/admobConfig';
 interface AdmobProps {
   id: string;
   name: string;
@@ -28,7 +28,7 @@ interface AdmobProps {
 
 export default function Admob() {
   const { mode } = useTheme();
-  const { showInterstitial, showRewarded, showAppOpen } = useAdmob();
+  // const { showInterstitial, showRewarded, showAppOpen } = useAdmob();
 
   const options: AdmobProps[] = [
     {
@@ -55,7 +55,7 @@ export default function Admob() {
         />
       ),
       onPress: () => {
-        showInterstitial();
+        // showInterstitial();
       },
     },
     {
@@ -70,7 +70,7 @@ export default function Admob() {
         />
       ),
       onPress: () => {
-        showRewarded();
+        // showRewarded();
       },
     },
     {
@@ -85,7 +85,7 @@ export default function Admob() {
         />
       ),
       onPress: () => {
-        showAppOpen();
+        // showAppOpen();
       },
     },
   ];
@@ -115,13 +115,13 @@ export default function Admob() {
           />
         ))}
       </ScrollView>
-      <BannerAd
+      {/* <BannerAd
         unitId={admobConfig.bannerAdUnitId}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
         onAdLoaded={() => {
           console.log('Banner Ad Loaded');
         }}
-      />
+      /> */}
     </Container>
   );
 }

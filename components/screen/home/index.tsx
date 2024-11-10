@@ -15,8 +15,6 @@ import {
   MARGIN,
   PADDING,
 } from '@/constants/AppConstants';
-import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
-import { admobConfig } from '@/services/admob/admobConfig';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
 
@@ -64,10 +62,6 @@ export default function HomeScreen() {
         keyExtractor={(item) => item.id}
         numColumns={2}
         contentContainerStyle={styles.gridContainer}
-      />
-      <BannerAd
-        unitId={admobConfig.bannerAdUnitId}
-        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
       />
     </ThemedView>
   );
