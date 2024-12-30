@@ -31,7 +31,7 @@ const SettingsScreen = () => {
 
   const handlePrivacyPolicy = async () => {
     await WebBrowser.openBrowserAsync(
-      'https://shipmobilefast.com/en/privacy-policy'
+      'https://shipmobilefast.com/privacy-policy'
     );
   };
 

@@ -1,17 +1,17 @@
 import { AppDispatch } from '@/store';
 
-// Uncomment this to use Admob
+// 1. Uncomment this to use Admob 👇
 // import mobileAds, { MaxAdContentRating } from 'react-native-google-mobile-ads';
 // import { setAdmobReady } from '@/store/slices/admobSlice';
 
 export const initializeAdmob = (dispatch: AppDispatch) => {
-  // Uncomment this to use Admob
+  // 2. Uncomment this to use Admob 👇
   // mobileAds().setRequestConfiguration({
   //   maxAdContentRating: MaxAdContentRating.G,
   //   tagForChildDirectedTreatment: true,
   //   tagForUnderAgeOfConsent: true,
   // });
-  // Uncomment this to use Admob
+  // 3. Uncomment this to use Admob 👇
   // mobileAds()
   //   .initialize()
   //   .then((adapterStatuses) => {

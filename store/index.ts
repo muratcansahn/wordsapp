@@ -1,7 +1,7 @@
-import { configureStore } from "@reduxjs/toolkit";
-import themeReducer from "@/store/slices/themeSlice";
-import searchReducer from "@/store/slices/searchSlice";
-import admobReducer from "@/store/slices/admobSlice";
+import { configureStore } from '@reduxjs/toolkit';
+import themeReducer from '@/store/slices/themeSlice';
+import searchReducer from '@/store/slices/searchSlice';
+import admobReducer from '@/store/slices/admobSlice';
 
 export const store = configureStore({
   reducer: {

@@ -1,4 +1,3 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { PropsWithChildren, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated, {
@@ -13,11 +12,16 @@ import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
 import {
   ANIMATION_DURATION,
+  BORDER_RADIUS,
+  BORDER_WIDTH,
   BUTTON_HEIGHT,
-  ICON_SIZE,
+  FLEX,
+  FONT_SIZE,
   MARGIN,
+  PADDING,
 } from '@/constants/AppConstants';
 import PressableOpacity from '@/components/common/buttons/pressable-opacity';
+import { Minus, Plus } from 'lucide-react-native';
 
 export function Collapsible({
   children,
@@ -26,37 +30,57 @@ export function Collapsible({
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const { mode } = useTheme();
   const animatedHeight = useSharedValue<number>(0);
-  const animatedStyle = useAnimatedStyle(() => {
+  const iconRotation = useSharedValue(0);
+
+  const iconStyle = useAnimatedStyle(() => {
     return {
-      height: withTiming(isOpen ? animatedHeight.value : 0, {
-        duration: ANIMATION_DURATION.D3,
-      }),
-      overflow: 'hidden',
+      transform: [{ rotate: `${iconRotation.value}deg` }],
     };
   });
 
+  const animatedStyle = useAnimatedStyle(() => ({
+    height: withTiming(isOpen ? animatedHeight.value : 0, {
+      duration: ANIMATION_DURATION.D3,
+    }),
+    overflow: 'hidden',
+  }));
+
+  const handlePress = () => {
+    setIsOpen((prev) => !prev);
+    iconRotation.value = withTiming(isOpen ? 0 : -180, {
+      duration: ANIMATION_DURATION.D3,
+    });
+    animatedHeight.value = isOpen ? 0 : BUTTON_HEIGHT.sm;
+  };
+
   return (
-    <ThemedView>
-      <PressableOpacity
-        style={styles.heading}
-        onPress={() => {
-          setIsOpen((value) => !value);
-          animatedHeight.value = isOpen ? 0 : BUTTON_HEIGHT.xl;
-        }}
-      >
-        <Ionicons
-          name={isOpen ? 'chevron-down' : 'chevron-forward-outline'}
-          size={ICON_SIZE.sm}
-          color={Colors[mode].text}
-        />
-        <ThemedText type="defaultSemiBold">{title}</ThemedText>
+    <ThemedView
+      style={[
+        styles.container,
+        {
+          borderColor: isOpen ? Colors[mode].primary : Colors[mode].borderColor,
+        },
+      ]}
+    >
+      <PressableOpacity style={styles.heading} onPress={handlePress}>
+        <ThemedText type="default" style={styles.title}>
+          {title}
+        </ThemedText>
+        <Animated.View style={iconStyle}>
+          {isOpen ? (
+            <Minus color={Colors[mode].text} style={styles.icon} />
+          ) : (
+            <Plus color={Colors[mode].text} style={styles.icon} />
+          )}
+        </Animated.View>
       </PressableOpacity>
       <Animated.View style={[styles.content, animatedStyle]}>
         <ScrollView
-          style={{ maxHeight: BUTTON_HEIGHT.xxl }}
+          style={styles.scrollView}
           nestedScrollEnabled={true}
+          showsVerticalScrollIndicator={false}
         >
-          {children}
+          <PressableOpacity onPress={handlePress}>{children}</PressableOpacity>
         </ScrollView>
       </Animated.View>
     </ThemedView>
@@ -64,14 +88,29 @@ export function Collapsible({
 }
 
 const styles = StyleSheet.create({
+  container: {
+    borderRadius: BORDER_RADIUS.sm,
+    borderWidth: BORDER_WIDTH.sm,
+    padding: PADDING.sm,
+  },
   heading: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: MARGIN.lg,
+    justifyContent: 'space-between',
+    paddingHorizontal: PADDING.sm,
+  },
+  title: {
+    flex: FLEX.one,
+    fontSize: FONT_SIZE.md,
+    fontWeight: 'bold',
   },
   content: {
-    marginTop: MARGIN.sm,
-    marginLeft: MARGIN.xxl,
+    paddingHorizontal: PADDING.sm,
+  },
+  scrollView: {
     maxHeight: BUTTON_HEIGHT.xxl,
+  },
+  icon: {
+    marginVertical: MARGIN.md,
   },
 });

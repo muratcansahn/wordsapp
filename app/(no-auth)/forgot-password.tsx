@@ -19,14 +19,18 @@ import {
   MARGIN,
   PADDING,
   FLEX,
-  ANIMATION_DURATION,
   BORDER_RADIUS,
-} from '../../constants/AppConstants';
+  FONT_SIZE,
+  INPUT_HEIGHT,
+  Z_INDEX,
+  ANIMATION_DURATION,
+} from '@/constants/AppConstants';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/SupabaseProvider';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AuthError } from '@supabase/supabase-js';
-import ShinyButton from '@/components/common/buttons/shiny-button';
+import AnimatedBorderButton from '@/components/common/buttons/animated-border-button';
+import { BlurView } from 'expo-blur';
 
 interface ForgotPasswordFormInputs extends FieldValues {
   email: string;
@@ -37,7 +41,7 @@ const AnimatedImage = Animated.createAnimatedComponent(Image);
 const ForgotPassword = () => {
   const { mode } = useTheme();
   const { t } = useTranslation();
-  const { sendNewPasswordLink, handleError } = useAuth();
+  const { sendNewPasswordLink, handleError, isLoading } = useAuth();
   const {
     control,
     handleSubmit,
@@ -61,20 +65,21 @@ const ForgotPassword = () => {
   return (
     <ThemedView style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardAvoidingView}
       >
         <ScrollView contentContainerStyle={styles.scrollViewContent}>
           <AnimatedImage
-            entering={FadeInDown.delay(ANIMATION_DURATION.D4)}
+            entering={FadeInDown.duration(ANIMATION_DURATION.D2)}
             source={require('@/assets/images/logo.png')}
             style={styles.logo}
+            contentFit="contain"
           />
           <Animated.View
-            entering={FadeInDown.delay(ANIMATION_DURATION.D5)}
+            entering={FadeInDown.duration(ANIMATION_DURATION.D3)}
             style={styles.textContainer}
           >
-            <ThemedText type="title" style={styles.title}>
+            <ThemedText type="subtitle" style={styles.title}>
               {t('auth.forgotPassword')}
             </ThemedText>
             <ThemedText type="default" style={styles.description}>
@@ -83,7 +88,7 @@ const ForgotPassword = () => {
           </Animated.View>
 
           <Animated.View
-            entering={FadeInDown.delay(ANIMATION_DURATION.D6)}
+            entering={FadeInDown.duration(ANIMATION_DURATION.D4)}
             style={styles.formContainer}
           >
             <FormField<ForgotPasswordFormInputs>
@@ -108,16 +113,38 @@ const ForgotPassword = () => {
               containerStyle={styles.input}
               error={errors.root?.message}
             />
-            <ShinyButton
+            <AnimatedBorderButton
               onPress={handleSubmit(onSubmit)}
-              buttonColor={Colors[mode].primary}
+              sliderColor={Colors[mode].primary}
               borderRadius={BORDER_RADIUS.sm}
-              bgColor={Colors[mode].backgroundSecondary}
+              pathColor={Colors[mode].button}
+              sliderHeight={4}
+              width={'100%'}
+              height={INPUT_HEIGHT.md}
+              sliderWidth={40}
+              innerContainerColor={Colors[mode].backgroundOpacity}
+              loading={isLoading}
             >
-              <ThemedText type="default" darkColor={Colors.dark.white}>
-                {t('buttons.send')}
-              </ThemedText>
-            </ShinyButton>
+              {Platform.OS === 'ios' ? (
+                <BlurView intensity={100} style={styles.blurView} tint={mode}>
+                  <ThemedView
+                    style={styles.buttonContainer}
+                    darkColor="transparent"
+                    lightColor="transparent"
+                  >
+                    <ThemedText type="default" darkColor={Colors.dark.white}>
+                      {t('buttons.send')}
+                    </ThemedText>
+                  </ThemedView>
+                </BlurView>
+              ) : (
+                <ThemedView style={styles.buttonContainer}>
+                  <ThemedText type="default" darkColor={Colors.dark.white}>
+                    {t('buttons.send')}
+                  </ThemedText>
+                </ThemedView>
+              )}
+            </AnimatedBorderButton>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -152,12 +179,25 @@ const styles = StyleSheet.create({
   },
   description: {
     textAlign: 'center',
+    fontSize: FONT_SIZE.sm,
   },
   formContainer: {
     width: '100%',
   },
   input: {
     marginBottom: MARGIN.lg,
+    height: INPUT_HEIGHT.md,
+  },
+  buttonContainer: {
+    flex: FLEX.one,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  blurView: {
+    flex: FLEX.one,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: Z_INDEX.top,
   },
 });
 

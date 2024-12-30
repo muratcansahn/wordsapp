@@ -1,7 +1,7 @@
 import { StyleSheet, FlatList } from 'react-native';
 import { ThemedText } from '@/components/common/typography';
 import { ThemedView } from '@/components/common/view';
-import { Href, useRouter } from 'expo-router';
+import { Href, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { features } from '@/components/screen/home/HomeCards';
@@ -26,11 +26,11 @@ interface FeatureItemProps {
 
 const FeatureItem: React.FC<FeatureItemProps> = ({ icon, route, name }) => {
   const { mode } = useTheme();
-  const router = useRouter();
+
   const { t } = useTranslation();
 
   const handlePress = () => {
-    router.push(`/${route}` as Href<string>);
+    router.push(`/${route}` as Href);
   };
 
   return (
@@ -70,19 +70,13 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: FLEX.one,
-  },
-  description: {
-    margin: MARGIN.md,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    fontSize: FONT_SIZE.lg,
+    padding: PADDING.sm,
   },
   gridContainer: {
     padding: PADDING.sm,
   },
   themedView: {
     flex: FLEX.one,
-    backgroundColor: 'transparent',
   },
   gridItem: {
     flex: FLEX.one,
@@ -92,7 +86,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: MARGIN.md,
     height: BUTTON_HEIGHT.xl,
-    backgroundColor: 'rgba(142, 142, 147, 0.12)',
   },
   gridItemText: {
     marginTop: MARGIN.lg,

@@ -1,6 +1,5 @@
 import React, { useCallback } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { ThemedView } from '@/components/common/view';
 import { ThemedText } from '@/components/common/typography';
 import { Colors } from '@/constants/Colors';
@@ -22,6 +21,7 @@ import {
 import { useAuth } from '@/context/SupabaseProvider';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import { menuItems } from '@/data/ProfileButtons';
+import { ChevronRight, LucideIcon } from 'lucide-react-native';
 
 const ProfileScreen = () => {
   const { mode } = useTheme();
@@ -41,10 +41,7 @@ const ProfileScreen = () => {
     [router]
   );
 
-  const renderMenuItem = (
-    icon: keyof typeof Ionicons.glyphMap,
-    text: string
-  ) => (
+  const renderMenuItem = (IconComponent: LucideIcon, text: string) => (
     <PressableOpacity
       key={text}
       style={[styles.menuItem, { borderBottomColor: Colors[mode].borderColor }]}
@@ -52,13 +49,9 @@ const ProfileScreen = () => {
         handlePress(menuItems.find((item) => item.text === text)?.route as Href)
       }
     >
-      <Ionicons name={icon} size={ICON_SIZE.sm} color={Colors[mode].text} />
+      <IconComponent size={ICON_SIZE.sm} color={Colors[mode].text} />
       <ThemedText style={styles.menuItemText}>{t(text)}</ThemedText>
-      <Ionicons
-        name="chevron-forward"
-        size={ICON_SIZE.xs}
-        color={Colors[mode].placeholderColor}
-      />
+      <ChevronRight size={ICON_SIZE.xs} color={Colors[mode].placeholderColor} />
     </PressableOpacity>
   );
 
@@ -75,9 +68,12 @@ const ProfileScreen = () => {
               contentFit="contain"
             />
           </Animated.View>
-          {name && <ThemedText style={styles.name}>{name}</ThemedText>}
-          {email && <ThemedText style={styles.email}>{email}</ThemedText>}
+          <ThemedView style={styles.nameContainer}>
+            {name && <ThemedText style={styles.name}>{name}</ThemedText>}
+            {email && <ThemedText style={styles.email}>{email}</ThemedText>}
+          </ThemedView>
         </ThemedView>
+
         <ThemedView>
           {menuItems.map((item) => renderMenuItem(item.icon, item.text))}
         </ThemedView>
@@ -91,23 +87,31 @@ const styles = StyleSheet.create({
     flex: FLEX.one,
   },
   profileInfo: {
+    gap: 10,
     alignItems: 'center',
     marginBottom: MARGIN.lg,
-    padding: PADDING.sm,
+    paddingHorizontal: PADDING.md,
+    paddingTop: PADDING.md,
+  },
+  nameContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   avatar: {
-    width: AVATAR_SIZE.lg,
-    height: AVATAR_SIZE.lg,
+    width: AVATAR_SIZE.md,
+    height: AVATAR_SIZE.md,
     borderRadius: BORDER_RADIUS.rounded,
-    marginBottom: MARGIN.lg,
   },
   name: {
-    fontSize: FONT_SIZE.xxl,
-    fontWeight: 'bold',
-    marginBottom: MARGIN.md,
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '800',
   },
   email: {
     fontSize: FONT_SIZE.md,
+  },
+  upgradeContainer: {
+    paddingHorizontal: PADDING.md,
+    marginVertical: MARGIN.lg,
   },
   menuItem: {
     flexDirection: 'row',

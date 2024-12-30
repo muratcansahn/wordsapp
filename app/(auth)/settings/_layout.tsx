@@ -1,8 +1,8 @@
 import React from 'react';
 import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import HeaderLeft from '@/components/navigation/header/HeaderBack';
-import HeaderClose from '@/components/navigation/header/HeaderClose';
+import HeaderBack from '@/components/navigation/header/header-back';
+import HeaderClose from '@/components/navigation/header/header-close';
 
 const SettingsLayout = () => {
   const { t } = useTranslation();
@@ -11,14 +11,13 @@ const SettingsLayout = () => {
     <Stack
       initialRouteName="index"
       screenOptions={{
-        headerLeft: HeaderLeft,
+        headerLeft: HeaderBack,
       }}
     >
       <Stack.Screen
         name="index"
         options={{
           title: t('header.settings'),
-          headerLargeTitle: true,
         }}
       />
       <Stack.Screen

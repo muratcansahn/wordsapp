@@ -2,16 +2,11 @@
   "expo": {
     "name": "YOUR APP NAME (e.g. Ship Mobile Fast)",
     "slug": "YOUR APP SLUG (e.g. ship-mobile-fast)",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "YOUR APP SCHEME *important* (e.g. com.shipmobilefast.app)",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#000"
-    },
     "ios": {
       "supportsTablet": false,
       "associatedDomains": [
@@ -19,6 +14,7 @@
       ],
       "bundleIdentifier": "YOUR APP SCHEME *important* (e.g. com.shipmobilefast.app)",
       "usesAppleSignIn": true,
+      // FOR REACT NATIVE SHARE (SOCIAL SHARING)
       "infoPlist": {
         "LSApplicationQueriesSchemes": [
           "instagram",
@@ -37,8 +33,6 @@
       "permissions": [
         "com.google.android.gms.permission.AD_ID"
       ],
-      // * IMPORTANT FOR GOOGLE AUTH ON ANDROID * //
-      "googleServicesFile": "./google-services.json",
       "intentFilters": [
         {
           "action": "VIEW",
@@ -72,12 +66,14 @@
       "expo-apple-authentication",
       "expo-notifications",
       "expo-dev-client",
+      // FOR TRACKING TRANSPARENCY
       [
         "expo-tracking-transparency",
         {
           "userTrackingPermission": "This identifier will be used to deliver personalized ads to you."
         }
       ],
+      // FOR GOOGLE ADMOB
       [
         "react-native-google-mobile-ads",
         {
@@ -91,7 +87,21 @@
           // We are going to use ios client id
           "iosUrlScheme": "com.googleusercontent.apps.some-id"
         }
-      ]
+      ],
+      // * IMPORTANT FOR SPLASH SCREEN (SDK 52)
+       [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff",
+          "image": "./assets/images/splash-icon.png",
+          "dark": {
+            "image": "./assets/images/splash-icon.png",
+            "backgroundColor": "#222222"
+          },
+          "imageWidth": 200
+        }
+      ],
+       "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

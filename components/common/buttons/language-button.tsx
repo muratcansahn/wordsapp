@@ -38,8 +38,8 @@ const LanguageButton = ({
       style={[
         styles.languageItem,
         isActive
-          ? { backgroundColor: Colors[mode].buttonActive }
-          : { backgroundColor: Colors[mode].buttonInactive },
+          ? { backgroundColor: `${Colors[mode].primary}20` }
+          : { backgroundColor: Colors[mode].button },
       ]}
     >
       <Image

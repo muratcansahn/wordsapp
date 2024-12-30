@@ -20,6 +20,7 @@ type RoundedSize = 'rounded';
 type PaddingSize = BaseSize;
 type LogoSize = BaseSize;
 type ButtonHeightSize = BaseSize;
+type ButtonWidthSize = BaseSize;
 type InputHeightSize = ButtonHeightSize;
 type ButtonRadiusSize = BaseSize | RoundedSize;
 type BorderWidthSize = BaseSize;
@@ -71,6 +72,18 @@ export const LOGO_SIZE: Record<LogoSize, number> = {
 };
 
 export const BUTTON_HEIGHT: Record<ButtonHeightSize, number> = {
+  xxxs: scale(10),
+  xxs: scale(16),
+  xs: scale(32),
+  sm: scale(40),
+  md: scale(56),
+  lg: scale(80),
+  xl: scale(96),
+  xxl: scale(128),
+  xxxl: scale(160),
+};
+
+export const BUTTON_WIDTH: Record<ButtonWidthSize, number | string> = {
   xxxs: scale(10),
   xxs: scale(16),
   xs: scale(32),

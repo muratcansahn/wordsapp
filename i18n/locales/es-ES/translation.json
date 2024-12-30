@@ -100,64 +100,30 @@
     "theme": "Tema"
   },
   "inAppPurchases": {
-    "title": "Prueba Ship Mobile Fast Pro \n por {{price}}",
-    "terms": "Las funciones pueden cambiar en cualquier momento. El pago se cargará a tu cuenta de App Store. Se renueva al precio completo después del período de oferta introductoria. Tu suscripción se renovará automáticamente en el intervalo seleccionado hasta que la canceles en la configuración de App Store. El monto del cargo puede cambiar con previo aviso. Puedes cancelarla en cualquier momento. Al tocar 'App Store', aceptas los Términos de suscripción de ShipMobileFast+ y la renovación automática.",
+    "title": "Prueba Ship Mobile Fast Pro",
+    "subtitle": "Más mensajes en nuestro modelo más potente con funciones premium",
+    "info": "Se renueva solo por {{price}} cada {{period}}. Cancela cuando quieras. Si no te convence, te devolvemos la lana en 7 días.",
+    "lifetime-info": "Acceso de por vida por {{price}}. Incluye garantía de devolución de dinero de 7 días.",
     "cards": {
-      "ua": {
-        "title": "Proyecto ilimitado",
-        "description": "Obtén acceso ilimitado a todas las funciones premium y comienza a construir rápidamente. Puedes usarlo en proyectos ilimitados."
+      "feature1": {
+        "title": "Feature Title 1",
+        "description": "Feature Description 1"
       },
-      "iap": {
-        "title": "Compras in-app",
-        "description": "No pierdas días en la configuración de RevenueCat. Define el producto y ofrécelo a la venta a través del Paywall preconfigurado."
+      "feature2": {
+        "title": "Feature Title 2",
+        "description": "Feature Description 2"
       },
-      "admob": {
-        "title": "Admob",
-        "description": "Gana dinero con tu aplicación usando Google Ads. Con solo una línea de código."
+      "feature3": {
+        "title": "Feature Title 3",
+        "description": "Feature Description 3"
       },
-      "pf": {
-        "title": "Más de 20 pantallas premium personalizadas",
-        "description": "Chat (estilo WhatsApp), Swipe Up (estilo TikTok), Mini Blog (estilo Kroko), AI Chatbot (estilo ChatGPT), Swipe Cards (estilo Tinder), Camera App (estilo Snapchat), Flujo de autenticación, Búsqueda con superposición, Perfiles, Configuración, Eliminar cuenta, etc. Todo para que puedas lanzar tu proyecto muy rápidamente."
+      "feature4": {
+        "title": "Feature Title 4",
+        "description": "Feature Description 4"
       },
-      "i18n": {
-        "title": "i18n (Soporte multilingüe)",
-        "description": "Solo prepara tus traducciones. ¿Qué idiomas quieres?"
-      },
-      "themes": {
-        "title": "Temas",
-        "description": "Selector de tema Claro / Oscuro / Sistema"
-      },
-      "notifications": {
-        "title": "Notificaciones",
-        "description": "Notificaciones push con Expo Push Notification"
-      },
-      "auth": {
-        "title": "Flujo de autenticación",
-        "description": "Iniciar sesión, registrarse, restablecer contraseña, verificación de correo electrónico, todo funciona perfectamente."
-      },
-      "onboarding": {
-        "title": "Onboarding",
-        "description": "No necesitas pasar días luchando con el onboarding."
-      },
-      "settings": {
-        "title": "Configuración",
-        "description": "Todo luce natural."
-      },
-      "ss": {
-        "title": "Compartir en redes sociales",
-        "description": "Los usuarios pueden compartir características de tu aplicación en IG o FB."
-      },
-      "sentry": {
-        "title": "Sentry",
-        "description": "Captura y rastrea errores."
-      },
-      "segments": {
-        "title": "Posthog",
-        "description": "Rastrea y analiza el comportamiento de tus usuarios."
-      },
-      "cc": {
-        "title": "Componentes personalizados",
-        "description": "Todos los componentes son altamente personalizables. Puedes cambiar fácilmente colores, estilos y más. Estos botones no existen en internet. Porque si existieran, no habría tenido que hacerlos."
+      "feature5": {
+        "title": "Feature Title 5",
+        "description": "Feature Description 5"
       }
     }
   },

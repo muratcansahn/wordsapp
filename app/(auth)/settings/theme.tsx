@@ -56,6 +56,7 @@ const ThemeSettings: React.FC = () => {
           onSelect={() => dispatch(setThemeMode(theme.key))}
           color={Colors[mode].primary}
           style={styles.themeItem}
+          height={130}
         />
       ))}
     </ThemedView>
@@ -66,9 +67,16 @@ const styles = StyleSheet.create({
   container: {
     flex: FLEX.one,
     padding: PADDING.sm,
+    flexDirection: 'row',
   },
   themeItem: {
     marginBottom: MARGIN.md,
+    flex: 1,
+    margin: 5,
+    flexDirection: 'column-reverse',
+
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

@@ -1,6 +1,5 @@
 import React, { useRef } from 'react';
 import { View, StyleSheet, Image } from 'react-native';
-import ViewShot from 'react-native-view-shot';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/theme/useTheme';
 import { Colors } from '@/constants/Colors';
@@ -16,17 +15,19 @@ import {
   ICON_SIZE,
   MARGIN,
   PADDING,
-} from '../../../constants/AppConstants';
+} from '@/constants/AppConstants';
+import ViewShot from 'react-native-view-shot';
 
 export default function ShareModal() {
   const viewShotRef = useRef<ViewShot | null>(null);
+
   const { mode } = useTheme();
-  const colors = ['#ff4e00', '#ff8900', '#000'];
+  const colors = ['#ff4e00', '#ff8900', '#000000'];
 
   const KrokoShareScreen = () => (
     <ThemedView style={styles.container}>
       <LinearGradient
-        colors={colors}
+        colors={colors as [string, string, string]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={styles.gradientBackground}

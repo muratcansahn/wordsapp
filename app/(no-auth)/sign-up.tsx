@@ -8,12 +8,12 @@ import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { ExternalLink } from '@/components/common/external-link';
-import { ANIMATION_DURATION } from '@/constants/AppConstants';
 import { useAuth } from '@/context/SupabaseProvider';
 import { Image } from 'expo-image';
 import AuthButton from '@/components/common/buttons/auth';
 import { authStyles } from '@/constants/AuthStyles';
 import PressableOpacity from '@/components/common/buttons/pressable-opacity';
+import { ANIMATION_DURATION } from '@/constants/AppConstants';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
@@ -33,7 +33,7 @@ const SignUpScreen = () => {
       <ThemedView>
         <ThemedView style={authStyles.imageTitleContainer}>
           <AnimatedImage
-            entering={FadeInDown.delay(ANIMATION_DURATION.D2)}
+            entering={FadeInDown.duration(ANIMATION_DURATION.D2)}
             source={require('@/assets/images/logo.png')}
             style={authStyles.logo}
           />
@@ -44,7 +44,9 @@ const SignUpScreen = () => {
 
         <ThemedView style={authStyles.viewContainer}>
           {Platform.OS === 'ios' && (
-            <Animated.View entering={FadeInDown.delay(ANIMATION_DURATION.D3)}>
+            <Animated.View
+              entering={FadeInDown.duration(ANIMATION_DURATION.D3)}
+            >
               <AuthButton
                 onPress={signInWithApple}
                 icon="logo-apple"
@@ -55,7 +57,7 @@ const SignUpScreen = () => {
             </Animated.View>
           )}
 
-          <Animated.View entering={FadeInDown.delay(ANIMATION_DURATION.D4)}>
+          <Animated.View entering={FadeInDown.duration(ANIMATION_DURATION.D4)}>
             <AuthButton
               onPress={signInWithGoogle}
               icon="logo-google"
@@ -65,7 +67,7 @@ const SignUpScreen = () => {
             />
           </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(ANIMATION_DURATION.D5)}>
+          <Animated.View entering={FadeInDown.duration(ANIMATION_DURATION.D5)}>
             <AuthButton
               onPress={() => router.push('/(no-auth)/sign-up-with-email')}
               icon="mail"
@@ -74,9 +76,9 @@ const SignUpScreen = () => {
             />
           </Animated.View>
         </ThemedView>
-        <Animated.View entering={FadeInDown.delay(ANIMATION_DURATION.D6)}>
+        <Animated.View entering={FadeInDown.duration(ANIMATION_DURATION.D6)}>
           <ExternalLink
-            href="https://shipmobilefast.com/en/privacy-policy"
+            href="https://shipmobilefast.com/privacy-policy"
             style={authStyles.termsText}
           >
             <ThemedText
@@ -88,7 +90,7 @@ const SignUpScreen = () => {
             </ThemedText>
           </ExternalLink>
         </Animated.View>
-        <Animated.View entering={FadeInDown.delay(ANIMATION_DURATION.D6)}>
+        <Animated.View entering={FadeInDown.duration(ANIMATION_DURATION.D7)}>
           <PressableOpacity
             onPress={() => {
               router.push('/(no-auth)/sign-in');

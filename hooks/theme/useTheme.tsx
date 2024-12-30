@@ -10,6 +10,7 @@ import {
 } from '@/store/slices/themeSlice';
 import { DarkTheme, DefaultTheme, Theme } from '@react-navigation/native';
 import { StatusBarStyle } from 'expo-status-bar';
+import { Colors } from '@/constants/Colors';
 
 export const useTheme = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -39,6 +40,13 @@ export const useTheme = () => {
   const theme: Theme = mode === 'dark' ? DarkTheme : DefaultTheme;
 
   const statusBarStyle: StatusBarStyle = mode === 'light' ? 'dark' : 'light';
+  const statusBarBackgroundColor = Colors[mode].background;
 
-  return { theme, mode, statusBarStyle, selectedMode };
+  return {
+    theme,
+    mode,
+    statusBarStyle,
+    selectedMode,
+    statusBarBackgroundColor,
+  };
 };

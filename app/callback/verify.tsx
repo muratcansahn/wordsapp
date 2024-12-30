@@ -5,8 +5,8 @@ import { ThemedView } from '@/components/common/view';
 import { ThemedText } from '@/components/common/typography';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
-import Loader from '@/components/common/loader/native-loader';
 import { FLEX, MARGIN, PADDING } from '@/constants/AppConstants';
+import LoaderLucide from '@/components/common/loader/loader-2';
 
 const Verify = () => {
   const { isLoading, session } = useAuth();
@@ -22,7 +22,7 @@ const Verify = () => {
   if (!session && !isLoading) {
     return (
       <ThemedView style={styles.container}>
-        <Loader size="large" />
+        <LoaderLucide size={24} />
         <ThemedText style={styles.text} type="default">
           {t('auth.pleaseCheckYourEmail')}
         </ThemedText>
@@ -32,7 +32,7 @@ const Verify = () => {
 
   return (
     <ThemedView style={styles.container}>
-      <Loader size="large" />
+      <LoaderLucide size={24} />
       <ThemedText style={styles.text} type="default">
         {t('auth.verifying')}
       </ThemedText>

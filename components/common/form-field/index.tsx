@@ -7,7 +7,12 @@ import {
   FieldPath,
   RegisterOptions,
 } from 'react-hook-form';
-import { KeyboardTypeOptions, TextInput, ViewStyle } from 'react-native';
+import {
+  KeyboardTypeOptions,
+  TextInput,
+  TextStyle,
+  ViewStyle,
+} from 'react-native';
 import Input from '@/components/common/input';
 
 type FormFieldProps<TFieldValues extends FieldValues> = {
@@ -23,7 +28,7 @@ type FormFieldProps<TFieldValues extends FieldValues> = {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   containerStyle?: ViewStyle;
-  inputStyle?: ViewStyle;
+  inputStyle?: TextStyle;
   error?: string | undefined;
 };
 

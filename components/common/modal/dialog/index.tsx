@@ -1,11 +1,12 @@
-import { View, Modal, StyleSheet } from 'react-native';
-import React, { useEffect } from 'react';
+import { Modal, StyleSheet, Pressable, View } from 'react-native';
+import React, { useEffect, useCallback } from 'react';
 import Animated, {
   Easing,
   useSharedValue,
   withTiming,
   useAnimatedStyle,
   runOnJS,
+  cancelAnimation,
 } from 'react-native-reanimated';
 import { ThemedText } from '@/components/common/typography';
 import Button from '@/components/common/buttons/button';
@@ -20,8 +21,9 @@ import {
   PADDING,
   FLEX,
   ANIMATION_DURATION,
+  ScreenWidth,
+  ScreenHeight,
 } from '@/constants/AppConstants';
-import { ThemedView } from '@/components/common/view';
 
 const Dialog = ({
   title,
@@ -50,26 +52,29 @@ const Dialog = ({
   const animationValue = useSharedValue(0);
   const { mode } = useTheme();
 
-  const openModal = () => {
-    setVisible(true);
+  const openModal = useCallback(() => {
+    cancelAnimation(animationValue);
     animationValue.value = withTiming(1, {
       duration: animationDuration,
       easing: Easing.out(Easing.exp),
     });
-  };
+  }, [animationDuration, animationValue]);
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
+    cancelAnimation(animationValue);
     animationValue.value = withTiming(
       0,
       {
         duration: animationDuration,
         easing: Easing.in(Easing.exp),
       },
-      () => {
-        runOnJS(setVisible)(false);
+      (finished) => {
+        if (finished) {
+          runOnJS(setVisible)(false);
+        }
       }
     );
-  };
+  }, [animationDuration, animationValue, setVisible]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: animationValue.value,
@@ -84,7 +89,12 @@ const Dialog = ({
     if (visible) {
       openModal();
     }
-  }, [visible]);
+  }, [visible, openModal]);
+
+  const handleConfirm = useCallback(() => {
+    onConfirm();
+    closeModal();
+  }, [onConfirm, closeModal]);
 
   return (
     <>
@@ -94,11 +104,16 @@ const Dialog = ({
         animationType="none"
         visible={visible}
         onRequestClose={closeModal}
+        statusBarTranslucent={true}
       >
-        <ThemedView
-          style={styles.blurContainer}
-          darkColor={Colors.dark.backgroundOpacity}
-          lightColor={Colors.dark.backgroundOpacity}
+        <Pressable
+          style={[
+            styles.modalOverlay,
+            {
+              backgroundColor: Colors[mode].dialogBackdrop,
+            },
+          ]}
+          onPress={closeModal}
         >
           <Animated.View
             style={[
@@ -125,10 +140,7 @@ const Dialog = ({
                 </ThemedText>
               </Button>
               <Button
-                onPress={() => {
-                  onConfirm();
-                  closeModal();
-                }}
+                onPress={handleConfirm}
                 style={styles.button}
                 bgColor={Colors[mode].error}
                 disabled={isLoading}
@@ -145,24 +157,36 @@ const Dialog = ({
               </Button>
             </View>
           </Animated.View>
-        </ThemedView>
+        </Pressable>
       </Modal>
     </>
   );
 };
 
 const styles = StyleSheet.create({
-  blurContainer: {
+  modalOverlay: {
     flex: FLEX.one,
-    alignItems: 'center',
+    width: ScreenWidth,
+    height: ScreenHeight,
+    position: 'absolute',
+    top: 0,
+    left: 0,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   dialogContainer: {
     borderRadius: BORDER_RADIUS.md,
     padding: PADDING.md,
-    width: '85%',
+    width: ScreenWidth - 48,
     maxWidth: 400,
-    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   title: {
     fontSize: FONT_SIZE.xl,
@@ -177,7 +201,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%',
+    marginTop: MARGIN.md,
   },
   button: {
     flex: FLEX.one,

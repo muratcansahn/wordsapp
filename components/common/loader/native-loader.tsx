@@ -5,7 +5,7 @@ import { Colors } from '@/constants/Colors';
 
 const Loader = ({ size = 'small' }: { size?: 'small' | 'large' }) => {
   const { mode } = useTheme();
-  return <ActivityIndicator size={size} color={Colors[mode].tint} />;
+  return <ActivityIndicator size={size} color={Colors[mode].primary} />;
 };
 
 export default Loader;

@@ -1,39 +1,47 @@
-import { Ionicons } from '@expo/vector-icons';
+import {
+  Pencil,
+  CreditCard,
+  Sun,
+  Bell,
+  HelpCircle,
+  Settings,
+  LucideIcon,
+} from 'lucide-react-native';
 
 type MenuItem = {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: LucideIcon;
   text: string;
   route: string;
 };
 
 export const menuItems: MenuItem[] = [
   {
-    icon: 'pencil',
+    icon: Pencil,
     text: 'profile.editProfile',
     route: '/profile',
   },
   {
-    icon: 'card',
+    icon: CreditCard,
     text: 'profile.subscription',
     route: '/profile',
   },
   {
-    icon: 'sunny',
+    icon: Sun,
     text: 'profile.theme',
     route: '/settings/theme',
   },
   {
-    icon: 'notifications',
+    icon: Bell,
     text: 'profile.notifications',
     route: '/settings/notifications',
   },
   {
-    icon: 'help-circle',
+    icon: HelpCircle,
     text: 'profile.help',
     route: '/settings/help',
   },
   {
-    icon: 'settings',
+    icon: Settings,
     text: 'profile.settings',
     route: '/settings',
   },

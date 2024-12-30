@@ -9,7 +9,7 @@ import { ThemedText } from '@/components/common/typography';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/theme/useTheme';
 import FormField from '@/components/common/form-field';
-import { ICON_SIZE } from '@/constants/AppConstants';
+import { ANIMATION_DURATION, ICON_SIZE } from '@/constants/AppConstants';
 import { useAuth } from '@/context/SupabaseProvider';
 import { useRouter } from 'expo-router';
 import Button from '@/components/common/buttons/button';
@@ -68,7 +68,7 @@ const SignIn = () => {
       >
         <ThemedView style={authStyles.imageTitleContainer}>
           <AnimatedImage
-            entering={FadeInDown.delay(200)}
+            entering={FadeInDown.duration(ANIMATION_DURATION.D2)}
             source={require('@/assets/images/logo.png')}
             style={authStyles.logo}
           />
@@ -79,7 +79,7 @@ const SignIn = () => {
         </ThemedView>
 
         <ThemedView style={authStyles.viewContainer}>
-          <Animated.View entering={FadeInDown.delay(250)}>
+          <Animated.View entering={FadeInDown.duration(ANIMATION_DURATION.D3)}>
             <FormField<SignInFormInputs>
               name="email"
               control={control}
@@ -104,7 +104,7 @@ const SignIn = () => {
             />
           </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(300)}>
+          <Animated.View entering={FadeInDown.duration(ANIMATION_DURATION.D4)}>
             <FormField<SignInFormInputs>
               name="password"
               control={control}
@@ -132,7 +132,7 @@ const SignIn = () => {
           </Animated.View>
 
           <Animated.View
-            entering={FadeInDown.delay(350)}
+            entering={FadeInDown.duration(ANIMATION_DURATION.D5)}
             style={authStyles.forgotPassword}
           >
             <PressableOpacity
@@ -153,7 +153,9 @@ const SignIn = () => {
           </Animated.View>
 
           <ThemedView style={authStyles.buttonWrapper}>
-            <Animated.View entering={FadeInDown.delay(400)}>
+            <Animated.View
+              entering={FadeInDown.duration(ANIMATION_DURATION.D6)}
+            >
               <Button
                 onPress={handleSubmit(onSubmit)}
                 disabled={isLoading}
@@ -172,11 +174,11 @@ const SignIn = () => {
             </Animated.View>
           </ThemedView>
 
-          <Animated.View entering={FadeInDown.delay(450)}>
+          <Animated.View entering={FadeInDown.duration(ANIMATION_DURATION.D7)}>
             <ThemedText style={authStyles.orText}>{t('auth.or')}</ThemedText>
           </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(500)}>
+          <Animated.View entering={FadeInDown.duration(ANIMATION_DURATION.D8)}>
             <AuthButton
               onPress={signInWithGoogle}
               icon="logo-google"
@@ -187,7 +189,9 @@ const SignIn = () => {
           </Animated.View>
 
           {Platform.OS === 'ios' && (
-            <Animated.View entering={FadeInDown.delay(550)}>
+            <Animated.View
+              entering={FadeInDown.duration(ANIMATION_DURATION.D9)}
+            >
               <AuthButton
                 onPress={signInWithApple}
                 icon="logo-apple"
@@ -199,7 +203,7 @@ const SignIn = () => {
           )}
 
           <Animated.View
-            entering={FadeInDown.delay(600)}
+            entering={FadeInDown.duration(ANIMATION_DURATION.D10)}
             style={authStyles.bottomText}
           >
             <PressableOpacity

@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { StyleSheet, ScrollView, View } from 'react-native';
+import { StyleSheet, FlatList, View } from 'react-native';
 import RadioButton from '@/components/common/buttons/radio-button';
 import { ThemedView } from '@/components/common/view';
 import { ThemedText } from '@/components/common/typography';
@@ -7,9 +7,16 @@ import { useTranslation } from 'react-i18next';
 import Dialog from '@/components/common/modal/dialog';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
-import { FLEX, FONT_SIZE, MARGIN, PADDING } from '@/constants/AppConstants';
-import ShinyButton from '@/components/common/buttons/shiny-button';
+import {
+  BORDER_RADIUS,
+  BUTTON_HEIGHT,
+  FLEX,
+  FONT_SIZE,
+  MARGIN,
+  PADDING,
+} from '@/constants/AppConstants';
 import { DeleteAccountReasons } from '@/data/DeleteAccount';
+import AnimatedBorderButton from '@/components/common/buttons/animated-border-button';
 
 const DeleteAccountScreen: React.FC = () => {
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
@@ -29,19 +36,25 @@ const DeleteAccountScreen: React.FC = () => {
       <ThemedText type="default" style={styles.subtitle}>
         {t('settings.deleteAccount.subtitle')}
       </ThemedText>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {DeleteAccountReasons.map((reason, index) => (
-          <View style={{ marginBottom: MARGIN.lg }} key={index}>
+      <FlatList
+        data={DeleteAccountReasons}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item, index }) => (
+          <View style={styles.gridItem}>
             <RadioButton
-              selected={selectedReason === reason.value}
-              onSelect={() => handleSelectReason(reason.value)}
-              label={t(reason.label)}
+              selected={selectedReason === item.value}
+              onSelect={() => handleSelectReason(item.value)}
+              label={t(item.label)}
+              labelStyle={{
+                fontSize: FONT_SIZE.md,
+              }}
               color={Colors[mode].error}
-              accessibilityLabel={reason.label}
+              accessibilityLabel={item.label}
+              height={BUTTON_HEIGHT.md}
             />
           </View>
-        ))}
-      </ScrollView>
+        )}
+      />
       <Dialog
         title={t('settings.deleteAccount.deleteDialog.title')}
         description={t('settings.deleteAccount.deleteDialog.description')}
@@ -50,22 +63,35 @@ const DeleteAccountScreen: React.FC = () => {
         visible={visible}
         setVisible={setVisible}
       >
-        <ShinyButton
+        <AnimatedBorderButton
           onPress={() => {
             setVisible(true);
           }}
-          bgColor={'#ff000099'}
-          buttonColor="red"
+          pathColor={Colors[mode].background}
+          sliderColor={Colors[mode].error}
+          borderRadius={BORDER_RADIUS.sm}
+          innerContainerColor={Colors[mode].error}
+          width={'100%'}
+          height={BUTTON_HEIGHT.md}
+          sliderWidth={50}
         >
-          <ThemedText
-            type="default"
-            style={styles.deleteButton}
-            darkColor="white"
-            lightColor="white"
+          <View
+            style={{
+              flex: FLEX.one,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
           >
-            {t('buttons.delete')}
-          </ThemedText>
-        </ShinyButton>
+            <ThemedText
+              type="default"
+              style={styles.deleteButton}
+              darkColor={Colors.dark.text}
+              lightColor={Colors.dark.text}
+            >
+              {t('buttons.delete')}
+            </ThemedText>
+          </View>
+        </AnimatedBorderButton>
       </Dialog>
     </ThemedView>
   );
@@ -75,18 +101,24 @@ const styles = StyleSheet.create({
   container: {
     flex: FLEX.one,
     padding: PADDING.md,
+    gap: 4,
   },
   title: {
-    marginBottom: MARGIN.lg,
     textAlign: 'center',
   },
   subtitle: {
-    marginBottom: MARGIN.lg,
+    marginBottom: MARGIN.xl,
     textAlign: 'center',
+  },
+  gridItem: {
+    flex: FLEX.one,
+    marginVertical: MARGIN.md,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   deleteButton: {
     fontSize: FONT_SIZE.lg,
-    fontFamily: 'Neulis',
+    fontWeight: '900',
   },
 });
 

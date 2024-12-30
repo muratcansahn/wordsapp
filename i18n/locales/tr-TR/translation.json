@@ -100,64 +100,30 @@
     "theme": "Tema"
   },
   "inAppPurchases": {
-    "title": "Try Ship Mobile Fast Pro \n for {{price}}",
-    "terms": "Features can change at any time. Payment will be charged to your App Store account. Renews at the full price after the introductory offer period. Your subscription will auto- renew at your selected interval until you cancel in App Store settings. Amount of the charge may change with notice. Cancel anytime. By tapping 'App Store', you agree to the ShipMobileFast+ Subscription Terms and the auto-renewal.",
+    "title": "Ship Mobile Fast Pro'yu deneyin",
+    "subtitle": "En güçlü modelimizde premium özelliklerle daha fazla mesaj",
+    "info": "Otomatik olarak {{price}} / {{period}} ile devam eder. Her zaman iptal edebilirsiniz. 7 günlük para iade garantisi içerir.",
+    "lifetime-info": "Ömür boyu erişim için {{price}}. 7 günlük para iade garantisi içerir.",
     "cards": {
-      "ua": {
-        "title": "Sınırsız Proje",
-        "description": "Tüm premium özelliklere sınırsız erişim alın ve hızlıca inşa etmeye başlayın. Sınırsız projede kullanabilirsiniz."
+      "feature1": {
+        "title": "Özellik 1",
+        "description": "Özellik Açıklaması 1"
       },
-      "iap": {
-        "title": "In App Purchases",
-        "description": "RevenueCat kurulumu için günlerinizi harcamayın. Ürünü belirleyin ve hazır Paywall üzerinden satışa sunun."
+      "feature2": {
+        "title": "Özellik 2",
+        "description": "Özellik Açıklaması 2"
       },
-      "admob": {
-        "title": "Admob",
-        "description": "Uygulamanızda Google Ads ile para kazanın. Sadece bir satır kodla."
+      "feature3": {
+        "title": "Özellik 3",
+        "description": "Özellik Açıklaması 3"
       },
-      "pf": {
-        "title": "Özel Oluşturulmuş +20 Premium Ekranlar",
-        "description": "Chat (Whatsapp stili), Swipe Up (Tiktok stili), Mini Blog (Kroko stili), AI Chatbot (ChatGPT stili), Swipe Cards (Tinder stili), Camera App (Snapchat stili), Auth Flow, Search ile Overlay, Profiller, Ayarlar, Hesabı sil, vb. Tümü çok hızlı proje çıkarabilmen için.."
+      "feature4": {
+        "title": "Özellik 4",
+        "description": "Özellik Açıklaması 4"
       },
-      "i18n": {
-        "title": "i18n (Çoklu Dil Desteği)",
-        "description": "Sadece çevirilerinizi hazırlayın. Hangi dilleri istiyorsunuz?"
-      },
-      "themes": {
-        "title": "Temalar",
-        "description": "Açık / Koyu / Sistem Tema Değiştirici"
-      },
-      "notifications": {
-        "title": "Bildirimler",
-        "description": "Push Notifications with Expo Push Notification"
-      },
-      "auth": {
-        "title": "Auth Akışı",
-        "description": "Giriş yap, kayıt ol, şifre sıfırlama, e-posta doğrulama, hepsi harika çalışıyor."
-      },
-      "onboarding": {
-        "title": "Onboarding",
-        "description": "Onboarding için günlerce uğraşmana gerek yok."
-      },
-      "settings": {
-        "title": "Ayarlar",
-        "description": "Her şey doğal görünümünde."
-      },
-      "ss": {
-        "title": "Sosyal Paylaşım",
-        "description": "Uygulamandaki özellikleri kullanıcılar IG veya FB'de paylaşabilirler."
-      },
-      "sentry": {
-        "title": "Sentry",
-        "description": "Hataları yakalayın ve izleyin."
-      },
-      "segments": {
-        "title": "Posthog",
-        "description": "Kullanıcılarınızın davranışlarını izleyin ve analiz edin."
-      },
-      "cc": {
-        "title": "Özel Bileşenler",
-        "description": "Tüm bileşenler çok özelleştirilebilir. Renkleri, stilleri ve daha fazlasını kolayca değiştirebilirsiniz. Bu butonlar internette yok. Çünkü olsaydı yapmak zorunda kalmazdım."
+      "feature5": {
+        "title": "Özellik 5",
+        "description": "Özellik Açıklaması 5"
       }
     }
   },
@@ -207,7 +173,7 @@
       "deleteButton": "Hesabı sil",
       "reasons": {
         "privacy": "Gizlilik",
-        "dissatisfaction": "Memnuniyetsizlik",
+        "dissatisfaction": "Beğenmedim",
         "tooManyAds": "Çok fazla reklam",
         "competition": "Rekabet",
         "tooManyNotifications": "Çok fazla bildirim",

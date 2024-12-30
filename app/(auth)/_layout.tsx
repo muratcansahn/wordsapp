@@ -10,7 +10,7 @@ const AuthLayout = () => {
         name="(modals)"
         options={{ presentation: 'fullScreenModal' }}
       />
-      {/* You can pick one or how many you want and delete this code 👇 */}
+      {/* You can delete this code 👇 */}
       <Stack.Screen name="(features)" />
     </Stack>
   );

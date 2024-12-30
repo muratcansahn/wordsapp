@@ -19,13 +19,13 @@ import {
 import { Colors } from '@/constants/Colors';
 
 export default function ShareModal() {
-  const colors = ['#FAFF00', '#000'];
+  const colors = ['#FAFF00', '#000000'];
   const viewShotRef = useRef<ViewShot | null>(null);
 
   const CuulShareScreen = () => (
     <ThemedView style={styles.container}>
       <LinearGradient
-        colors={colors}
+        colors={colors as [string, string]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={[styles.gradientBackground]}
@@ -117,11 +117,11 @@ const styles = StyleSheet.create({
   },
   userFullName: {
     fontSize: FONT_SIZE.lg,
-    color: 'white',
+    color: Colors.light.white,
     fontWeight: 'bold',
   },
   username: {
-    color: '#eee',
+    color: Colors.light.white,
     fontSize: FONT_SIZE.sm,
   },
   footer: {

@@ -7,13 +7,15 @@ import React, {
 } from 'react';
 import { Session, User, AuthError, UserMetadata } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import Toast from 'react-native-root-toast';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '../constants/Colors';
 import { parseSupabaseUrl, showToast } from '../helpers/app-functions';
 import * as Linking from 'expo-linking';
+
+// TODO: Uncomment GoogleSignin 🔥
+// import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 type AuthContextType = {
   user: UserMetadata | null;
@@ -36,11 +38,12 @@ type AuthContextType = {
   setNewPassword: (password: string) => Promise<void>;
 };
 
-// Initialize Google Sign-In
-GoogleSignin.configure({
-  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID,
-  webClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID,
-});
+// TODO: 1.Uncomment GoogleSignin 🔥
+//!! This doesn't work on web and EXPO GO.
+// GoogleSignin.configure({
+//   iosClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID,
+//   webClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID,
+// });
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<React.PropsWithChildren> = ({
@@ -173,19 +176,20 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
     );
     try {
       setIsLoading(true);
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      const idToken = userInfo.data?.idToken;
-      if (idToken) {
-        await handleAuthAction(
-          () =>
-            supabase.auth.signInWithIdToken({
-              provider: 'google',
-              token: idToken,
-            }),
-          t('auth.signingInWithGoogle')
-        );
-      }
+      // TODO: 2. Uncomment this 👇:
+      // await GoogleSignin.hasPlayServices();
+      // const userInfo = await GoogleSignin.signIn();
+      // const idToken = userInfo.data?.idToken;
+      // if (idToken) {
+      //   await handleAuthAction(
+      //     () =>
+      //       supabase.auth.signInWithIdToken({
+      //         provider: 'google',
+      //         token: idToken,
+      //       }),
+      //     t('auth.signingInWithGoogle')
+      //   );
+      // }
     } catch (error: any) {
       handleError(error);
       setIsAuthenticated(false);
@@ -218,7 +222,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
             provider: 'apple',
             token: credential.identityToken ?? '',
           }),
-        'auth.signingInWithApple'
+        t('auth.signingInWithApple')
       );
     } catch (error) {
       handleError(error as Error);

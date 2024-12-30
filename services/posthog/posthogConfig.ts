@@ -5,7 +5,7 @@ export const posthog = new PostHog(
   {
     host: process.env.EXPO_PUBLIC_POSTHOG_HOST as string,
 
-    // If you want to use Session Replay, uncomment the following lines 👇
+    // 1. If you want to use Session Replay, uncomment the following lines 👇
     // enableSessionReplay: true,
     // sessionReplayConfig: {
     //   // Whether text inputs are masked. Default is true.

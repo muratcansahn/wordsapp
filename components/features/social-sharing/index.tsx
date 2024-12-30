@@ -7,77 +7,104 @@ import { ThemedText } from '@/components/common/typography';
 import { Href, useRouter } from 'expo-router';
 import { ThemedView } from '@/components/common/view';
 import { Image } from 'expo-image';
-import { RainbowButton } from '@/components/common/buttons/rainbow/rainbow-button';
 import {
+  ANIMATION_DURATION,
   BORDER_RADIUS,
+  BUTTON_HEIGHT,
   FLEX,
   ICON_SIZE,
   MARGIN,
   PADDING,
+  ScreenWidth,
+  Z_INDEX,
 } from '@/constants/AppConstants';
+import AnimatedBorderButton from '@/components/common/buttons/animated-border-button';
+import PressableOpacity from '@/components/common/buttons/pressable-opacity';
 
 const SocialShareButton: React.FC<{
   icon: React.ReactNode;
   text: string;
-  colors: string[];
+  color: string;
   onPress: () => void;
-}> = ({ icon, text, colors, onPress }) => {
+  duration?: number;
+  height?: number;
+  borderRadius?: number;
+}> = ({
+  icon,
+  text,
+  color,
+  onPress,
+  duration = ANIMATION_DURATION.D30,
+  height = BUTTON_HEIGHT.md,
+  borderRadius = BORDER_RADIUS.sm,
+}) => {
   const { mode } = useTheme();
 
   return (
-    <RainbowButton
-      onPress={onPress}
-      style={styles.socialButton}
-      buttonStyle={styles.socialButtonContent}
-      colors={[...colors, Colors[mode].button]}
-      height={80}
-      borderRadius={20}
+    <AnimatedBorderButton
+      height={height}
+      borderRadius={borderRadius}
+      delayInAnimation={duration}
+      pathColor={Colors[mode].borderColor}
+      innerContainerColor={Colors[mode].background}
+      sliderColor={color}
+      width={ScreenWidth - 40}
+      sliderHeight={3}
     >
-      {icon}
-      <ThemedText style={[styles.socialButtonText, { color: colors[1] }]}>
-        {text}
-      </ThemedText>
-    </RainbowButton>
+      <PressableOpacity style={styles.socialButtonView} onPress={onPress}>
+        {icon}
+        <ThemedText
+          style={[styles.socialButtonText, { color: Colors[mode].text }]}
+        >
+          {text}
+        </ThemedText>
+      </PressableOpacity>
+    </AnimatedBorderButton>
   );
 };
 
-const socialButtons = [
-  {
-    icon: <FontAwesome6 name="spotify" size={30} color="#1DB954" />,
-    text: 'Share Spotify Music',
-    colors: ['#1DB954', Colors.light.background, '#1ed760'],
-    route: '/(auth)/(modals)/share',
-  },
-  {
-    icon: (
-      <Image
-        source={require('@/assets/logos/cuul.png')}
-        style={{ width: 30, height: 30, borderRadius: 10 }}
-      />
-    ),
-    text: 'Share Cuul Story',
-    colors: ['#FAFF00', '#B2DE10'],
-    route: '/(auth)/(modals)/cuul',
-  },
-  {
-    icon: (
-      <Image
-        source={require('@/assets/logos/kroko.png')}
-        style={{ width: 30, height: 30, borderRadius: 10 }}
-      />
-    ),
-    text: 'Share Krok',
-    colors: ['#ff4e00', '#ff8900'],
-    route: '/(auth)/(modals)/kroko',
-  },
-];
-
 export default function SocialSharing() {
   const router = useRouter();
-
   const openBottomSheet = (route: string) => {
     router.push(route as Href);
   };
+
+  const socialButtons = [
+    {
+      icon: <FontAwesome6 name="spotify" size={30} color="#1DB954" />,
+      text: 'Share Spotify Music',
+      color: '#1DB954',
+      route: '/spotify',
+      height: BUTTON_HEIGHT.lg,
+      borderRadius: BORDER_RADIUS.sm,
+    },
+    {
+      icon: (
+        <Image
+          source={require('@/assets/logos/cuul.png')}
+          style={styles.logoImage}
+        />
+      ),
+      text: 'Share Cuul Story',
+      color: '#FAFF00',
+      route: '/cuul',
+      height: BUTTON_HEIGHT.lg,
+      borderRadius: BORDER_RADIUS.sm,
+    },
+    {
+      icon: (
+        <Image
+          source={require('@/assets/logos/kroko.png')}
+          style={styles.logoImage}
+        />
+      ),
+      text: 'Share Krok',
+      color: '#ff8900',
+      route: '/kroko',
+      height: BUTTON_HEIGHT.lg,
+      borderRadius: BORDER_RADIUS.sm,
+    },
+  ];
 
   return (
     <ThemedView style={styles.container}>
@@ -87,7 +114,9 @@ export default function SocialSharing() {
             key={index}
             icon={button.icon}
             text={button.text}
-            colors={button.colors}
+            height={button.height}
+            borderRadius={button.borderRadius}
+            color={button.color}
             onPress={() => openBottomSheet(button.route)}
           />
         ))}
@@ -102,6 +131,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: PADDING.md,
+    gap: MARGIN.lg,
   },
   socialButton: {
     marginBottom: MARGIN.lg,
@@ -110,8 +140,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  socialButtonView: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: Z_INDEX.one,
+    flex: 1,
+    justifyContent: 'center',
+  },
   socialButtonText: {
     marginLeft: MARGIN.lg,
+    zIndex: Z_INDEX.one,
+  },
+  blurView: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: BORDER_RADIUS.sm,
+    overflow: 'hidden',
+    zIndex: Z_INDEX.zero,
   },
   logoImage: {
     width: ICON_SIZE.md,

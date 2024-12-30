@@ -1,12 +1,12 @@
 import { StyleSheet } from 'react-native';
 import React from 'react';
 import { ThemedView } from '@/components/common/view';
-import Loader from '@/components/common/loader/native-loader';
+import LoaderLucide from '@/components/common/loader/loader-2';
 
 const LoadingScreen = () => {
   return (
     <ThemedView style={styles.container}>
-      <Loader />
+      <LoaderLucide size={24} />
     </ThemedView>
   );
 };

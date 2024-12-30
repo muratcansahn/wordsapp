@@ -6,12 +6,12 @@ import {
   ViewStyle,
   TextStyle,
   Platform,
-  ActivityIndicator,
 } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/hooks/theme/useTheme';
 import { BUTTON_HEIGHT, BORDER_RADIUS, MARGIN } from '@/constants/AppConstants';
+import LoaderLucide from '@/components/common/loader/loader-2';
 
 interface ButtonProps {
   onPress: () => void;
@@ -44,7 +44,7 @@ const Button: React.FC<ButtonProps> = ({
   const { mode } = useTheme();
   const renderContent = () => {
     if (loading) {
-      return <ActivityIndicator size={'small'} color={Colors[mode].text} />;
+      return <LoaderLucide size={24} />;
     }
 
     const iconElement = icon ? (

@@ -2,29 +2,17 @@
   "expo": {
     "name": "My App",
     "slug": "my-app",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "com.myapp.app",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
+    "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
       "associatedDomains": ["applinks:myapp.com"],
       "bundleIdentifier": "com.myapp.app",
-      "usesAppleSignIn": true,
-      "infoPlist": {
-        "LSApplicationQueriesSchemes": [
-          "instagram",
-          "instagram-stories",
-          "facebook",
-          "facebook-stories"
-        ]
-      }
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
@@ -70,11 +58,18 @@
         }
       ],
       [
-        "@react-native-google-signin/google-signin",
+        "expo-splash-screen",
         {
-          "iosUrlScheme": "com.googleusercontent.apps.some-id"
+          "backgroundColor": "#ffffff",
+          "image": "./assets/images/splash-icon.png",
+          "dark": {
+            "image": "./assets/images/splash-icon.png",
+            "backgroundColor": "#222222"
+          },
+          "imageWidth": 200
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

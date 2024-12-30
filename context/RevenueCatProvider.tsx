@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
+
 import Purchases, {
   PurchasesPackage,
   CustomerInfo,
@@ -17,6 +18,7 @@ interface RevenueCatContextType {
   initializeRevenueCat: () => Promise<void>;
   purchasePackage: (pack: PurchasesPackage) => Promise<string>;
   restorePurchases: () => Promise<CustomerInfo>;
+  isLoading: boolean;
 }
 
 const RevenueCatContext = createContext<RevenueCatContextType | undefined>(
@@ -29,6 +31,7 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null | undefined>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const initializeRevenueCat = async () => {
     try {
@@ -39,9 +42,10 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
       }
 
       const offerings = await Purchases.getOfferings();
+
       const availablePackages = offerings.current?.availablePackages || [];
       setPackages(availablePackages);
-      // Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
+      Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
       setIsReady(true);
       setError(null);
     } catch (err) {
@@ -50,6 +54,7 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
   };
 
   const purchasePackage = async (pack: PurchasesPackage) => {
+    setIsLoading(true);
     try {
       const purchase = await Purchases.purchasePackage(pack);
       setError(null);
@@ -57,10 +62,13 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const restorePurchases = async () => {
+    setIsLoading(true);
     try {
       const customer = await Purchases.restorePurchases();
       setError(null);
@@ -68,6 +76,8 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -82,6 +92,7 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
     initializeRevenueCat,
     purchasePackage,
     restorePurchases,
+    isLoading,
   };
 
   return (

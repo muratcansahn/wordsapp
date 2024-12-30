@@ -4,6 +4,7 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
+  View,
 } from 'react-native';
 import { useForm, SubmitHandler, FieldValues } from 'react-hook-form';
 import { Colors } from '@/constants/Colors';
@@ -23,16 +24,17 @@ import {
   ANIMATION_DURATION,
   BORDER_RADIUS,
   FONT_SIZE,
+  INPUT_HEIGHT,
 } from '@/constants/AppConstants';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/SupabaseProvider';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import ShinyButton from '@/components/common/buttons/shiny-button';
 import { AuthError } from '@supabase/supabase-js';
 import PressableOpacity from '@/components/common/buttons/pressable-opacity';
 import { useRouter } from 'expo-router';
-import { RainbowButton2 } from '@/components/common/buttons/rainbow/rainbow-button2';
-import LoadingScreen from '@/components/screen/loading';
+import AnimatedBorderButton from '@/components/common/buttons/animated-border-button';
+import LoaderLucide from '@/components/common/loader/loader-2';
+import { BlurView } from 'expo-blur';
 
 interface ForgotPasswordFormInputs extends FieldValues {
   password: string;
@@ -80,55 +82,60 @@ const NewPassword = () => {
       <ThemedView style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollViewContent}>
           <AnimatedImage
-            entering={FadeInDown.delay(ANIMATION_DURATION.D4)}
+            entering={FadeInDown.delay(ANIMATION_DURATION.D3)}
             source={require('@/assets/images/logo.png')}
             style={styles.logo}
           />
           <ThemedText type="title" style={styles.title}>
             {t('notFound')}
           </ThemedText>
-          <RainbowButton2
-            onPress={() => {
-              router.back();
-            }}
-            colors={[
-              Colors[mode].button,
-              Colors[mode].buttonInactive,
-              Colors[mode].error,
-            ]}
-            bgColor={Colors[mode].background}
-            borderRadius={BORDER_RADIUS.sm}
-            style={{
-              marginTop: MARGIN.lg,
-            }}
-          >
-            <ThemedText type="default">
-              {t('buttons.goToHomeScreen')}
-            </ThemedText>
-          </RainbowButton2>
+          <View style={styles.buttonContainer}>
+            <AnimatedBorderButton
+              borderRadius={BORDER_RADIUS.sm}
+              sliderColor={Colors[mode].primary}
+              innerContainerColor={Colors[mode].background}
+              pathColor={Colors[mode].button}
+              width={200}
+              sliderWidth={50}
+              sliderHeight={2}
+            >
+              <PressableOpacity
+                onPress={() => router.back()}
+                style={styles.button}
+              >
+                <ThemedText type="default">
+                  {t('buttons.goToHomeScreen')}
+                </ThemedText>
+              </PressableOpacity>
+            </AnimatedBorderButton>
+          </View>
         </ScrollView>
       </ThemedView>
     );
   }
 
   if (isLoading) {
-    return <LoadingScreen />;
+    return (
+      <ThemedView style={styles.loadingContainer}>
+        <LoaderLucide size={20} />
+      </ThemedView>
+    );
   }
 
   return (
     <ThemedView style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardAvoidingView}
       >
         <ScrollView contentContainerStyle={styles.scrollViewContent}>
           <AnimatedImage
-            entering={FadeInDown.delay(ANIMATION_DURATION.D4)}
+            entering={FadeInDown.delay(ANIMATION_DURATION.D3)}
             source={require('@/assets/images/logo.png')}
             style={styles.logo}
           />
           <Animated.View
-            entering={FadeInDown.delay(ANIMATION_DURATION.D5)}
+            entering={FadeInDown.delay(ANIMATION_DURATION.D4)}
             style={styles.textContainer}
           >
             <ThemedText type="title" style={styles.title}>
@@ -140,7 +147,7 @@ const NewPassword = () => {
           </Animated.View>
 
           <Animated.View
-            entering={FadeInDown.delay(ANIMATION_DURATION.D6)}
+            entering={FadeInDown.delay(ANIMATION_DURATION.D5)}
             style={styles.formContainer}
           >
             <FormField<ForgotPasswordFormInputs>
@@ -178,16 +185,34 @@ const NewPassword = () => {
               containerStyle={styles.input}
               error={errors.root?.message}
             />
-            <ShinyButton
+            <AnimatedBorderButton
               onPress={handleSubmit(onSubmit)}
-              buttonColor={Colors[mode].primary}
+              sliderColor={Colors[mode].primary}
               borderRadius={BORDER_RADIUS.sm}
-              bgColor={Colors[mode].backgroundOpacity}
+              pathColor={Colors[mode].button}
+              sliderHeight={4}
+              width={'100%'}
+              height={INPUT_HEIGHT.md}
+              sliderWidth={40}
+              innerContainerColor={Colors[mode].backgroundOpacity}
+              loading={isLoading}
             >
-              <ThemedText type="default" darkColor={Colors.light.white}>
-                {t('buttons.okay')}
-              </ThemedText>
-            </ShinyButton>
+              {Platform.OS === 'ios' ? (
+                <BlurView intensity={100} style={styles.blurView}>
+                  <View style={styles.buttonContainer}>
+                    <ThemedText type="default" darkColor={Colors.dark.white}>
+                      {t('buttons.send')}
+                    </ThemedText>
+                  </View>
+                </BlurView>
+              ) : (
+                <ThemedView style={styles.buttonContainer}>
+                  <ThemedText type="default" darkColor={Colors.dark.white}>
+                    {t('buttons.send')}
+                  </ThemedText>
+                </ThemedView>
+              )}
+            </AnimatedBorderButton>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -198,6 +223,11 @@ const NewPassword = () => {
 const styles = StyleSheet.create({
   container: {
     flex: FLEX.one,
+  },
+  loadingContainer: {
+    flex: FLEX.one,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   keyboardAvoidingView: {
     flex: FLEX.one,
@@ -211,16 +241,16 @@ const styles = StyleSheet.create({
     width: LOGO_SIZE.md,
     height: LOGO_SIZE.md,
     alignSelf: 'center',
-    marginBottom: MARGIN.xl,
+    marginBottom: MARGIN.lg,
   },
   textContainer: {
     alignItems: 'center',
     marginBottom: MARGIN.xl,
   },
   title: {
-    marginBottom: MARGIN.sm,
+    marginBottom: MARGIN.lg,
     textAlign: 'center',
-    fontSize: FONT_SIZE.xxxl,
+    fontSize: FONT_SIZE.xl,
   },
   description: {
     textAlign: 'center',
@@ -230,6 +260,22 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: MARGIN.lg,
+  },
+  button: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: FLEX.one,
+  },
+  buttonContainer: {
+    flex: FLEX.one,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  blurView: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
   },
 });
 

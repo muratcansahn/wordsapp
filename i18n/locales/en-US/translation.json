@@ -101,64 +101,30 @@
     "theme": "Theme"
   },
   "inAppPurchases": {
-    "title": "Try Ship Mobile Fast Pro \n for {{price}}",
-    "terms": "Features can change at any time. Payment will be charged to your App Store account. Renews at the full price after the introductory offer period. Your subscription will auto- renew at your selected interval until you cancel in App Store settings. Amount of the charge may change with notice. Cancel anytime. By tapping 'App Store', you agree to the ShipMobileFast+ Subscription Terms and the auto-renewal.",
+    "title": "Try Ship Mobile Fast Pro",
+    "subtitle": "More messages on our most powerful model with premium features",
+    "info": "Auto renews for {{price}} / {{period}}. Cancel anytime. Includes 7-day money back guarantee.",
+    "lifetime-info": "Lifetime access for {{price}}. Includes 7-day money back guarantee.",
     "cards": {
-      "ua": {
-        "title": "Unlimited Projects",
-        "description": "Get unlimited access to all premium features and start building super fastly. You can use it unlimited times."
+      "feature1": {
+        "title": "Feature Title 1",
+        "description": "Feature Description 1"
       },
-      "iap": {
-        "title": "In App Purchases",
-        "description": "Save couple of days for implementing In App Purchases. You can sell anything in your app. Such as subscriptions, one-time purchases, consumable items, etc."
+      "feature2": {
+        "title": "Feature Title 2",
+        "description": "Feature Description 2"
       },
-      "admob": {
-        "title": "Admob",
-        "description": "Make money with Google Ads in your app with just one line code."
+      "feature3": {
+        "title": "Feature Title 3",
+        "description": "Feature Description 3"
       },
-      "pf": {
-        "title": "Custom Built +20 Premium Screens",
-        "description": "Chat (Whatsapp style), Swipe Up (Tiktok style), Mini Blog (Kroko style), AI Chatbot (Claude style), Swipe Cards (Tinder style), Camera App (Snapchat style), Auth Flow, Search with Overlay, Profiles, Settings, Delete Account, etc. All custom built for you."
+      "feature4": {
+        "title": "Feature Title 4",
+        "description": "Feature Description 4"
       },
-      "i18n": {
-        "title": "i18n (Internationalization)",
-        "description": "Internationalization with Expo Localization"
-      },
-      "themes": {
-        "title": "Themes",
-        "description": "Light / Dark / System Theme Switcher"
-      },
-      "notifications": {
-        "title": "Notifications",
-        "description": "Push Notifications with Expo Push Notification"
-      },
-      "auth": {
-        "title": "Authentication",
-        "description": "Save couple of days for implementing Authentication."
-      },
-      "onboarding": {
-        "title": "Onboarding",
-        "description": "Save couple of days for implementing Onboarding."
-      },
-      "settings": {
-        "title": "Settings",
-        "description": "Native Look Settings Screen"
-      },
-      "ss": {
-        "title": "Share Socials",
-        "description": "Save couple of days for implementing Share Socials. Such as Facebook Story or Instagram Story"
-      },
-      "sentry": {
-        "title": "Sentry",
-        "description": "Error handling and monitoring."
-      },
-      "segments": {
-        "title": "Segments",
-        "description": "Data Segmentation for your app."
-      },
-      "cc": {
-        "title": "Custom Components",
-        "description": "All built in components are highly customizable. You can easily change the colors, styles, and more. You can not find this buttons on internet. Because if exists, I wasn't built myself."
+      "feature5": {
+        "title": "Feature Title 5",
+        "description": "Feature Description 5"
       }
     }
   },

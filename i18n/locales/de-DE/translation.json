@@ -100,64 +100,30 @@
     "theme": "Design"
   },
   "inAppPurchases": {
-    "title": "Probieren Sie Ship Mobile Fast Pro \n für {{price}}",
-    "terms": "Funktionen können sich jederzeit ändern. Die Zahlung wird Ihrem App Store-Konto belastet. Verlängert sich nach Ablauf des Einführungsangebots zum vollen Preis. Ihr Abonnement verlängert sich automatisch in dem von Ihnen gewählten Intervall, bis Sie es in den App Store-Einstellungen kündigen. Der Betrag der Belastung kann sich mit Ankündigung ändern. Jederzeit kündbar. Durch Tippen auf 'App Store' stimmen Sie den ShipMobileFast+ Abonnementbedingungen und der automatischen Verlängerung zu.",
+    "title": "Probieren Sie Ship Mobile Fast Pro",
+    "subtitle": "Mehr Nachrichten auf unserem leistungsstärksten Modell mit Premium-Funktionen",
+    "info": "Läuft automatisch weiter für {{price}} pro {{period}}. Kannst jederzeit stornieren. Kriegst dein Geld 7 Tage zurück, ist safe.",
+    "lifetime-info": "Läuft automatisch weiter für {{price}} pro {{period}}. Kannst jederzeit stornieren. Kriegst dein Geld 7 Tage zurück, ist safe.",
     "cards": {
-      "ua": {
-        "title": "Unbegrenzte Projekte",
-        "description": "Erhalten Sie unbegrenzten Zugriff auf alle Premium-Funktionen und beginnen Sie schnell mit dem Aufbau. Sie können es in unbegrenzten Projekten verwenden."
+      "feature1": {
+        "title": "Feature Title 1",
+        "description": "Feature Description 1"
       },
-      "iap": {
-        "title": "In-App-Käufe",
-        "description": "Verschwenden Sie nicht Tage mit dem RevenueCat-Setup. Definieren Sie das Produkt und bieten Sie es über die vorgefertigte Paywall zum Verkauf an."
+      "feature2": {
+        "title": "Feature Title 2",
+        "description": "Feature Description 2"
       },
-      "admob": {
-        "title": "Admob",
-        "description": "Monetarisieren Sie Ihre App mit Google Ads. Mit nur einer Zeile Code."
+      "feature3": {
+        "title": "Feature Title 3",
+        "description": "Feature Description 3"
       },
-      "pf": {
-        "title": "Speziell erstellte +20 Premium-Bildschirme",
-        "description": "Chat (Whatsapp-Stil), Swipe Up (TikTok-Stil), Mini-Blog (Kroko-Stil), AI Chatbot (ChatGPT-Stil), Swipe Cards (Tinder-Stil), Kamera-App (Snapchat-Stil), Authentifizierungsablauf, Suche mit Overlay, Profile, Einstellungen, Konto löschen usw. Alles für Ihre schnelle Projektentwicklung.."
+      "feature4": {
+        "title": "Feature Title 4",
+        "description": "Feature Description 4"
       },
-      "i18n": {
-        "title": "i18n (Mehrsprachige Unterstützung)",
-        "description": "Bereiten Sie einfach Ihre Übersetzungen vor. Welche Sprachen möchten Sie?"
-      },
-      "themes": {
-        "title": "Designs",
-        "description": "Hell / Dunkel / System-Design-Wechsler"
-      },
-      "notifications": {
-        "title": "Benachrichtigungen",
-        "description": "Push-Benachrichtigungen mit Expo Push Notification"
-      },
-      "auth": {
-        "title": "Authentifizierungsablauf",
-        "description": "Anmelden, Registrieren, Passwort zurücksetzen, E-Mail-Verifizierung, alles funktioniert großartig."
-      },
-      "onboarding": {
-        "title": "Onboarding",
-        "description": "Sie müssen sich nicht tagelang mit dem Onboarding herumschlagen."
-      },
-      "settings": {
-        "title": "Einstellungen",
-        "description": "Alles sieht natürlich aus."
-      },
-      "ss": {
-        "title": "Soziales Teilen",
-        "description": "Benutzer können Funktionen aus Ihrer App auf IG oder FB teilen."
-      },
-      "sentry": {
-        "title": "Sentry",
-        "description": "Erfassen und verfolgen Sie Fehler."
-      },
-      "segments": {
-        "title": "Posthog",
-        "description": "Verfolgen und analysieren Sie das Verhalten Ihrer Benutzer."
-      },
-      "cc": {
-        "title": "Benutzerdefinierte Komponenten",
-        "description": "Alle Komponenten sind hochgradig anpassbar. Sie können Farben, Stile und mehr einfach ändern. Diese Schaltflächen gibt es nicht im Internet. Denn wenn es sie gäbe, hätte ich sie nicht machen müssen."
+      "feature5": {
+        "title": "Feature Title 5",
+        "description": "Feature Description 5"
       }
     }
   },

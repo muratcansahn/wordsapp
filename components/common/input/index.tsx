@@ -9,6 +9,7 @@ import {
   TextInputProps,
   NativeSyntheticEvent,
   TextInputFocusEventData,
+  TextStyle,
 } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -33,7 +34,7 @@ interface InputProps extends TextInputProps {
   rightIcon?: React.ReactNode;
   error?: string;
   containerStyle?: ViewStyle;
-  inputStyle?: ViewStyle;
+  inputStyle?: TextStyle;
   leftIconStyle?: ViewStyle;
   rightIconStyle?: ViewStyle;
   fontSize?: number;
@@ -150,7 +151,6 @@ const Input = forwardRef<TextInput, InputProps>((props, ref) => {
             keyboardAppearance={mode}
             placeholder={restProps.placeholder || ''}
             clearButtonMode="while-editing"
-            blurOnSubmit={true}
             {...restProps}
           />
           {rightIcon && (

@@ -8,7 +8,7 @@ import { ThemedText } from '@/components/common/typography';
 import { useTheme } from '@/hooks/theme/useTheme';
 import { useForm, SubmitHandler, FieldValues } from 'react-hook-form';
 import FormField from '@/components/common/form-field';
-import { ICON_SIZE } from '@/constants/AppConstants';
+import { ANIMATION_DURATION, ICON_SIZE } from '@/constants/AppConstants';
 import { useAuth } from '@/context/SupabaseProvider';
 import { useRouter } from 'expo-router';
 import Button from '@/components/common/buttons/button';
@@ -69,7 +69,7 @@ const SignUpWithEmail = () => {
       >
         <ThemedView style={authStyles.imageTitleContainer}>
           <AnimatedImage
-            entering={FadeInDown.delay(200)}
+            entering={FadeInDown.duration(ANIMATION_DURATION.D3)}
             source={require('@/assets/images/logo.png')}
             style={authStyles.logo}
           />
@@ -79,7 +79,7 @@ const SignUpWithEmail = () => {
         </ThemedView>
 
         <ThemedView style={authStyles.viewContainer}>
-          <Animated.View entering={FadeInDown.delay(250)}>
+          <Animated.View entering={FadeInDown.duration(ANIMATION_DURATION.D4)}>
             <FormField<SignUpFormInputs>
               name="email"
               control={control}
@@ -104,7 +104,7 @@ const SignUpWithEmail = () => {
             />
           </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(300)}>
+          <Animated.View entering={FadeInDown.duration(ANIMATION_DURATION.D5)}>
             <FormField<SignUpFormInputs>
               name="password"
               control={control}
@@ -131,9 +131,9 @@ const SignUpWithEmail = () => {
             />
           </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(350)}>
+          <Animated.View entering={FadeInDown.duration(ANIMATION_DURATION.D6)}>
             <ExternalLink
-              href="https://shipmobilefast.com/en/privacy-policy"
+              href="https://shipmobilefast.com/privacy-policy"
               style={authStyles.linkText}
             >
               <ThemedText
@@ -147,7 +147,9 @@ const SignUpWithEmail = () => {
           </Animated.View>
 
           <ThemedView style={authStyles.buttonWrapper}>
-            <Animated.View entering={FadeInDown.delay(400)}>
+            <Animated.View
+              entering={FadeInDown.duration(ANIMATION_DURATION.D7)}
+            >
               <Button
                 onPress={handleSubmit(onSubmit)}
                 disabled={isLoading}
@@ -166,11 +168,11 @@ const SignUpWithEmail = () => {
             </Animated.View>
           </ThemedView>
 
-          <Animated.View entering={FadeInDown.delay(450)}>
+          <Animated.View entering={FadeInDown.duration(ANIMATION_DURATION.D8)}>
             <ThemedText style={authStyles.orText}>{t('auth.or')}</ThemedText>
           </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(500)}>
+          <Animated.View entering={FadeInDown.duration(ANIMATION_DURATION.D9)}>
             <AuthButton
               onPress={signInWithGoogle}
               icon="logo-google"
@@ -181,7 +183,9 @@ const SignUpWithEmail = () => {
           </Animated.View>
 
           {Platform.OS === 'ios' && (
-            <Animated.View entering={FadeInDown.delay(550)}>
+            <Animated.View
+              entering={FadeInDown.duration(ANIMATION_DURATION.D10)}
+            >
               <AuthButton
                 onPress={signInWithApple}
                 icon="logo-apple"
@@ -193,7 +197,7 @@ const SignUpWithEmail = () => {
           )}
 
           <Animated.View
-            entering={FadeInDown.delay(600)}
+            entering={FadeInDown.duration(ANIMATION_DURATION.D11)}
             style={authStyles.bottomText}
           >
             <PressableOpacity

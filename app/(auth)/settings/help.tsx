@@ -4,16 +4,19 @@ import { useTranslation } from 'react-i18next';
 import { ThemedView } from '@/components/common/view';
 import { ThemedText } from '@/components/common/typography';
 import { Collapsible } from '@/components/common/collapsible';
-import Button from '@/components/common/buttons/button';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
 import {
-  BORDER_RADIUS,
+  BUTTON_HEIGHT,
+  BUTTON_WIDTH,
   FLEX,
   FONT_SIZE,
   MARGIN,
   PADDING,
 } from '@/constants/AppConstants';
+import { GlowButton } from '@/components/common/buttons/glow-button';
+import Container from '@/components/common/container';
+import { Mail } from 'lucide-react-native';
 
 const HelpScreen = () => {
   const { t } = useTranslation();
@@ -30,11 +33,16 @@ const HelpScreen = () => {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView style={styles.container}>
-        <ThemedText style={styles.header} type="title">
-          {t('settings.help.title')}
-        </ThemedText>
+    <Container
+      edges={['bottom']}
+      bgColor={Colors[mode].background}
+      style={styles.container}
+    >
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         <ThemedText style={styles.description}>
           {t('settings.help.description')}
         </ThemedText>
@@ -46,54 +54,51 @@ const HelpScreen = () => {
             </Collapsible>
           </ThemedView>
         ))}
-
-        <Button
-          style={styles.button}
-          onPress={handleContactSupport}
-          bgColor={Colors[mode].primary}
-          textStyle={styles.buttonText}
-        >
-          <ThemedText style={styles.buttonText} darkColor="black">
-            {t('settings.help.contactSupport')}
-          </ThemedText>
-        </Button>
       </ScrollView>
-    </ThemedView>
+      <ThemedView style={styles.buttonContainer}>
+        <GlowButton
+          onPress={handleContactSupport}
+          bgColor={Colors[mode].background}
+          colors={[
+            Colors[mode].background,
+            Colors[mode].primary,
+            Colors[mode].background,
+          ]}
+          width={BUTTON_WIDTH.lg}
+          height={BUTTON_HEIGHT.lg}
+        >
+          <Mail size={36} color={Colors[mode].text} />
+        </GlowButton>
+      </ThemedView>
+    </Container>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: FLEX.one,
-    padding: PADDING.sm,
+    flexGrow: FLEX.one,
+    paddingHorizontal: PADDING.md,
   },
-  header: {
-    fontSize: FONT_SIZE.xxxl,
-    marginBottom: MARGIN.lg,
+  scrollView: {
+    flexGrow: FLEX.one,
+    paddingTop: PADDING.md,
   },
   description: {
-    fontSize: FONT_SIZE.md,
     marginBottom: MARGIN.xl,
   },
   faqContainer: {
-    marginBottom: MARGIN.lg,
+    marginBottom: MARGIN.md,
   },
   question: {
     fontSize: FONT_SIZE.md,
-    fontWeight: 'bold',
   },
   answer: {
     fontSize: FONT_SIZE.md,
     marginTop: MARGIN.sm,
   },
-  button: {
-    marginTop: MARGIN.xl,
-    padding: PADDING.md,
-    borderRadius: BORDER_RADIUS.sm,
-    alignItems: 'center',
-  },
-  buttonText: {
-    fontSize: FONT_SIZE.md,
+  buttonContainer: {
+    alignSelf: 'center',
+    marginBottom: MARGIN.xl,
   },
 });
 

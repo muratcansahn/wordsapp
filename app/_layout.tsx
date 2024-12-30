@@ -1,4 +1,7 @@
-//! --Expo Development Build Required--
+//! -- You can start with Expo Go --
+// If you want to use Admob, RevenueCat, Google Sign In and Share Social, you need to create a development build.
+// This won't work on Expo Go.
+
 import { ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Slot, Stack, useRouter, useSegments } from 'expo-router';
@@ -16,6 +19,7 @@ import { usePushNotification } from '@/hooks/usePushNotification';
 import { useTheme } from '@/hooks/theme/useTheme';
 import { RootSiblingParent } from 'react-native-root-siblings';
 import { AuthProvider, useAuth } from '@/context/SupabaseProvider';
+import { FLEX } from '@/constants/AppConstants';
 
 //* If you want to use RevenueCat, uncomment the following lines 👇
 // import {
@@ -23,15 +27,25 @@ import { AuthProvider, useAuth } from '@/context/SupabaseProvider';
 //   useRevenueCat,
 // } from '@/context/RevenueCatProvider';
 
+//* If you want to use Admob, uncomment the following lines 👇
+// import { useAdmob } from '@/hooks/useAdmob';
+
+//* If you want to use PostHog, uncomment the following lines 👇
+// import { PostHogProvider } from 'posthog-react-native';
+// import { posthog } from '@/services/posthog/posthogConfig';
+
 SplashScreen.preventAutoHideAsync();
 
 function MainLayout() {
   usePushNotification();
-  const { statusBarStyle, theme } = useTheme();
+  const { statusBarStyle, statusBarBackgroundColor, theme } = useTheme();
+
   //* If you want to use RevenueCat, uncomment the following lines 👇
   // const { initializeRevenueCat } = useRevenueCat();
-  const segments = useSegments();
+  //* If you want to use Admob, uncomment the following lines 👇
+  // const { admobState, initializeAdmobService } = useAdmob();
 
+  const segments = useSegments();
   const router = useRouter();
   const { session, initialized } = useAuth();
   const [loaded] = useFonts({
@@ -42,11 +56,13 @@ function MainLayout() {
   useEffect(() => {
     // Get user tracking permission
     // This function is important for compliance with privacy regulations
+    //* If you want to use Admob, uncomment the following lines 👇
+    // initializeAdmobService();
     // Dont remove it , because Apple will reject the app if this is not implemented
     // You should configure this function according to your needs.
     getUserTrackingPermission();
-    // If you don't need In App Purchases, remove this line and react-native-purchases package too. 👇
-    //* initializeRevenueCat();
+    //* If you want to use RevenueCat, uncomment the following lines 👇
+    // initializeRevenueCat();
   }, []);
 
   useEffect(() => {
@@ -73,8 +89,12 @@ function MainLayout() {
 
   return (
     <ThemeProvider value={theme}>
-      <StatusBar style={statusBarStyle} animated={true} />
-      <Stack screenOptions={{ headerShown: false }} initialRouteName="(auth)">
+      <StatusBar
+        style={statusBarStyle}
+        animated={true}
+        backgroundColor={statusBarBackgroundColor}
+      />
+      <Stack initialRouteName="(auth)" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(no-auth)" />
         <Stack.Screen
@@ -90,9 +110,10 @@ function MainLayout() {
 const RootLayout = () => {
   return (
     <Provider store={store}>
+      {/* <PostHogProvider client={posthog}> */}
       <AuthProvider>
         {/* <RevenueCatProvider> */}
-        <GestureHandlerRootView style={{ flex: 1 }}>
+        <GestureHandlerRootView style={{ flex: FLEX.one }}>
           <BottomSheetModalProvider>
             <RootSiblingParent>
               <MainLayout />
@@ -101,12 +122,9 @@ const RootLayout = () => {
         </GestureHandlerRootView>
         {/* </RevenueCatProvider> */}
       </AuthProvider>
+      {/* </PostHogProvider> */}
     </Provider>
   );
 };
 
-// If you are using Sentry, wrap your RootLayout in Sentry.wrap
-// export default Sentry.wrap(RootLayout);
-
-// or if you are not using Sentry, 👇
 export default RootLayout;
