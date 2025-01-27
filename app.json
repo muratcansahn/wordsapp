@@ -1,17 +1,19 @@
 {
   "expo": {
-    "name": "My App",
-    "slug": "my-app",
+    "name": "Deneme v1",
+    "slug": "deneme-v1",
     "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "com.myapp.app",
+    "scheme": "com.deneme-v1.app",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
-      "associatedDomains": ["applinks:myapp.com"],
-      "bundleIdentifier": "com.myapp.app",
+      "associatedDomains": [
+        "applinks:myapp.com"
+      ],
+      "bundleIdentifier": "deneme-v1.app",
       "usesAppleSignIn": true
     },
     "android": {
@@ -19,23 +21,23 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#fff"
       },
-      "package": "com.myapp.app",
-      "permissions": ["com.google.android.gms.permission.AD_ID"],
+      "package": "com.muratcansahn.denemev1",
+      "permissions": [
+        "com.google.android.gms.permission.AD_ID"
+      ],
       "intentFilters": [
         {
           "action": "VIEW",
           "autoVerify": true,
           "data": [
             {
-              "scheme": "https",
-              "host": "myapp.com",
-              "pathPrefix": "/"
-            },
-            {
-              "scheme": "com.myapp.app"
+              "scheme": "com.deneme-v1.app"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -73,6 +75,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "34c34389-80f1-43c6-8e20-7f377050f0c4"
+      }
     }
   }
 }

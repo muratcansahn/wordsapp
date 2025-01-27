@@ -14,8 +14,7 @@ import { Colors } from '../constants/Colors';
 import { parseSupabaseUrl, showToast } from '../helpers/app-functions';
 import * as Linking from 'expo-linking';
 
-// TODO: Uncomment GoogleSignin 🔥
-// import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 type AuthContextType = {
   user: UserMetadata | null;
@@ -39,11 +38,11 @@ type AuthContextType = {
 };
 
 // TODO: 1.Uncomment GoogleSignin 🔥
-//!! This doesn't work on web and EXPO GO.
-// GoogleSignin.configure({
-//   iosClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID,
-//   webClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID,
-// });
+// !! This doesn't work on web and EXPO GO.
+GoogleSignin.configure({
+  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID,
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID,
+});
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<React.PropsWithChildren> = ({
@@ -169,6 +168,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
   );
 
   const signInWithGoogle = useCallback(async () => {
+    console.log("here")
     const toast = showToast(
       t('auth.signingInWithGoogle'),
       false,
@@ -177,19 +177,19 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
     try {
       setIsLoading(true);
       // TODO: 2. Uncomment this 👇:
-      // await GoogleSignin.hasPlayServices();
-      // const userInfo = await GoogleSignin.signIn();
-      // const idToken = userInfo.data?.idToken;
-      // if (idToken) {
-      //   await handleAuthAction(
-      //     () =>
-      //       supabase.auth.signInWithIdToken({
-      //         provider: 'google',
-      //         token: idToken,
-      //       }),
-      //     t('auth.signingInWithGoogle')
-      //   );
-      // }
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      const idToken = userInfo.data?.idToken;
+      if (idToken) {
+        await handleAuthAction(
+          () =>
+            supabase.auth.signInWithIdToken({
+              provider: 'google',
+              token: idToken,
+            }),
+          t('auth.signingInWithGoogle')
+        );
+      }
     } catch (error: any) {
       handleError(error);
       setIsAuthenticated(false);
