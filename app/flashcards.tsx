@@ -246,33 +246,38 @@ export default function FlashcardsScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.screenTitle}>Kelime Listeleri</Text>
-          <Text style={styles.screenSubtitle}>Çalışmak istediğiniz listeyi seçin</Text>
+          <View>
+            <Text style={styles.screenTitle}>Kelime Listeleri</Text>
+            <Text style={styles.screenSubtitle}>Çalışmak istediğiniz listeyi seçin</Text>
+          </View>
+          <View style={styles.levelContainer}>
+            {['B1', 'B2', 'C1'].map((level) => (
+              <TouchableOpacity
+                key={level}
+                style={[
+                  styles.levelBadge,
+                  selectedLevel === level && styles.levelBadgeActive,
+                ]}
+                onPress={() => setSelectedLevel(level)}
+              >
+                <Text
+                  style={[
+                    styles.levelText,
+                    selectedLevel === level && styles.levelTextActive,
+                  ]}
+                >
+                  {level}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.levelScroll}>
-          {['B1', 'B2', 'C1'].map((level) => (
-            <TouchableOpacity
-              key={level}
-              style={[
-                styles.levelBadge,
-                selectedLevel === level && styles.levelBadgeActive,
-              ]}
-              onPress={() => setSelectedLevel(level)}
-            >
-              <Text
-                style={[
-                  styles.levelText,
-                  selectedLevel === level && styles.levelTextActive,
-                ]}
-              >
-                {level}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        <ScrollView style={styles.listContainer}>
+        <ScrollView 
+          style={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContentContainer}
+        >
           {WORD_LISTS
             .filter((list) => list.level === selectedLevel)
             .map((list) => (
@@ -283,21 +288,34 @@ export default function FlashcardsScreen() {
               >
                 <View style={styles.listCardContent}>
                   <View style={styles.listIconContainer}>
-                    <Icon name={list.title.includes('İş') ? 'briefcase-outline' : list.title.includes('Günlük') ? 'chat-outline' : 'school-outline'} size={24} color="#1976d2" />
+                    <Icon 
+                      name={
+                        list.title.includes('İş') 
+                          ? 'briefcase-outline' 
+                          : list.title.includes('Günlük') 
+                          ? 'chat-outline' 
+                          : 'school-outline'
+                      } 
+                      size={22} 
+                      color="#1976d2" 
+                    />
                   </View>
                   <View style={styles.listTextContainer}>
                     <Text style={styles.listTitle}>{list.title}</Text>
                     <Text style={styles.listSubtitle}>{list.subtitle}</Text>
                     <View style={styles.listInfoRow}>
                       <View style={styles.listInfoItem}>
-                        <Icon name="cards" size={16} color="#666" />
+                        <Icon name="cards" size={14} color="#666" />
                         <Text style={styles.listInfoText}>{list.cards.length} kelime</Text>
                       </View>
                       <View style={styles.listInfoItem}>
-                        <Icon name="clock-outline" size={16} color="#666" />
+                        <Icon name="clock-outline" size={14} color="#666" />
                         <Text style={styles.listInfoText}>~{Math.ceil(list.cards.length * 0.5)} dk</Text>
                       </View>
                     </View>
+                  </View>
+                  <View style={styles.listArrowContainer}>
+                    <Icon name="chevron-right" size={20} color="#999" />
                   </View>
                 </View>
               </TouchableOpacity>
@@ -417,35 +435,114 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingTop: 40,
+    paddingTop: 16,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
+  screenTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#1a1a1a',
+    marginBottom: 4,
   },
-  headerSubtitle: {
+  screenSubtitle: {
     fontSize: 14,
     color: '#666',
-    marginTop: 4,
+    marginBottom: 12,
+  },
+  levelContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    paddingVertical: 8,
+    gap: 8,
   },
   levelBadge: {
-    backgroundColor: '#E3F2FD',
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 20,
+    backgroundColor: '#f5f5f5',
+    minWidth: 42,
+    alignItems: 'center',
+  },
+  levelBadgeActive: {
+    backgroundColor: '#1976d2',
   },
   levelText: {
-    color: '#1976D2',
+    fontSize: 13,
     fontWeight: '600',
-    fontSize: 14,
+    color: '#666',
+  },
+  levelTextActive: {
+    color: '#fff',
+  },
+  listContainer: {
+    flex: 1,
+  },
+  listContentContainer: {
+    padding: 16,
+    gap: 12,
+  },
+  listCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  listCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  listIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: '#f5f9ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  listTextContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  listTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1a1a1a',
+    marginBottom: 2,
+  },
+  listSubtitle: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 6,
+  },
+  listInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  listInfoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  listInfoText: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 4,
+  },
+  listArrowContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 12,
   },
   statsContainer: {
     flexDirection: 'row',
@@ -568,90 +665,31 @@ const styles = StyleSheet.create({
   dontKnowButton: {
     backgroundColor: '#F44336',
   },
-  screenTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1a1a1a',
   },
-  screenSubtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 4,
-  },
-  levelScroll: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  levelBadge: {
-    paddingHorizontal: 24,
-    paddingVertical: 8,
-    backgroundColor: '#f5f6fa',
-    borderRadius: 20,
-    marginRight: 12,
-  },
-  levelText: {
-    fontSize: 16,
-    fontWeight: '600',
+  headerSubtitle: {
+    fontSize: 14,
     color: '#666',
   },
-  levelTextActive: {
-    color: '#fff',
-  },
-  listContainer: {
-    padding: 16,
-    flex: 1,
-  },
-  listCard: {
-    backgroundColor: '#fff',
+  backButton: {
+    backgroundColor: '#1976d2',
+    padding: 12,
     borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  listCardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  listIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#e3f2fd',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
   },
-  listTextContainer: {
-    flex: 1,
-  },
-  listTitle: {
-    fontSize: 18,
+  backButtonText: {
+    fontSize: 16,
+    color: '#fff',
     fontWeight: '600',
-    color: '#333',
   },
-  listSubtitle: {
-    fontSize: 14,
+  noMoreCards: {
+    fontSize: 20,
     color: '#666',
-    marginTop: 4,
-    marginBottom: 8,
-  },
-  listInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  listInfoItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  listInfoText: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 4,
+    textAlign: 'center',
+    marginBottom: 16,
   },
 });
