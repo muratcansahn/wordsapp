@@ -72,7 +72,7 @@ export default function ExercisesScreen() {
     <TouchableOpacity
       key={exercise.id}
       style={styles.exerciseCard}
-      onPress={() => router.push(`/exercise/${exercise.id}`)}
+      onPress={() => router.push(`/writing`)}
     >
       <View style={styles.exerciseHeader}>
         <MaterialCommunityIcons
