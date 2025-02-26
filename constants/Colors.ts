@@ -31,6 +31,7 @@ export const Colors = {
     shinyButton: '#ffffff',
     shinyButtonBorderColor: '#D9DBF1',
     shinyButtonBackground: '#ffffff50',
+    card: '#f8f8f8',
   },
   dark: {
     primary: '#ffce08',
@@ -53,5 +54,6 @@ export const Colors = {
     shinyButton: '#ffffff',
     shinyButtonBorderColor: '#D9DBF1',
     shinyButtonBackground: '#00000050',
+    card: '#222222',
   },
 };

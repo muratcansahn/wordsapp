@@ -22,9 +22,9 @@ export default function HomePage() {
       textColor: '#0369A1',
     },
     {
-      icon: 'cards',
-      title: 'Kelime Kartları',
-      route: '/flashcards',
+      icon: 'book-open-variant',
+      title: 'Öğren',
+      route: '/learn',
       color: '#FEF3C7',
       textColor: '#B45309',
     },
@@ -49,6 +49,13 @@ export default function HomePage() {
       color: '#FFE4E6',
       textColor: '#BE123C',
     },
+    {
+      icon: 'palette',
+      title: 'Renk Paleti',
+      route: '/colors',
+      color: '#FECDD3',
+      textColor: '#9D174D',
+    },
   ];
 
   return (
@@ -65,7 +72,7 @@ export default function HomePage() {
         <View style={styles.headerContent}>
           <View style={styles.userInfo}>
             <Image
-              source={user?.user_metadata?.avatar_url ? { uri: user.user_metadata.avatar_url } : ""}
+              source={user?.user_metadata?.avatar_url ? { uri: user.user_metadata.avatar_url } : undefined}
               style={styles.avatar}
             />
             <View style={styles.userDetails}>

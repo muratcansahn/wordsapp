@@ -37,7 +37,7 @@ type AuthContextType = {
   setNewPassword: (password: string) => Promise<void>;
 };
 
-// TODO: 1.Uncomment GoogleSignin 🔥
+// TODO: 1.Uncomment GoogleSignin 
 // !! This doesn't work on web and EXPO GO.
 GoogleSignin.configure({
   iosClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID,
@@ -48,13 +48,42 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<React.PropsWithChildren> = ({
   children,
 }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>({
+    id: 'google-123456789',
+    email: 'test.user@gmail.com',
+    user_metadata: {
+      avatar_url: 'https://lh3.googleusercontent.com/a/default-user',
+      email: 'test.user@gmail.com',
+      email_verified: true,
+      full_name: 'Test User',
+      iss: 'https://accounts.google.com',
+      name: 'Test User',
+      picture: 'https://lh3.googleusercontent.com/a/default-user',
+      provider_id: '123456789',
+      sub: 'google-oauth2|123456789'
+    },
+    app_metadata: {
+      provider: 'google',
+      providers: ['google']
+    },
+    aud: 'authenticated',
+    created_at: '2024-02-22T09:27:09.000Z',
+    role: 'authenticated'
+  } as any);
+  const [session, setSession] = useState<Session | null>({
+    access_token: 'fake-access-token',
+    refresh_token: 'fake-refresh-token',
+    expires_in: 3600,
+    expires_at: 1708851229,
+    provider_token: 'fake-google-token',
+    provider_refresh_token: 'fake-google-refresh-token',
+    user: user
+  } as any);
   const [initialized, setInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   const { t } = useTranslation();
   const url = Linking.useURL();
   const redirectUrlVerify = Linking.createURL('callback/verify');
@@ -66,6 +95,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         setSession(session);
         setUser(session?.user ?? null);
         setInitialized(true);
+        setIsAuthenticated(true);
       }
     );
     setIsLoading(false);
@@ -176,7 +206,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
     );
     try {
       setIsLoading(true);
-      // TODO: 2. Uncomment this 👇:
+      // TODO: 2. Uncomment this :
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
       const idToken = userInfo.data?.idToken;
@@ -282,6 +312,19 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
     },
     [handleError, t]
   );
+
+  useEffect(() => {
+    setIsLoading(true);
+    setSession(session);
+    setUser(user);
+    setInitialized(true);
+    setIsAuthenticated(true);
+    setIsLoading(false);
+
+    return () => {
+      // cleanup
+    };
+  }, []);
 
   useEffect(() => {
     if (url) {

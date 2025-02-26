@@ -1,6 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated, PanResponder, Dimensions, TouchableOpacity, Share, FlatList, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useLocalSearchParams } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BORDER_RADIUS, PADDING, MARGIN } from '@/constants/AppConstants';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SWIPE_THRESHOLD = 0.25 * SCREEN_WIDTH;
@@ -139,10 +142,11 @@ const WORD_LISTS: WordList[] = [
 ];
 
 export default function FlashcardsScreen() {
-  const [selectedList, setSelectedList] = useState<WordList | null>(null);
+  const params = useLocalSearchParams();
+  const [selectedList, setSelectedList] = useState<WordList>(WORD_LISTS[0]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showTranslation, setShowTranslation] = useState(false);
-  const [selectedLevel, setSelectedLevel] = useState('B1');
+  const [isInitialized, setIsInitialized] = useState(false);
   const position = useRef(new Animated.ValueXY()).current;
 
   const [stats, setStats] = useState({
@@ -150,6 +154,21 @@ export default function FlashcardsScreen() {
     unknown: 0,
     favorites: 0
   });
+
+  useEffect(() => {
+    if (!isInitialized) {
+      // Eğer listId parametresi varsa, o listeyi seç
+      if (params.listId) {
+        const listId = String(params.listId);
+        // ID'yi hem string hem de sayısal olarak karşılaştır
+        const list = WORD_LISTS.find(list => list.id === listId || list.id === ''+listId || Number(list.id) === Number(listId));
+        if (list) {
+          setSelectedList(list);
+        }
+      }
+      setIsInitialized(true);
+    }
+  }, [params, isInitialized]);
 
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
@@ -177,7 +196,7 @@ export default function FlashcardsScreen() {
   };
 
   const onSwipeComplete = (direction: 'right' | 'left') => {
-    const item = selectedList?.cards[currentIndex];
+    const item = selectedList.cards[currentIndex];
     if (direction === 'right') {
       setStats(prev => ({ ...prev, known: prev.known + 1 }));
     } else {
@@ -230,115 +249,53 @@ export default function FlashcardsScreen() {
           style={[styles.card, getCardStyle()]}
           {...panResponder.panHandlers}
         >
-          <Text style={styles.wordText}>{card.word}</Text>
-          {showTranslation && (
-            <View style={styles.translationWrapper}>
-              <Text style={styles.translationText}>{card.translation}</Text>
-              <Text style={styles.exampleText}>{card.example}</Text>
+          <LinearGradient
+            colors={['#6366F1', '#A5B4FC']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientContainer}
+          >
+            <View style={styles.cardHeader}>
+              <View style={styles.iconContainer}>
+                <Icon name="book-open-page-variant" size={24} color="#FFFFFF" />
+              </View>
+              <Text style={styles.cardHeaderText}>Kelime Kartı</Text>
             </View>
-          )}
+            
+            <View style={styles.cardContent}>
+              <Text style={styles.wordText}>{card.word}</Text>
+              {showTranslation && (
+                <View style={styles.translationWrapper}>
+                  <Text style={styles.translationText}>{card.translation}</Text>
+                  <Text style={styles.exampleText}>{card.example}</Text>
+                </View>
+              )}
+            </View>
+          </LinearGradient>
         </Animated.View>
       </View>
     );
   };
 
-  if (!selectedList) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.screenTitle}>Kelime Listeleri</Text>
-            <Text style={styles.screenSubtitle}>Çalışmak istediğiniz listeyi seçin</Text>
-          </View>
-          <View style={styles.levelContainer}>
-            {['B1', 'B2', 'C1'].map((level) => (
-              <TouchableOpacity
-                key={level}
-                style={[
-                  styles.levelBadge,
-                  selectedLevel === level && styles.levelBadgeActive,
-                ]}
-                onPress={() => setSelectedLevel(level)}
-              >
-                <Text
-                  style={[
-                    styles.levelText,
-                    selectedLevel === level && styles.levelTextActive,
-                  ]}
-                >
-                  {level}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <ScrollView 
-          style={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContentContainer}
-        >
-          {WORD_LISTS
-            .filter((list) => list.level === selectedLevel)
-            .map((list) => (
-              <TouchableOpacity
-                key={list.id}
-                style={styles.listCard}
-                onPress={() => setSelectedList(list)}
-              >
-                <View style={styles.listCardContent}>
-                  <View style={styles.listIconContainer}>
-                    <Icon 
-                      name={
-                        list.title.includes('İş') 
-                          ? 'briefcase-outline' 
-                          : list.title.includes('Günlük') 
-                          ? 'chat-outline' 
-                          : 'school-outline'
-                      } 
-                      size={22} 
-                      color="#1976d2" 
-                    />
-                  </View>
-                  <View style={styles.listTextContainer}>
-                    <Text style={styles.listTitle}>{list.title}</Text>
-                    <Text style={styles.listSubtitle}>{list.subtitle}</Text>
-                    <View style={styles.listInfoRow}>
-                      <View style={styles.listInfoItem}>
-                        <Icon name="cards" size={14} color="#666" />
-                        <Text style={styles.listInfoText}>{list.cards.length} kelime</Text>
-                      </View>
-                      <View style={styles.listInfoItem}>
-                        <Icon name="clock-outline" size={14} color="#666" />
-                        <Text style={styles.listInfoText}>~{Math.ceil(list.cards.length * 0.5)} dk</Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.listArrowContainer}>
-                    <Icon name="chevron-right" size={20} color="#999" />
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-        </ScrollView>
-      </View>
-    );
-  }
-
   if (currentIndex >= selectedList.cards.length) {
     return (
       <View style={styles.container}>
-        <Text style={styles.noMoreCards}>Tüm kartları tamamladınız!</Text>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => {
-            setSelectedList(null);
-            setCurrentIndex(0);
-            setStats({ known: 0, unknown: 0, favorites: 0 });
-          }}
-        >
-          <Text style={styles.backButtonText}>Listelere Dön</Text>
-        </TouchableOpacity>
+        <View style={styles.completionContainer}>
+          <Icon name="check-circle" size={80} color="#4CAF50" />
+          <Text style={styles.noMoreCards}>Tüm kartları tamamladınız!</Text>
+          <Text style={styles.completionStats}>
+            {stats.known} bilinen, {stats.unknown} bilinmeyen kelime
+          </Text>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => {
+              setCurrentIndex(0);
+              setStats({ known: 0, unknown: 0, favorites: 0 });
+            }}
+          >
+            <Text style={styles.backButtonText}>Tekrar Başla</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -347,11 +304,11 @@ export default function FlashcardsScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>B1 Seviye Kelimeler</Text>
-          <Text style={styles.headerSubtitle}>Günlük konuşma kelimeleri</Text>
+          <Text style={styles.headerTitle}>{selectedList.title}</Text>
+          <Text style={styles.headerSubtitle}>{selectedList.subtitle}</Text>
         </View>
         <View style={styles.levelBadge}>
-          <Text style={styles.levelText}>B1</Text>
+          <Text style={styles.levelText}>{selectedList.level}</Text>
         </View>
       </View>
 
@@ -390,11 +347,14 @@ export default function FlashcardsScreen() {
       <View style={styles.cardControlsContainer}>
         <Text style={styles.counterText}>{currentIndex + 1} / {selectedList.cards.length}</Text>
         <TouchableOpacity 
+          style={styles.controlButton}
           onPress={() => setShowTranslation(!showTranslation)}
         >
-          <Icon name={showTranslation ? 'eye-off' : 'eye'} size={24} color="#666" />
+          <Icon name={showTranslation ? 'eye-off' : 'eye'} size={22} color="#6366F1" />
+          <Text style={styles.controlButtonText}>{showTranslation ? 'Gizle' : 'Göster'}</Text>
         </TouchableOpacity>
         <TouchableOpacity 
+          style={styles.controlButton}
           onPress={() => {
             const card = selectedList.cards[currentIndex];
             Share.share({
@@ -403,11 +363,12 @@ export default function FlashcardsScreen() {
             });
           }}
         >
-          <Icon name="share-variant" size={24} color="#666" />
+          <Icon name="share-variant" size={22} color="#6366F1" />
+          <Text style={styles.controlButtonText}>Paylaş</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.cardContainer}>
+      <View style={styles.cardWrapper}>
         {renderCard()}
       </View>
 
@@ -434,125 +395,50 @@ export default function FlashcardsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    paddingTop: 16,
+    backgroundColor: '#FFFFFF',
+    paddingTop: PADDING.md,
   },
   header: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: PADDING.md,
+    paddingBottom: PADDING.md,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  screenTitle: {
+  headerTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#1a1a1a',
-    marginBottom: 4,
+    color: '#1F2937',
+    marginBottom: MARGIN.xs,
   },
-  screenSubtitle: {
+  headerSubtitle: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 12,
-  },
-  levelContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    paddingVertical: 8,
-    gap: 8,
+    color: '#6B7280',
   },
   levelBadge: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: '#f5f5f5',
+    paddingHorizontal: PADDING.md,
+    paddingVertical: PADDING.xs,
+    borderRadius: BORDER_RADIUS.md,
+    backgroundColor: '#F3F4F6',
     minWidth: 42,
     alignItems: 'center',
-  },
-  levelBadgeActive: {
-    backgroundColor: '#1976d2',
   },
   levelText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#666',
-  },
-  levelTextActive: {
-    color: '#fff',
-  },
-  listContainer: {
-    flex: 1,
-  },
-  listContentContainer: {
-    padding: 16,
-    gap: 12,
-  },
-  listCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  listCardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  listIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: '#f5f9ff',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  listTextContainer: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  listTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1a1a1a',
-    marginBottom: 2,
-  },
-  listSubtitle: {
-    fontSize: 13,
-    color: '#666',
-    marginBottom: 6,
-  },
-  listInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  listInfoItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  listInfoText: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 4,
-  },
-  listArrowContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 12,
+    color: '#4B5563',
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    backgroundColor: '#fff',
+    paddingVertical: PADDING.md,
+    paddingHorizontal: PADDING.md,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderTopWidth: 1,
-    borderColor: '#eee',
+    borderColor: '#F3F4F6',
   },
   statItem: {
     flexDirection: 'row',
@@ -560,104 +446,166 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: MARGIN.md,
   },
   statTextContainer: {
     justifyContent: 'center',
   },
   statValue: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: '700',
-    color: '#333',
-    marginBottom: 2,
+    color: '#1F2937',
+    marginBottom: MARGIN.xxs,
   },
   statLabel: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: 13,
+    color: '#6B7280',
     fontWeight: '500',
   },
   statDivider: {
     width: 1,
     height: 40,
-    marginHorizontal: 12,
+    marginHorizontal: MARGIN.md,
   },
   cardControlsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: PADDING.md,
+    paddingVertical: PADDING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  controlButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: PADDING.sm,
+    paddingVertical: PADDING.xs,
+    borderRadius: BORDER_RADIUS.md,
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+  },
+  controlButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6366F1',
+    marginLeft: MARGIN.xs,
   },
   counterText: {
     fontSize: 16,
-    color: '#666',
+    color: '#4B5563',
     fontWeight: '500',
+  },
+  cardWrapper: {
+    flex: 1,
+    paddingHorizontal: PADDING.md,
+    paddingVertical: PADDING.md,
   },
   cardContainer: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  card: {
+    width: '100%',
+    height: '100%',
+    borderRadius: BORDER_RADIUS.lg,
+    overflow: 'hidden',
     elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
     shadowRadius: 8,
-    height: '100%',
-    position: 'relative',
+  },
+  gradientContainer: {
+    flex: 1,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: 0,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: PADDING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  cardHeaderText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginLeft: MARGIN.md,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: PADDING.lg,
   },
   wordText: {
-    fontSize: 32,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: 36,
+    fontWeight: '700',
+    color: '#FFFFFF',
     textAlign: 'center',
+    marginBottom: MARGIN.lg,
   },
   translationWrapper: {
     alignItems: 'center',
-    marginTop: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    padding: PADDING.md,
+    borderRadius: BORDER_RADIUS.md,
+    width: '100%',
   },
   translationText: {
-    fontSize: 24,
-    color: '#666',
+    fontSize: 28,
+    color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: MARGIN.md,
+    fontWeight: '600',
   },
   exampleText: {
     fontSize: 16,
-    color: '#888',
+    color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
     fontStyle: 'italic',
+    lineHeight: 22,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 16,
+    padding: PADDING.md,
+    backgroundColor: '#FFFFFF',
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 25,
+    paddingHorizontal: PADDING.lg,
+    paddingVertical: PADDING.md,
+    borderRadius: BORDER_RADIUS.lg,
     flex: 0.48,
     justifyContent: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
   },
   actionButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
+    marginLeft: MARGIN.sm,
   },
   knowButton: {
     backgroundColor: '#4CAF50',
@@ -665,31 +613,42 @@ const styles = StyleSheet.create({
   dontKnowButton: {
     backgroundColor: '#F44336',
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1a1a1a',
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#666',
-  },
-  backButton: {
-    backgroundColor: '#1976d2',
-    padding: 12,
-    borderRadius: 12,
+  completionContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: PADDING.lg,
+  },
+  completionStats: {
+    fontSize: 16,
+    color: '#6B7280',
+    marginBottom: MARGIN.lg,
+    marginTop: MARGIN.md,
+  },
+  backButton: {
+    backgroundColor: '#6366F1',
+    paddingHorizontal: PADDING.lg,
+    paddingVertical: PADDING.md,
+    borderRadius: BORDER_RADIUS.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
   },
   backButtonText: {
     fontSize: 16,
-    color: '#fff',
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   noMoreCards: {
-    fontSize: 20,
-    color: '#666',
+    fontSize: 24,
+    color: '#1F2937',
     textAlign: 'center',
-    marginBottom: 16,
+    marginTop: MARGIN.lg,
+    marginBottom: MARGIN.md,
+    fontWeight: '700',
   },
 });
