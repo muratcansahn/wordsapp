@@ -47,10 +47,18 @@ export default function StudyModePage() {
   const { mode } = useTheme();
 
   const handleModeSelect = (modeId: string) => {
-    router.push({
-      pathname: modeId === 'flashcards' ? '/flashcards' : '/quiz',
-      params: { listId }
-    });
+    const listIdParam = listId ? String(listId) : '1';
+    if (modeId === 'flashcards') {
+      router.push({
+        pathname: '/flashcards',
+        params: { listId: listIdParam }
+      });
+    } else {
+      router.push({
+        pathname: '/quiz',
+        params: { listId: listIdParam }
+      });
+    }
   };
 
   return (
@@ -123,13 +131,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: STYLE_MARGIN,
+    marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     textAlign: 'center',
-    maxWidth: '80%',
+    maxWidth: width * 0.8,
     opacity: 0.7,
   },
   gridContainer: {

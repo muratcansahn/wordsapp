@@ -15,31 +15,46 @@ const TabLayout = () => {
       screenOptions={{
         tabBarHideOnKeyboard: true,
         tabBarActiveTintColor: Colors[mode].primary || Colors[mode].button,
+        headerShown: false
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="dashboard"
+        options={{
+          title: t('header.dashboard'),
+          tabBarIcon: ({ color }) => <TabBarIcon name={'stats-chart'} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="home"
         options={{
           title: t('header.home'),
-          headerTitle: t('appName'),
           tabBarIcon: ({ color }) => <TabBarIcon name={'home'} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="search"
+        name="learn"
         options={{
-          title: t('header.search'),
-          headerShown: false,
+          title: t('header.learn'),
           tabBarIcon: ({ color }) => (
-            <TabBarIcon name={'search'} color={color} />
+            <TabBarIcon name={'book-open'} color={color} />
           ),
         }}
       />
-
+      <Tabs.Screen
+        name="exercises"
+        options={{
+          title: t('header.exercises'),
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name={'clipboard'} color={color} />
+          ),
+        }}
+      />
       <Tabs.Screen
         name="profile"
         options={{
           title: t('header.profile'),
+          headerShown: false,
           headerRight: ProfileHeader,
           tabBarIcon: ({ color }) => <TabBarIcon name={'user'} color={color} />,
         }}

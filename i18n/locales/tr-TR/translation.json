@@ -27,6 +27,9 @@
   },
   "header": {
     "home": "Ana sayfa",
+    "dashboard": "Panel",
+    "learn": "Öğren",
+    "exercises": "Alıştırmalar",
     "search": "Ara",
     "notifications": "Bildirimler",
     "profile": "Profil",
@@ -196,5 +199,19 @@
     "notifications": "Bildirimler",
     "theme": "Tema",
     "language": "Dil +4"
+  },
+  "dashboard": {
+    "welcome": "Merhaba 👋",
+    "welcomeSubtext": "Bugün ne öğrenmek istersin?", 
+    "wordStatus": "Kelime Durumu",
+    "known": "Bilinen",
+    "unknown": "Bilinmeyen",
+    "learned": "Öğrenilen",
+    "dailyActivities": "Günlük Aktiviteler",
+    "quickAccess": "Hızlı Erişim",
+    "recommended": "Tavsiye Edilen",
+    "performance": "Performans",
+    "revising": "Tekrar",
+    "streak": "Seri"
   }
 }
