@@ -17,7 +17,8 @@
     "try": "Dene",
     "getAccess": "Erişim al",
     "continue": "Devam et",
-    "goToHomeScreen": "Ana sayfaya git"
+    "goToHomeScreen": "Ana sayfaya git",
+    "feed": "Besle"
   },
   "placeholders": {
     "email": "Email adresiniz",
@@ -212,6 +213,11 @@
     "recommended": "Tavsiye Edilen",
     "performance": "Performans",
     "revising": "Tekrar",
-    "streak": "Seri"
+    "streak": "Seri",
+    "feedFish": "Balıkları Besle",
+    "selectFish": "Balıklarınızı Besleyin",
+    "selectFishDescription": "Hangi balığı beslemek istiyorsunuz?",
+    "orangeFish": "Turuncu Balık",
+    "blueFish": "Mavi Balık"
   }
 }
