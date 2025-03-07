@@ -12,6 +12,7 @@ import {
   Dimensions,
   Platform
 } from 'react-native';
+import { useSelector } from 'react-redux';
 import { ThemedText } from '@/components/common/typography';
 import { ThemedView } from '@/components/common/view';
 import { useTranslation } from 'react-i18next';
@@ -30,6 +31,7 @@ import {
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
 import { FishTypes } from '../../../assets/svg/fish';
+import { RootState } from '@/store';
 
 // Günlük içerik için oluşturulacak veriler
 const dailyContent = [
@@ -40,25 +42,33 @@ const dailyContent = [
     progress: 75,
     icon: 'calendar',
     gradient: ['#FF9A9E', '#FAD0C4'] as readonly [string, string],
-    action: 'learn',
+    action: 'flashcards',
   },
   {
-    id: '2',
-    title: 'Tekrar Zamanı',
-    description: 'Öğrendiğiniz kelimeleri pekiştirin',
-    progress: 40,
-    icon: 'sync',
-    gradient: ['#A18CD1', '#FBC2EB'] as readonly [string, string],
-    action: 'exercises',
+    id: '3',
+    title: 'Kelime Tahmin Oyunu',
+    description: 'Kelime bilginizi eğlenceli bir oyunla test edin',
+    progress: 0,
+    icon: 'game-controller',
+    gradient: ['#4facfe', '#00f2fe'] as readonly [string, string],
+    action: 'writing',
+  },
+  {
+    id: '4',
+    title: 'Kelime Eşleştirme',
+    description: 'Kelimeleri anlamlarıyla eşleştirin',
+    progress: 0,
+    icon: 'link',
+    gradient: ['#43e97b', '#38f9d7'] as readonly [string, string],
+    action: 'word-matching',
   },
 ];
 
-// Kelime istatistikleri
-const wordStats = [
-  { id: '1', title: 'learned', value: '143', icon: 'checkmark-circle', color: '#10B981' },
-  { id: '2', title: 'known', value: '98', icon: 'star', color: '#F59E0B' },
-  { id: '3', title: 'unknown', value: '45', icon: 'refresh', color: '#EF4444' },
-  { id: '4', title: 'streak', value: '7', icon: 'flame', color: '#F97316' }
+// Kelime istatistikleri - Redux ile değiştirildi
+const getWordStats = (learnedCount: number, unknownCount: number, streakCount: number) => [
+  { id: '1', title: 'learned', value: learnedCount.toString(), icon: 'checkmark-circle', color: '#10B981', progress: 65 },
+  { id: '3', title: 'unknown', value: unknownCount.toString(), icon: 'refresh', color: '#EF4444', progress: 20 },
+  { id: '4', title: 'streak', value: streakCount.toString(), icon: 'flame', color: '#F97316', progress: 70 }
 ];
 
 interface FishInfo {
@@ -73,15 +83,10 @@ interface FishInfo {
   mouthAnim: Animated.Value;
   mouthScaleAnim: Animated.Value;
   translateX: Animated.AnimatedInterpolation<number>;
-  translateY: Animated.AnimatedInterpolation<number>;
   scale: {
     scaleX: number;
     scaleY: number;
   };
-  scaleZ: Animated.AnimatedInterpolation<number>;
-  zPosition: number;
-  pathIndex: number;
-  pathDirection: number;
   hungerLevel: number; // 0-100 arası, 0: aç, 100: tok
   lastFedTime: number; // son beslenme zamanı (timestamp)
 }
@@ -102,27 +107,15 @@ export default function DashboardScreen() {
   const { mode } = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
+  
+  // Redux'tan kelime durumunu al
+  const { learnedCount, unknownCount, streakCount } = useSelector((state: RootState) => state.words);
+  const wordStats = getWordStats(learnedCount, unknownCount, streakCount);
 
   // Animasyon değerleri
   const fishTopAnim = useRef(new Animated.Value(0)).current;
   const fishBottomAnim = useRef(new Animated.Value(0)).current;
-  const fishMouthAnim = useRef(new Animated.Value(0)).current;
-  const fish2MouthAnim = useRef(new Animated.Value(0)).current;
-
-  // Yeni 3D animasyon değerleri
-  const fish1XAnim = useRef(new Animated.Value(0)).current;
-  const fish1YAnim = useRef(new Animated.Value(0)).current;
-  const fish1ZAnim = useRef(new Animated.Value(1)).current; // Z değeri ölçekleme için (derinlik)
   
-  const fish2XAnim = useRef(new Animated.Value(0)).current;
-  const fish2YAnim = useRef(new Animated.Value(0)).current;
-  const fish2ZAnim = useRef(new Animated.Value(0.8)).current; // Z değeri ölçekleme için (derinlik)
-
-  // Kabarcık animasyonları için değerler
-  const bubble1Anim = useRef(new Animated.Value(0)).current;
-  const bubble2Anim = useRef(new Animated.Value(0)).current;
-  const bubble3Anim = useRef(new Animated.Value(0)).current;
-
   // Yem animasyonu için değerler
   const [isFeeding, setIsFeeding] = useState(false);
   const [isEating, setIsEating] = useState<string | false>(false);
@@ -134,214 +127,48 @@ export default function DashboardScreen() {
   const [feedingSuccess, setFeedingSuccess] = useState(false); // Besleme başarısı state'i
   const [foodCount, setFoodCount] = useState(5); // Balık yemi miktarı
   
+  // Ağız animasyonu değerleri
+  const fishMouthAnim = useRef(new Animated.Value(0)).current;
+  const fish2MouthAnim = useRef(new Animated.Value(0)).current;
+
   // Balık bilgileri - merkezileştirilmiş veri modeli
   const [fishData, setFishData] = useState<FishDataType>({
     orange: {
       id: 'orange',
       name: 'Turuncu Balık',
-      position: { x: 40, y: 40, width: 30, height: 20 }, 
+      position: { x: 40, y: 100, width: 30, height: 20 }, // Y pozisyonunu güncelledim
       mouthAnim: fishMouthAnim,
       mouthScaleAnim: useRef(new Animated.Value(1)).current,
-      translateX: fish1XAnim, // Yeni X animasyonu
-      translateY: fish1YAnim, // Yeni Y animasyonu
+      translateX: fishTopAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 50],
+      }),
       scale: {
         scaleX: -1, // Sola doğru bakan balık
         scaleY: 1,
       },
-      scaleZ: fish1ZAnim, // Z ölçekleme değeri (derinlik efekti için)
-      zPosition: 1, // Balığın z pozisyonu (ön plan=1, arka plan=0)
-      pathIndex: 0, // Şu anki yüzme yolu indeksi
-      pathDirection: 1, // Yüzme yönü (1=ileri, -1=geri)
       hungerLevel: 60, // Orta derece tok
       lastFedTime: Date.now()
     },
     blue: {
       id: 'blue',
       name: 'Mavi Balık',
-      position: { x: 265, y: 60, width: 30, height: 20 }, 
+      position: { x: 265, y: 60, width: 30, height: 20 }, // Y pozisyonunu güncelledim
       mouthAnim: fish2MouthAnim,
       mouthScaleAnim: useRef(new Animated.Value(1)).current,
-      translateX: fish2XAnim, // Yeni X animasyonu
-      translateY: fish2YAnim, // Yeni Y animasyonu
+      translateX: fishBottomAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, -40],
+      }),
       scale: {
         scaleX: 1, // Sağa doğru bakan balık
         scaleY: 1,
       },
-      scaleZ: fish2ZAnim, // Z ölçekleme değeri (derinlik efekti için)
-      zPosition: 0.8, // Balığın z pozisyonu (ön plan=1, arka plan=0)
-      pathIndex: 1, // Farklı bir yüzme yolu
-      pathDirection: 1, // Yüzme yönü
       hungerLevel: 30, // Biraz aç
       lastFedTime: Date.now() - 3600000 // 1 saat önce beslenmiş
     }
     // Gelecekte yeni balıklar buraya eklenebilir
   });
-
-  // Balıkların izleyeceği yolları tanımla - daha doğal görünümlü yüzme için Bezier eğrileri
-  // Not: Akvaryum yüksekliği 180 olduğundan, y değerleri 20-150 arasında tutulacak
-  const fishPaths = [
-    // 1. yol - organik dalgalı bir yüzme yolu - akvaryumun üst kısmında
-    [
-      { x: 30, y: 40 },   // Başlangıç noktası
-      { x: 120, y: 30 },  // Kontrol noktası
-      { x: 200, y: 50 },  // Kontrol noktası
-      { x: 250, y: 40 }   // Bitiş noktası
-    ],
-    // 2. yol - farklı bir dalgalı yüzme yolu - akvaryumun orta kısmında
-    [
-      { x: 250, y: 60 },  // Başlangıç noktası
-      { x: 180, y: 80 },  // Kontrol noktası
-      { x: 120, y: 60 },  // Kontrol noktası
-      { x: 40, y: 70 }    // Bitiş noktası
-    ],
-    // 3. yol - akvaryumun üst-orta kısmında
-    [
-      { x: 40, y: 50 },   // Başlangıç noktası
-      { x: 100, y: 90 },  // Kontrol noktası
-      { x: 200, y: 60 },  // Kontrol noktası
-      { x: 280, y: 80 }   // Bitiş noktası
-    ],
-    // 4. yol - akvaryumun orta-alt kısmında (ama en alta değil)
-    [
-      { x: 280, y: 90 },  // Başlangıç noktası
-      { x: 180, y: 100 }, // Kontrol noktası
-      { x: 100, y: 120 }, // Kontrol noktası
-      { x: 30, y: 100 }   // Bitiş noktası
-    ],
-    // Daha fazla yol eklenebilir...
-  ];
-
-  // Bezier eğrisi üzerindeki belirli bir noktayı hesaplayan yardımcı fonksiyon
-  const bezierPoint = (path: Array<{x: number, y: number}>, t: number) => {
-    // 4 noktalı Bezier eğrisi için cubik hesaplama
-    const u = 1 - t;
-    const tt = t * t;
-    const uu = u * u;
-    const uuu = uu * u;
-    const ttt = tt * t;
-    
-    // Bezier formülü
-    let point = { x: 0, y: 0 };
-    point.x = uuu * path[0].x + 3 * uu * t * path[1].x + 3 * u * tt * path[2].x + ttt * path[3].x;
-    point.y = uuu * path[0].y + 3 * uu * t * path[1].y + 3 * u * tt * path[2].y + ttt * path[3].y;
-    
-    return point;
-  };
-
-  // 3D balık animasyonlarını başlat
-  const startFishAnimations = () => {
-    // Tüm balıklar için
-    Object.keys(fishData).forEach((fishId) => {
-      animateFishAlongPath(fishId);
-    });
-  };
-  
-  // Balığı belirli bir yol boyunca hareket ettiren fonksiyon
-  const animateFishAlongPath = (fishId: string) => {
-    const fish = fishData[fishId];
-    if (!fish) return;
-    
-    const pathIndex = fish.pathIndex % fishPaths.length;
-    const path = fishPaths[pathIndex];
-    
-    // İleri veya geri yönde hareket edip etmeyeceğini belirle
-    const isForward = fish.pathDirection === 1;
-    
-    // Yolun uzunluğunu belirle (daha doğru hesaplama için daha fazla nokta kullanılabilir)
-    const numPoints = 100;
-    const points = [];
-    
-    for (let i = 0; i <= numPoints; i++) {
-      const t = i / numPoints;
-      points.push(bezierPoint(path, isForward ? t : 1 - t));
-    }
-    
-    // Balık için animasyon sekansı oluştur
-    const animSequence = points.map((point, i) => {
-      // X ve Y için animasyonlar
-      const xAnim = Animated.timing(fish.translateX, {
-        toValue: point.x,
-        duration: 50, // Hızlı ve pürüzsüz hareket için
-        useNativeDriver: true,
-      });
-      
-      const yAnim = Animated.timing(fish.translateY, {
-        toValue: point.y,
-        duration: 50,
-        useNativeDriver: true,
-      });
-      
-      // Z için hafif dalgalanma efekti (derinlik hissi)
-      const zScale = fish.zPosition + (Math.sin(i / 10) * 0.05);
-      const zAnim = Animated.timing(fish.scaleZ, {
-        toValue: zScale,
-        duration: 50,
-        useNativeDriver: true,
-      });
-      
-      // Yön kontrolü (sadece ilk animasyonda)
-      if (i === 1) {
-        const prevPoint = points[0];
-        const xDiff = point.x - prevPoint.x;
-        
-        if (xDiff !== 0) {
-          setFishData(prevData => ({
-            ...prevData,
-            [fishId]: {
-              ...prevData[fishId],
-              scale: {
-                scaleX: xDiff > 0 ? 1 : -1,
-                scaleY: 1,
-              }
-            }
-          }));
-        }
-      }
-      
-      return Animated.parallel([xAnim, yAnim, zAnim]);
-    });
-    
-    // Tüm animasyonları sırayla çalıştır
-    Animated.sequence(animSequence).start(() => {
-      // Animasyon tamamlandığında, rastgele bir yol seç ve yönü değiştir
-      setFishData(prevData => {
-        // Yeni yol seç - mevcut yoldan farklı olsun
-        let newPathIndex;
-        do {
-          newPathIndex = Math.floor(Math.random() * fishPaths.length);
-        } while (newPathIndex === prevData[fishId].pathIndex);
-        
-        // Yeni yön belirle - %50 ihtimalle yön değişsin
-        const newDirection = Math.random() > 0.5 ? 
-                            prevData[fishId].pathDirection : 
-                            prevData[fishId].pathDirection * -1;
-        
-        return {
-          ...prevData,
-          [fishId]: {
-            ...prevData[fishId],
-            pathDirection: newDirection,
-            pathIndex: newPathIndex
-          }
-        };
-      });
-      
-      // Yeni yol ve yönle tekrar başlat
-      setTimeout(() => animateFishAlongPath(fishId), 100);
-    });
-  };
-
-  // Kabarcık animasyonu
-  const animateBubble = (anim: Animated.Value, duration: number): void => {
-    Animated.loop(
-      Animated.timing(anim, {
-        toValue: 1,
-        duration,
-        useNativeDriver: true,
-        easing: Easing.linear,
-      })
-    ).start();
-  };
 
   // Açlık seviyesine göre renk belirleme
   const getHungerColor = (hungerLevel: number) => {
@@ -349,6 +176,20 @@ export default function DashboardScreen() {
     if (hungerLevel <= 70) return '#FFC107'; // Sarı - orta
     return '#4CAF50'; // Yeşil - tok
   };
+
+  // Baloncuklar için animasyon değerleri
+  const bubbles = useRef([...Array(12)].map(() => ({
+    xPos: Math.random() * 250,
+    yPos: Math.random() * 300,
+    size: Math.random() * 15 + 5,
+    speed: Math.random() * 3000 + 2000,
+    xOffset: new Animated.Value(0),
+    yOffset: new Animated.Value(0),
+    opacity: new Animated.Value(Math.random() * 0.4 + 0.2),
+    scale: new Animated.Value(1),
+    rotation: new Animated.Value(0),
+    color: Math.random() > 0.7 ? 'rgba(255, 255, 255, 0.7)' : 'rgba(220, 240, 255, 0.7)',
+  }))).current;
 
   // Balık besleme işlemini başlat
   const startFeedingProcess = () => {
@@ -510,7 +351,7 @@ export default function DashboardScreen() {
     );
   };
 
-  // Balık tipine göre ölçekleme ve dönüşleri uygula - 3D derinlik efekti ile
+  // Balık tipine göre ölçekleme ve dönüşleri uygula
   const getFishStyle = (fishType: string) => {
     const fishInfo = fishData[fishType];
     if (!fishInfo) return {};
@@ -518,12 +359,9 @@ export default function DashboardScreen() {
     return {
       transform: [
         { translateX: fishInfo.translateX },
-        { translateY: fishInfo.translateY },
-        { scale: fishInfo.scaleZ }, // Z-derinliği için ölçekleme
         { scaleX: fishInfo.scale.scaleX },
         { scaleY: fishInfo.scale.scaleY }
-      ],
-      opacity: fishInfo.zPosition // Arka plandaki balıklar biraz daha saydamlaşsın
+      ]
     };
   };
 
@@ -744,19 +582,125 @@ export default function DashboardScreen() {
     );
   };
 
-  // Animasyonları ve balık hareketlerini başlat
   useEffect(() => {
-    // Kabarcık animasyonları
-    animateBubble(bubble1Anim, 6000);
-    animateBubble(bubble2Anim, 5000);
-    animateBubble(bubble3Anim, 4000);
-    
-    // 3D balık animasyonlarını başlat
-    startFishAnimations();
+    // Balık 1 animasyonu
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(fishTopAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+          easing: Easing.sin,
+        }),
+        Animated.timing(fishTopAnim, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true,
+          easing: Easing.sin,
+        }),
+      ])
+    ).start();
 
-    return () => {
-      // Temizlik işlemleri...
+    // Balık 2 animasyonu
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(fishBottomAnim, {
+          toValue: 1,
+          duration: 2500,
+          useNativeDriver: true,
+          easing: Easing.sin,
+        }),
+        Animated.timing(fishBottomAnim, {
+          toValue: 0,
+          duration: 2500,
+          useNativeDriver: true,
+          easing: Easing.sin,
+        }),
+      ])
+    ).start();
+
+    const animateBubble = (bubble: any, index: number) => {
+      // X ekseni animasyonu - daha doğal salınım için sinüs fonksiyonu kullanımı
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(bubble.xOffset, {
+            toValue: 1,
+            duration: bubble.speed,
+            useNativeDriver: true,
+            easing: Easing.sin, // Daha doğal salınım için sinüs fonksiyonu
+          }),
+          Animated.timing(bubble.xOffset, {
+            toValue: 0,
+            duration: bubble.speed,
+            useNativeDriver: true,
+            easing: Easing.sin,
+          }),
+        ])
+      ).start();
+
+      // Y ekseni animasyonu - sürekli yukarı hareket
+      Animated.loop(
+        Animated.timing(bubble.yOffset, {
+          toValue: 1,
+          duration: bubble.speed * 1.5, // Daha yavaş yükselme
+          useNativeDriver: true,
+          easing: Easing.out(Easing.quad), // Daha doğal yükselme hareketi
+        })
+      ).start();
+
+      // Opaklık animasyonu - daha doğal geçişler
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(bubble.opacity, {
+            toValue: 0.7,
+            duration: bubble.speed / 2,
+            useNativeDriver: true,
+            easing: Easing.inOut(Easing.ease),
+          }),
+          Animated.timing(bubble.opacity, {
+            toValue: 0.2,
+            duration: bubble.speed / 2,
+            useNativeDriver: true,
+            easing: Easing.inOut(Easing.ease),
+          }),
+        ])
+      ).start();
+      
+      // Boyut değişimi animasyonu
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(bubble.scale, {
+            toValue: 1.2,
+            duration: bubble.speed / 1.5,
+            useNativeDriver: true,
+            easing: Easing.inOut(Easing.ease),
+          }),
+          Animated.timing(bubble.scale, {
+            toValue: 0.8,
+            duration: bubble.speed / 1.5,
+            useNativeDriver: true,
+            easing: Easing.inOut(Easing.ease),
+          }),
+        ])
+      ).start();
+      
+      // Hafif dönme animasyonu
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(bubble.rotation, {
+            toValue: 1,
+            duration: bubble.speed * 2,
+            useNativeDriver: true,
+            easing: Easing.linear,
+          }),
+        ])
+      ).start();
     };
+
+    bubbles.forEach((bubble, index) => {
+      animateBubble(bubble, index);
+    });
+
   }, []);
 
   // Yem satın alma işlemi
@@ -770,98 +714,8 @@ export default function DashboardScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Balık Yemi Göstergesi */}
-        <View style={styles.foodCountContainer}>
-          <View style={styles.foodIconContainer}>
-            <Ionicons
-              name="water-outline"
-              size={ICON_SIZE.sm}
-              color="#FFFFFF"
-            />
-          </View>
-          <Text style={styles.foodCountText}>{foodCount}</Text>
-          <TouchableOpacity 
-            style={styles.buyFoodButton}
-            onPress={() => setFoodCount(prev => prev + 5)}
-          >
-            <Ionicons
-              name="add"
-              size={ICON_SIZE.xs}
-              color="#FFFFFF"
-            />
-          </TouchableOpacity>
-        </View>
-        
-        {/* Akvaryum */}
-        <View style={styles.aquariumContainer}>
-          <LinearGradient
-            colors={['#86b4ff', '#70a5fd']}
-            style={styles.aquarium}
-          >
-            {/* Kabarcık 1 */}
-            <Animated.View
-              style={[
-                styles.bubble,
-                {
-                  left: 70,
-                  bottom: 10,
-                  width: 10,
-                  height: 10,
-                  transform: [{ translateY: bubble1Anim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, -80],
-                  }) }]
-                }
-              ]}
-            />
-            
-            {/* Kabarcık 2 */}
-            <Animated.View
-              style={[
-                styles.bubble,
-                {
-                  left: 200,
-                  bottom: 15,
-                  width: 15,
-                  height: 15,
-                  transform: [{ translateY: bubble2Anim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, -100],
-                  }) }]
-                }
-              ]}
-            />
-            
-            {/* Kabarcık 3 */}
-            <Animated.View
-              style={[
-                styles.bubble,
-                {
-                  left: 150,
-                  bottom: 50,
-                  width: 20,
-                  height: 20,
-                  transform: [{ translateY: bubble3Anim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, -60],
-                  }) }]
-                }
-              ]}
-            />
-            
-            {/* Turuncu Balık */}
-            {renderOrangeFish()}
-            
-            {/* Mavi Balık */}
-            {renderBlueFish()}
-            
-            {/* Su yüzeyindeki yansıma efekti */}
-            <View style={styles.waterSurface} />
-          </LinearGradient>
-        </View>
-
-        {/* Balıkları Besle Butonu */}
-        <View style={{ paddingHorizontal: PADDING.md, paddingBottom: PADDING.md }}>
+        {/* Butonlar */}
+        <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[
               styles.feedFishButton,
@@ -880,12 +734,88 @@ export default function DashboardScreen() {
               {t('dashboard.feedFish') || "Balıkları Besle"}
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.foodCountContainer}
+            onPress={buyMoreFood}
+          >
+            <View style={styles.foodIconContainer}>
+              <Ionicons
+                name="water-outline"
+                size={ICON_SIZE.sm}
+                color="#FFFFFF"
+              />
+            </View>
+            <Text style={styles.foodCountText}>{foodCount}</Text>
+            <TouchableOpacity 
+              style={styles.buyFoodButton}
+              onPress={buyMoreFood}
+            >
+              <Ionicons
+                name="add"
+                size={ICON_SIZE.xs}
+                color="#FFFFFF"
+              />
+            </TouchableOpacity>
+          </TouchableOpacity>
         </View>
 
-        {/* Karşılama Başlığı */}
-        <View style={styles.welcomeSection}>
-          <ThemedText style={styles.welcomeText}>{t('dashboard.welcome')}</ThemedText>
-          <ThemedText style={styles.welcomeSubtext}>{t('dashboard.welcomeSubtext')}</ThemedText>
+        {/* Akvaryum */}
+        <View style={styles.aquariumContainer}>
+          <LinearGradient
+            colors={['#86b4ff', '#70a5fd']}
+            style={styles.aquarium}
+          >
+            {/* Su yüzeyindeki yansıma efekti */}
+            <View style={styles.waterSurface} />
+            
+            {/* Baloncuklar */}
+            {bubbles.map((bubble, index) => (
+              <Animated.View
+                key={`bubble_${index}`}
+                style={[
+                  styles.bubble,
+                  {
+                    left: bubble.xPos,
+                    bottom: bubble.yPos,
+                    width: bubble.size,
+                    height: bubble.size,
+                    backgroundColor: bubble.color,
+                    transform: [
+                      { translateX: bubble.xOffset.interpolate({
+                          inputRange: [0, 0.5, 1],
+                          outputRange: [0, bubble.size * (Math.random() > 0.5 ? 0.7 : -0.7), 0]
+                        }) 
+                      },
+                      { translateY: bubble.yOffset.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, -bubble.speed / 10] // Daha uzun mesafe yükselme
+                        })
+                      },
+                      { scale: bubble.scale }, // Boyut değişimi
+                      { rotate: bubble.rotation.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0deg', '360deg']
+                        })
+                      }
+                    ],
+                    opacity: bubble.opacity,
+                    // Hafif gölge ekleme
+                    shadowColor: "#fff",
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 3,
+                  }
+                ]}
+              />
+            ))}
+            
+            {/* Turuncu Balık */}
+            {renderOrangeFish()}
+            
+            {/* Mavi Balık */}
+            {renderBlueFish()}
+            
+          </LinearGradient>
         </View>
 
         {/* Kelime İstatistikleri */}
@@ -898,17 +828,23 @@ export default function DashboardScreen() {
             <TouchableOpacity 
               key={stat.id} 
               style={[styles.wordStatCard, { backgroundColor: Colors[mode].card }]}
-              onPress={() => router.push('/learn')}
+              onPress={() => router.push({
+                pathname: '/word-list',
+                params: { type: stat.title }
+              })}
             >
-              <View style={[styles.wordStatIconContainer, { backgroundColor: stat.color + '20' }]}>
+              <View style={[styles.wordStatIconContainer, { backgroundColor: stat.color + '15' }]}>
                 <Ionicons
                   name={stat.icon as keyof typeof Ionicons.glyphMap}
-                  size={ICON_SIZE.sm}
+                  size={ICON_SIZE.xs}
                   color={stat.color}
                 />
               </View>
-              <ThemedText style={styles.wordStatValue}>{stat.value}</ThemedText>
-              <ThemedText style={styles.wordStatTitle}>{t(`dashboard.${stat.title}`)}</ThemedText>
+              <View style={styles.wordStatContent}>
+                <View style={styles.wordStatHeader}>
+                  <ThemedText style={styles.wordStatValue}>{stat.value}</ThemedText>
+                </View>
+              </View>
             </TouchableOpacity>
           ))}
         </View>
@@ -922,7 +858,7 @@ export default function DashboardScreen() {
           <TouchableOpacity 
             key={item.id}
             style={styles.dailyCard}
-            onPress={() => router.push(`/${item.action}`)}
+            onPress={() => router.push(item.action)}
           >
             <LinearGradient
               colors={item.gradient}
@@ -1120,49 +1056,90 @@ const styles = StyleSheet.create({
   },
   aquariumContainer: {
     width: '100%',
-    height: 180, 
-    borderRadius: BORDER_RADIUS.md,
+    height: 250,
+    marginTop: 10,
+    borderRadius: 15,
     overflow: 'hidden',
-    marginBottom: MARGIN.lg,
+    position: 'relative',
   },
   aquarium: {
     width: '100%',
     height: '100%',
     position: 'relative',
   },
-  // Balık yemi göstergesi
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginHorizontal: 10,
+    marginBottom: 10,
+  },
   foodCountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-end',
-    marginBottom: MARGIN.sm,
     backgroundColor: '#4a85e5',
-    paddingHorizontal: PADDING.sm,
-    paddingVertical: PADDING.xs,
-    borderRadius: BORDER_RADIUS.md,
+    borderRadius: 25,
+    padding: 8,
+    marginTop: 10,
+    marginBottom: 10,
+    alignSelf: 'flex-end', // Sağ tarafa yerleşim
+    marginRight: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   foodIconContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 50,
+    backgroundColor: '#3a75d5',
+    borderRadius: 20,
     padding: 5,
-    marginRight: MARGIN.xs,
+    marginRight: 8,
   },
   foodCountText: {
     color: '#FFFFFF',
+    fontSize: 16,
     fontWeight: 'bold',
-    fontSize: FONT_SIZE.lg,
-    marginRight: MARGIN.xs,
+    marginRight: 8,
   },
   buyFoodButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: '#3a75d5',
     borderRadius: 50,
     padding: 3,
   },
-  // Kabarcıklar
+  feedFishButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF7F50', // Turuncu renk
+    borderRadius: 25,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    marginTop: 10,
+    marginBottom: 10,
+    alignSelf: 'flex-start', // Sol tarafa yerleşim
+    marginLeft: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  feedFishButtonDisabled: {
+    backgroundColor: 'rgba(255, 127, 80, 0.5)', // Soluk turuncu
+  },
+  feedFishButtonIcon: {
+    marginRight: 8,
+  },
+  feedFishButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
   bubble: {
     position: 'absolute',
     borderRadius: 50,
     backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.9)',
   },
   waterSurface: {
     position: 'absolute',
@@ -1171,26 +1148,6 @@ const styles = StyleSheet.create({
     right: 0,
     height: 15,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  feedFishButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#4a85e5',
-    padding: PADDING.sm,
-    borderRadius: BORDER_RADIUS.sm,
-    marginBottom: MARGIN.md,
-    alignSelf: 'flex-start',
-  },
-  feedFishButtonDisabled: {
-    backgroundColor: '#a0a0a0',
-    opacity: 0.7,
-  },
-  feedFishButtonIcon: {
-    marginRight: MARGIN.sm,
-  },
-  feedFishButtonText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
   },
   welcomeSection: {
     marginBottom: MARGIN.lg,
@@ -1210,33 +1167,38 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap'
   },
   wordStatCard: {
-    width: '30%',
-    padding: PADDING.sm,
+    width: '31%',
+    padding: PADDING.xs,
     borderRadius: BORDER_RADIUS.md,
-    alignItems: 'center',
     marginHorizontal: MARGIN.xxs,
     marginBottom: MARGIN.sm,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 3,
     elevation: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   wordStatIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 16,
+    width: 32,
+    height: 32,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: MARGIN.sm,
+    marginRight: MARGIN.xs,
+  },
+  wordStatContent: {
+    flex: 1,
+  },
+  wordStatHeader: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   wordStatValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: MARGIN.xxs,
-  },
-  wordStatTitle: {
-    fontSize: 10,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -1393,7 +1355,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
-  // Besleme popup için stiller
   feedingPopupContent: {
     alignItems: 'center',
     paddingVertical: 20,
@@ -1428,7 +1389,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#0066CC',
   },
-  // Balık açlık seviyesi göstergeleri
   hungerIndicatorContainer: {
     width: 40,
     height: 4,
@@ -1443,7 +1403,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#4CAF50', // Yeşil renk - dolu olduğunu gösterir
     borderRadius: 2,
   },
-  // Popup içindeki balık açlık göstergesi
   hungerIndicatorPreviewContainer: {
     width: '80%',
     height: 4,
