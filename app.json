@@ -4,8 +4,9 @@
     "slug": "langlearnpro",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "automatic",
+    "warnings": false,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
@@ -16,7 +17,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.langlearnpro.app"
+      "bundleIdentifier": "com.muratcansahn.denemev1"
     },
     "android": {
       "adaptiveIcon": {

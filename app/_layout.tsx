@@ -72,10 +72,12 @@ function MainLayout() {
   }, [loaded, initialized /* admobState.admobReady.isLoaded */]);
 
   useEffect(() => {
-    if (segments[0] === '(no-auth)') {
-      router.replace('/');
+    if (!session && segments[0] !== '(no-auth)') {
+      router.replace('/(no-auth)/onboarding');
+    } else if (session && segments[0] === '(no-auth)') {
+      router.replace('/(auth)');
     }
-  }, [segments, router]);
+  }, [segments, router, session]);
 
   if (!loaded || !initialized /* || !admobState.admobReady.isLoaded */) {
     return <Slot />;

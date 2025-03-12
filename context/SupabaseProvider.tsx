@@ -48,54 +48,88 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<React.PropsWithChildren> = ({
   children,
 }) => {
-  const [user, setUser] = useState<User | null>({
-    id: 'google-123456789',
-    email: 'test.user@gmail.com',
-    user_metadata: {
-      avatar_url: 'https://lh3.googleusercontent.com/a/default-user',
-      email: 'test.user@gmail.com',
-      email_verified: true,
-      full_name: 'Test User',
-      iss: 'https://accounts.google.com',
-      name: 'Test User',
-      picture: 'https://lh3.googleusercontent.com/a/default-user',
-      provider_id: '123456789',
-      sub: 'google-oauth2|123456789'
-    },
-    app_metadata: {
-      provider: 'google',
-      providers: ['google']
-    },
-    aud: 'authenticated',
-    created_at: '2024-02-22T09:27:09.000Z',
-    role: 'authenticated'
-  } as any);
-  const [session, setSession] = useState<Session | null>({
-    access_token: 'fake-access-token',
-    refresh_token: 'fake-refresh-token',
-    expires_in: 3600,
-    expires_at: 1708851229,
-    provider_token: 'fake-google-token',
-    provider_refresh_token: 'fake-google-refresh-token',
-    user: user
-  } as any);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [initialized, setInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { t } = useTranslation();
   const url = Linking.useURL();
   const redirectUrlVerify = Linking.createURL('callback/verify');
   const redirectUrlNewPassword = Linking.createURL('callback/new-password');
+
+  // Kullanıcıyı Users tablosuna kaydetme fonksiyonu
+  const saveUserToDatabase = useCallback(async (userData: User) => {
+    try {
+      // Önce kullanıcının tabloda var olup olmadığını kontrol ediyoruz
+      const { data: existingUser, error: queryError } = await supabase
+        .from('Users')
+        .select('id')
+        .eq('id', userData.id)
+
+      if (queryError) {
+        console.error('Sorgu hatası:', queryError.message);
+        return;
+      }
+
+      // Kullanıcının var olup olmadığını kontrol et
+      const userExists = existingUser && existingUser.length > 0;
+      console.log('Kullanıcı durumu:', userExists ? 'Bulundu' : 'Bulunamadı');
+
+      if (!userExists) {
+        const { error: insertError } = await supabase
+          .from('Users')
+          .insert([
+            {
+              id: userData.id,
+              full_name: userData.user_metadata?.full_name || 
+                        userData.user_metadata?.name || 
+                        userData.email?.split('@')[0] || 
+                        'Anonim Kullanıcı',
+              point: 5,
+              streak_count: 1,
+              last_login_datetime: new Date().toISOString(),
+            },
+          ]);
+
+        if (insertError) {
+          console.error('Kullanıcı ekleme hatası:', insertError);
+        } else {
+          console.log('Kullanıcı başarıyla eklendi');
+        }
+      } else {
+        // Kullanıcı zaten varsa, son giriş zamanını güncelliyoruz
+        const { error: updateError } = await supabase
+          .from('Users')
+          .update({ last_login_datetime: new Date().toISOString() })
+          .eq('id', userData.id);
+
+        if (updateError) {
+          console.error('Kullanıcı güncelleme hatası:', updateError);
+        } else {
+          console.log('Kullanıcı son giriş zamanı güncellendi');
+        }
+      }
+    } catch (error) {
+      console.error('Kullanıcı kaydetme işlemi sırasında hata:', error);
+    }
+  }, []);
+
   useEffect(() => {
     setIsLoading(true);
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setInitialized(true);
-        setIsAuthenticated(true);
+        setIsAuthenticated(!!session);
+
+        // Kullanıcı giriş yaptığında veritabanına kaydet
+        if (session?.user) {
+          await saveUserToDatabase(session.user);
+        }
       }
     );
     setIsLoading(false);
@@ -103,9 +137,15 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [saveUserToDatabase]);
 
   const handleError = useCallback((error: AuthError | Error) => {
+    console.error('Detaylı hata:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      error: JSON.stringify(error, null, 2)
+    });
     setError(error.message);
     showToast(error.message, true, Colors.light.error);
   }, []);
@@ -125,6 +165,11 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         if (error) throw error;
         setSession(data.session);
         setUser(data.session?.user ?? null);
+        
+        // Kullanıcı başarıyla giriş yaptığında veritabanına kaydet
+        if (data.session?.user) {
+          await saveUserToDatabase(data.session.user);
+        }
       } catch (error) {
         handleError(error as AuthError);
         setIsAuthenticated(false);
@@ -133,7 +178,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         Toast.hide(toast);
       }
     },
-    [handleError]
+    [handleError, saveUserToDatabase]
   );
 
   const signIn = useCallback(
@@ -148,14 +193,34 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
   const signUp = useCallback(
     (email: string, password: string) =>
       handleAuthAction(
-        async () =>
-          await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              emailRedirectTo: redirectUrlVerify,
-            },
-          }),
+        async () => {
+          try {
+            console.log('Signup attempt with:', { email });
+            const { data, error } = await supabase.auth.signUp({
+              email,
+              password,
+              options: {
+                emailRedirectTo: redirectUrlVerify,
+              },
+            });
+            
+            if (error) {
+              console.error('Signup error:', {
+                code: error.status,
+                name: error.name,
+                message: error.message,
+                details: error
+              });
+              throw error;
+            }
+            
+            console.log('Signup successful:', data);
+            return { data: { session: data.session }, error: null };
+          } catch (err) {
+            console.error('Signup error caught:', err);
+            throw err;
+          }
+        },
         t('auth.signingUp')
       ),
     [handleAuthAction, t, redirectUrlVerify]
@@ -198,7 +263,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
   );
 
   const signInWithGoogle = useCallback(async () => {
-    console.log("here")
+    console.log("Google signin başlatılıyor")
     const toast = showToast(
       t('auth.signingInWithGoogle'),
       false,
@@ -222,6 +287,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
       }
     } catch (error: any) {
       handleError(error);
+      console.log("Google signin hatası", error)
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
@@ -276,6 +342,9 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
           setSession(data.session);
           setUser(data.session.user);
           setIsAuthenticated(true);
+          
+          // URL'den gelen session sonrası kullanıcıyı veritabanına kaydet
+          await saveUserToDatabase(data.session.user);
         }
       } catch (error) {
         handleError(error as AuthError);
@@ -283,7 +352,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         setIsLoading(false);
       }
     },
-    [handleError]
+    [handleError, saveUserToDatabase]
   );
 
   const handleShowPassword = useCallback(() => {
@@ -314,19 +383,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
   );
 
   useEffect(() => {
-    setIsLoading(true);
-    setSession(session);
-    setUser(user);
-    setInitialized(true);
-    setIsAuthenticated(true);
-    setIsLoading(false);
-
-    return () => {
-      // cleanup
-    };
-  }, []);
-
-  useEffect(() => {
     if (url) {
       const parsedUrl = parseSupabaseUrl(url);
       if (
@@ -338,7 +394,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         createSessionFromUrl(url);
       }
     }
-  }, [url]);
+  }, [url, session, createSessionFromUrl]);
 
   const value = {
     user,
