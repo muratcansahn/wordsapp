@@ -21,6 +21,7 @@ import { RootSiblingParent } from 'react-native-root-siblings';
 import { AuthProvider, useAuth } from '@/context/SupabaseProvider';
 import { FLEX } from '@/constants/AppConstants';
 
+
 //* If you want to use RevenueCat, uncomment the following lines 👇
 // import {
 //   RevenueCatProvider,

@@ -5,12 +5,9 @@ import {
   TouchableOpacity, 
   StyleSheet, 
   ScrollView,
-  Image,
-  FlatList,
   Animated, 
   Easing,
   Dimensions,
-  Platform
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { ThemedText } from '@/components/common/typography';
@@ -109,9 +106,10 @@ export default function DashboardScreen() {
   const router = useRouter();
   
   // Redux'tan kelime durumunu al
-  const { learnedCount, unknownCount, streakCount } = useSelector((state: RootState) => state.words);
-  const wordStats = getWordStats(learnedCount, unknownCount, streakCount);
-
+  const { full_name, point, known_words, unknown_words, streak_count } = useSelector((state: RootState) => state.user);
+  const wordStats = getWordStats(known_words, unknown_words, streak_count);
+  console.log('wordStatss',  full_name, point, known_words, unknown_words, streak_count);
+  
   // Animasyon değerleri
   const fishTopAnim = useRef(new Animated.Value(0)).current;
   const fishBottomAnim = useRef(new Animated.Value(0)).current;
@@ -124,12 +122,7 @@ export default function DashboardScreen() {
   const [successPopupVisible, setSuccessPopupVisible] = useState(false);
   const [selectedFish, setSelectedFish] = useState<string | null>(null);
   const [foods, setFoods] = useState<Food[]>([]);
-  const [feedingSuccess, setFeedingSuccess] = useState(false); // Besleme başarısı state'i
-  const [foodCount, setFoodCount] = useState(5); // Balık yemi miktarı
-  
-  // Ağız animasyonu değerleri
-  const fishMouthAnim = useRef(new Animated.Value(0)).current;
-  const fish2MouthAnim = useRef(new Animated.Value(0)).current;
+  const [feedingSuccess, setFeedingSuccess] = useState(false);
 
   // Balık bilgileri - merkezileştirilmiş veri modeli
   const [fishData, setFishData] = useState<FishDataType>({
@@ -137,7 +130,7 @@ export default function DashboardScreen() {
       id: 'orange',
       name: 'Turuncu Balık',
       position: { x: 40, y: 100, width: 30, height: 20 }, // Y pozisyonunu güncelledim
-      mouthAnim: fishMouthAnim,
+      mouthAnim: useRef(new Animated.Value(0)).current,
       mouthScaleAnim: useRef(new Animated.Value(1)).current,
       translateX: fishTopAnim.interpolate({
         inputRange: [0, 1],
@@ -154,7 +147,7 @@ export default function DashboardScreen() {
       id: 'blue',
       name: 'Mavi Balık',
       position: { x: 265, y: 60, width: 30, height: 20 }, // Y pozisyonunu güncelledim
-      mouthAnim: fish2MouthAnim,
+      mouthAnim: useRef(new Animated.Value(0)).current,
       mouthScaleAnim: useRef(new Animated.Value(1)).current,
       translateX: fishBottomAnim.interpolate({
         inputRange: [0, 1],
@@ -193,9 +186,7 @@ export default function DashboardScreen() {
 
   // Balık besleme işlemini başlat
   const startFeedingProcess = () => {
-    if (foodCount <= 0) {
-      // Yem bitti durumunda kullanıcıya bildirim göster
-      // Burada bir alert veya popup gösterilebilir
+    if (point <= 0) {
       return;
     }
     
@@ -206,14 +197,12 @@ export default function DashboardScreen() {
   
   // Belirli bir balığı besle
   const feedFish = (fishType: string) => {
-    if (isFeeding || foodCount <= 0) return; // Zaten besleme yapılıyorsa işlemi engelle
+    if (isFeeding || point <= 0) return; // Zaten besleme yapılıyorsa işlemi engelle
     
     const fishInfo = fishData[fishType];
     if (!fishInfo) return;
     
     // Yem miktarını azalt
-    setFoodCount(prev => Math.max(0, prev - 1));
-    
     setSelectedFish(fishType);
     setFeedPopupVisible(false); // Seçim popup'ını kapat
     setFeedingPopupVisible(true); // Besleme popup'ını göster
@@ -705,7 +694,7 @@ export default function DashboardScreen() {
 
   // Yem satın alma işlemi
   const buyMoreFood = () => {
-    setFoodCount(prev => prev + 5); // 5 adet daha yem ekle
+    // TODO: Implement food purchase logic
   };
 
   return (
@@ -719,10 +708,10 @@ export default function DashboardScreen() {
           <TouchableOpacity
             style={[
               styles.feedFishButton,
-              foodCount <= 0 ? styles.feedFishButtonDisabled : {}
+              point <= 0 ? styles.feedFishButtonDisabled : {}
             ]}
             onPress={startFeedingProcess}
-            disabled={isFeeding || foodCount <= 0}
+            disabled={isFeeding || point <= 0}
           >
             <Ionicons
               name="fish-outline"
@@ -745,7 +734,7 @@ export default function DashboardScreen() {
                 color="#FFFFFF"
               />
             </View>
-            <Text style={styles.foodCountText}>{foodCount}</Text>
+            <Text style={styles.foodCountText}>{point}</Text>
             <TouchableOpacity 
               style={styles.buyFoodButton}
               onPress={buyMoreFood}

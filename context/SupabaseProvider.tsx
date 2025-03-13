@@ -13,6 +13,13 @@ import { useTranslation } from 'react-i18next';
 import { Colors } from '../constants/Colors';
 import { parseSupabaseUrl, showToast } from '../helpers/app-functions';
 import * as Linking from 'expo-linking';
+import { useDispatch } from 'react-redux';
+import { 
+  setReduxUser, 
+  clearReduxUser,
+  updateUserStats 
+} from '../store/userSlice';
+
 
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
@@ -59,6 +66,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
   const url = Linking.useURL();
   const redirectUrlVerify = Linking.createURL('callback/verify');
   const redirectUrlNewPassword = Linking.createURL('callback/new-password');
+  const dispatch = useDispatch();
+
 
   // Kullanıcıyı Users tablosuna kaydetme fonksiyonu
   const saveUserToDatabase = useCallback(async (userData: User) => {
@@ -91,6 +100,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
               point: 5,
               streak_count: 1,
               last_login_datetime: new Date().toISOString(),
+              known_words: 0,
+              unknown_words: 0,
             },
           ]);
 
@@ -125,19 +136,44 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         setUser(session?.user ?? null);
         setInitialized(true);
         setIsAuthenticated(!!session);
-
-        // Kullanıcı giriş yaptığında veritabanına kaydet
+  
         if (session?.user) {
+          // Önce veritabanına kaydet
           await saveUserToDatabase(session.user);
+          
+          // Sonra güncel verileri çek
+          const { data: userData, error: userError } = await supabase
+            .from('Users')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (userError) {
+            console.error('Kullanıcı verileri çekilirken hata:', userError);
+          } else if (userData) {
+            // Users tablosundan çekilen verileri Redux'a aktar
+            const userState = {
+              full_name: userData.full_name || '',
+              point: userData.point || 0,
+              last_login_datetime: userData.last_login_datetime || '',
+              known_words: userData.known_words || 0,
+              unknown_words: userData.unknown_words || 0,
+              streak_count: userData.streak_count || 0,
+              id: session.user.id
+            };
+            dispatch(setReduxUser(userState));
+          }
+        } else {
+          dispatch(clearReduxUser());
         }
       }
     );
     setIsLoading(false);
-
+  
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [saveUserToDatabase]);
+  }, [saveUserToDatabase, dispatch]);
 
   const handleError = useCallback((error: AuthError | Error) => {
     console.error('Detaylı hata:', {
@@ -166,9 +202,35 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         setSession(data.session);
         setUser(data.session?.user ?? null);
         
-        // Kullanıcı başarıyla giriş yaptığında veritabanına kaydet
+        // Kullanıcı oturumu varsa, Users tablosundan bilgileri çekelim
         if (data.session?.user) {
+          // Önce veritabanına kaydet (varsa güncelle, yoksa oluştur)
           await saveUserToDatabase(data.session.user);
+          
+          // Sonra Users tablosundan güncel verileri çek
+          const { data: userData, error: userError } = await supabase
+            .from('Users')
+            .select('*')
+            .eq('id', data.session.user.id)
+            .single();
+          
+          if (userError) {
+            console.error('Kullanıcı verileri çekilirken hata:', userError);
+          } else if (userData) {
+            // Users tablosundan çekilen verileri Redux'a aktar
+            const userState = {
+              full_name: userData.full_name || '',
+              point: userData.point || 0,
+              last_login_datetime: userData.last_login_datetime || '',
+              known_words: userData.known_words || 0,
+              unknown_words: userData.unknown_words || 0,
+              streak_count: userData.streak_count || 0,
+              id: data.session.user.id
+            };
+            dispatch(setReduxUser(userState));
+          }
+        } else {
+          dispatch(clearReduxUser());
         }
       } catch (error) {
         handleError(error as AuthError);
@@ -178,8 +240,9 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         Toast.hide(toast);
       }
     },
-    [handleError, saveUserToDatabase]
+    [handleError, saveUserToDatabase, dispatch]
   );
+  
 
   const signIn = useCallback(
     (email: string, password: string) =>
@@ -343,8 +406,31 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
           setUser(data.session.user);
           setIsAuthenticated(true);
           
-          // URL'den gelen session sonrası kullanıcıyı veritabanına kaydet
+          // Önce veritabanına kaydet
           await saveUserToDatabase(data.session.user);
+          
+          // Sonra güncel verileri çek
+          const { data: userData, error: userError } = await supabase
+            .from('Users')
+            .select('*')
+            .eq('id', data.session.user.id)
+            .single();
+          
+          if (userError) {
+            console.error('Kullanıcı verileri çekilirken hata:', userError);
+          } else if (userData) {
+            // Users tablosundan çekilen verileri Redux'a aktar
+            const userState = {
+              full_name: userData.full_name || '',
+              point: userData.point || 0,
+              last_login_datetime: userData.last_login_datetime || '',
+              known_words: userData.known_words || 0,
+              unknown_words: userData.unknown_words || 0,
+              streak_count: userData.streak_count || 0,
+              id: data.session.user.id
+            };
+            dispatch(setReduxUser(userState));
+          }
         }
       } catch (error) {
         handleError(error as AuthError);
@@ -352,7 +438,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         setIsLoading(false);
       }
     },
-    [handleError, saveUserToDatabase]
+    [handleError, saveUserToDatabase, dispatch]
   );
 
   const handleShowPassword = useCallback(() => {
@@ -380,7 +466,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
       }
     },
     [handleError, t]
-  );
+  ); 
 
   useEffect(() => {
     if (url) {
