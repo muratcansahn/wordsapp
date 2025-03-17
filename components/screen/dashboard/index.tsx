@@ -9,8 +9,10 @@ import {
   Easing,
   Dimensions,
   Modal,
+  Platform,
+  StatusBar,
 } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { ThemedText } from '@/components/common/typography';
 import { ThemedView } from '@/components/common/view';
 import { useTranslation } from 'react-i18next';
@@ -29,12 +31,12 @@ import {
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
 import { RootState } from '@/store';
+import { setReduxUser } from '@/store/userSlice';
 import { supabase } from '@/lib/supabase';
 import { FishTypes } from '@/assets/svg/fish';
 import DailyActivitiesSection from './DailyActivitiesSection';
 import { FishComponent } from '@/components/fish/FishComponent';
 import { getHungerColor } from './utils';
-import { FeedingAnimation } from '../../animations/FeedingAnimation';
 
 // Kelime istatistikleri - Redux ile değiştirildi
 const getWordStats = (learnedCount: number, unknownCount: number, streakCount: number) => [
@@ -67,489 +69,131 @@ interface FishDataInterface {
 
 type FishDataType = FishDataInterface[];
 
-export default function DashboardScreen() {
-  const { mode } = useTheme();
-  const { t } = useTranslation();
-  const router = useRouter();
-
-  
-  // Redux'tan kelime durumunu al
-  const { id, full_name, point, known_words, unknown_words, streak_count } = useSelector((state: RootState) => state.user);
-  const wordStats = getWordStats(known_words, unknown_words, streak_count);
-  const fishAnimRefs = useRef<{[key: string]: Animated.Value}>({});
-
-
-  // Animasyon değerler
-  
-  // Yem animasyonu için değerler
-  const [isFeeding, setIsFeeding] = useState(false);
-  const [isEating, setIsEating] = useState<boolean | false>(false);
-  const [feedPopupVisible, setFeedPopupVisible] = useState(false);
-  const [feedingPopupVisible, setFeedingPopupVisible] = useState(false);
-  const [feedingSuccess, setFeedingSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [fishData, setFishData] = useState<FishDataType>([]);
-  const foodAnimation = useRef(new Animated.Value(0)).current;
-  const mouthAnimation = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const fetchUserFishes = async () => {
-      try {
-        setIsLoading(true); // Yükleme başlıyor
-        const { data: userFishes, error } = await supabase
-          .from('UserFishes')
-          .select('*')
-          .eq('user_id', id);
-        
-        if (error) {
-          console.error('Supabase hatası:', error);
-          return;
-        }
-        if (userFishes && userFishes.length > 0) {
-          setFishData(userFishes);
-        }
-      } catch (error) {
-        console.error('Balık verilerini getirirken hata:', error);
-      } finally {
-        setIsLoading(false); // Yükleme bitti (başarılı veya başarısız olsa da)
-      }
-    };
-    
-    if (id) {
-      fetchUserFishes();
-    }
-  }, [id]);
-
-  const startFeedingAnimation = () => {
-    // Yem animasyonunu başlangıç konumuna getir
-    foodAnimation.setValue(0);
-    mouthAnimation.setValue(0);
-    setFeedingSuccess(false);
-    
-    // Yem düşme animasyonu
-    Animated.sequence([
-      // Önce yemi düşür
-      Animated.timing(foodAnimation, {
-        toValue: 110, // Balığın ağzına kadar olan mesafe
-        duration: 1000,
-        useNativeDriver: true,
-        easing: Easing.linear
-      }),
-      // Sonra balığın ağzını aç
-      Animated.timing(mouthAnimation, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: false,
-        easing: Easing.linear
-      })
-    ]).start(() => {
-      // Ağız açma animasyonu bittikten sonra
-      setFeedingSuccess(true);
-      // 1.5 saniye sonra popup'ı kapat
-      setTimeout(() => {
-        setFeedingPopupVisible(false);
-        setIsFeeding(false);
-        setIsEating(false);
-      }, 1500);
-    });
-  };
-
-  useEffect(() => {
-    if (feedingPopupVisible) {
-      startFeedingAnimation();
-    }
-  }, [feedingPopupVisible]);
-
-  // Açlık seviyesine göre renk döndüren yardımcı fonksiyon
-
-  // Baloncuklar için animasyon değerleri
-  const bubbles = useRef([...Array(12)].map(() => ({
-    xPos: Math.random() * 250,
-    yPos: Math.random() * 300,
-    size: Math.random() * 15 + 5,
-    speed: Math.random() * 3000 + 2000,
-    xOffset: new Animated.Value(0),
-    yOffset: new Animated.Value(0),
-    opacity: new Animated.Value(Math.random() * 0.4 + 0.2),
-    scale: new Animated.Value(1),
-    rotation: new Animated.Value(0),
-    color: Math.random() > 0.7 ? 'rgba(255, 255, 255, 0.7)' : 'rgba(220, 240, 255, 0.7)',
-  }))).current;
-
-  const bubbleAnimations = useRef<Animated.CompositeAnimation[]>(bubbles.map(bubble => {
-    return Animated.loop(
-      Animated.sequence([
-        Animated.timing(bubble.yOffset, {
-          toValue: bubble.size,
-          duration: bubble.speed * 10,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }),
-        Animated.timing(bubble.yOffset, {
-          toValue: bubble.yPos,
-          duration: 0,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-  }));
-
-  useEffect(() => {
-    bubbleAnimations.current.forEach(animation => animation.start());
-  }, [bubbleAnimations]);
-
-  // Balık besleme işlemini başlat
-  const startFeedingProcess = () => {
-    setFeedingPopupVisible(true);
-    const FeedUserFish = async () => {
-      try {
-        // Önce mevcut hunger_level'i kontrol et
-        const { data: currentFish, error: fetchError } = await supabase
-          .from('UserFishes')
-          .select('hunger_level')
-          .eq('user_id', id)
-          .single();
-
-        if (fetchError) {
-          console.error("Balık bilgisi alınamadı:", fetchError);
-          return;
-        }
-        const newHungerLevel = Math.min(currentFish.hunger_level + 50, 100);
-
-        const { data, error } = await supabase
-          .from('UserFishes')
-          .update({ hunger_level: newHungerLevel, last_feed_time: new Date().toISOString() })
-          .eq('user_id', id)
-          .select();
-        
-        if (error) {
-          console.error("Balık besleme hatası:", error);
-          return;
-        }
-
-        // Balık beslendikten sonra güncel verileri çek
-        const { data: updatedFishData, error: updateError } = await supabase
-          .from('UserFishes')
-          .select('*')
-          .eq('user_id', id);
-
-        if (updateError) {
-          console.error("Güncel balık verisi alınamadı:", updateError);
-          return;
-        }
-
-        if (updatedFishData) {
-          setFishData(updatedFishData);
-        }
-      } catch (err) {
-        console.error("Beklenmeyen hata:", err);
-      }
-    };
-  
-    FeedUserFish();
-  };
-  
-  
-  const aquariumRef = useRef(null);
-  
-  const renderFish = () => {
-    return fishData.map((fish, index) => {
-      const direction =  "left";
-      const mouthAnim = new Animated.Value(0);
-      
-                
-      return (
-        <View
-          key={`fish-${index}`}
-          style={[
-            {
-              position: 'absolute',
-              top: 30,
-              left: 30,
-            }
-          ]}
-        >
-          <FishComponent
-            width={50}
-            height={40}
-            mouthAnim={mouthAnim}
-            direction={direction}
-            isEating={false}
-            type={"orange"}
-            hungerLevel={fish.hunger_level}
-            lastFeedTime={fish.last_feed_time}
-          />
-        </View>
-      );
-    });
-  };
-
-  return (
-    <ThemedView style={styles.container}>
-      <ScrollView 
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* Butonlar */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[
-              styles.feedFishButton,
-              point <= 0 ? styles.feedFishButtonDisabled : {}
-            ]}
-            onPress={startFeedingProcess}
-            disabled={isFeeding || point <= 0}
-          >
-            <Ionicons
-              name="fish-outline"
-              size={ICON_SIZE.sm}
-              color="#FFFFFF"
-              style={styles.feedFishButtonIcon}
-            />
-            <Text style={styles.feedFishButtonText}>
-              {t('dashboard.feedFish') || "Balıkları Besle"}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.foodCountContainer}
-            onPress={()=>{}}
-          >
-            <View style={styles.foodIconContainer}>
-              <Ionicons
-                name="water-outline"
-                size={ICON_SIZE.sm}
-                color="#FFFFFF"
-              />
-            </View>
-            <Text style={styles.foodCountText}>{point}</Text>
-            <TouchableOpacity 
-              style={styles.buyFoodButton}
-              onPress={()=>{}}
-            >
-              <Ionicons
-                name="add"
-                size={ICON_SIZE.xs}
-                color="#FFFFFF"
-              />
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </View>
-
- 
-        
-        {/* Akvaryum */}
-        <View style={styles.aquariumContainer}>
-          <View style={styles.aquarium}>
-            {renderFish()}
-            <View style={styles.waterSurface} />
-            
-            {/* Baloncuklar */}
-            {bubbles.map((bubble, index) => (
-              <Animated.View
-                key={`bubble_${index}`}
-                style={[
-                  styles.bubble,
-                  {
-                    left: bubble.xPos,
-                    bottom: bubble.yPos,
-                    width: bubble.size,
-                    height: bubble.size,
-                    backgroundColor: bubble.color,
-                    transform: [
-                      { translateX: bubble.xOffset.interpolate({
-                          inputRange: [0, 0.5, 1],
-                          outputRange: [0, bubble.size * (Math.random() > 0.5 ? 0.7 : -0.7), 0]
-                        }) 
-                      },
-                      { translateY: bubble.yOffset.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0, -bubble.speed / 10] // Daha uzun mesafe yükselme
-                        })
-                      },
-                      { scale: bubble.scale }, // Boyut değişimi
-                      { rotate: bubble.rotation.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ['0deg', '360deg']
-                        })
-                      }
-                    ],
-                    opacity: bubble.opacity,
-                    // Hafif gölge ekleme
-                    shadowColor: "#fff",
-                    shadowOffset: { width: 0, height: 0 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 3,
-                  }
-                ]}
-              />
-            ))}
-            
-       
-            
-          </View>
-        </View>
-
-        {/* Kelime İstatistikleri */}
-        <View style={styles.sectionHeader}>
-          <ThemedText style={styles.sectionTitle}>{t('dashboard.wordStatus')}</ThemedText>
-        </View>
-        
-        <View style={styles.wordStatsContainer}>
-          {wordStats.map((stat) => (
-            <TouchableOpacity 
-              key={stat.id} 
-              style={[styles.wordStatCard, { backgroundColor: Colors[mode].card }]}
-              onPress={() => router.push({
-                pathname: '/word-list',
-                params: { type: stat.title }
-              })}
-            >
-              <View style={[styles.wordStatIconContainer, { backgroundColor: stat.color + '15' }]}>
-                <Ionicons
-                  name={stat.icon as keyof typeof Ionicons.glyphMap}
-                  size={ICON_SIZE.xs}
-                  color={stat.color}
-                />
-              </View>
-              <View style={styles.wordStatContent}>
-                <View style={styles.wordStatHeader}>
-                  <ThemedText style={styles.wordStatValue}>{stat.value}</ThemedText>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-
-      {/* Balık seçme popup'ı */}
-      <Popup
-        visible={feedPopupVisible}
-        onClose={() => setFeedPopupVisible(false)}
-        position="center"
-        title="Hangi Balığı Beslemek İstersiniz?"
-      >
-        <View style={styles.popupContent}>
-          {fishData && fishData.map((fish) => {
-            // Balık türüne göre SVG bileşenini al
-            const hungerColor = getHungerColor(fish.hunger_level);
-            
-            return (
-              <TouchableOpacity
-                key={fish.id}
-                style={styles.fishSelectButton}
-                onPress={() => {}}
-              >
-                <View style={styles.fishPreviewContainer}>
-                  <View style={styles.hungerIndicatorPreviewContainer}>
-                    <View 
-                      style={[
-                        styles.hungerIndicatorPreview, 
-                        { width: `${fish.hunger_level}%`, backgroundColor: hungerColor }
-                      ]} 
-                    />
-                  </View>
-                  <FishComponent 
-                    width={40}
-                    height={30}
-                    mouthAnim={new Animated.Value(0)}
-                    direction={"right"}
-                    isEating={false}
-                    type={fish.type}
-                    hungerLevel={fish.hunger_level}
-                    lastFeedTime={fish.last_feed_time}
-                  />
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-   
-      </Popup>
-      
-      {/* Besleme animasyonu popup'ı */}
-      <Popup
-        visible={feedingPopupVisible}
-        onClose={() => {
-          setFeedingPopupVisible(false);
-          setIsFeeding(false);
-          setIsEating(false);
-        }}
-        position="center"
-        title="Balık Besleniyor"
-      >
-        <View style={styles.feedingPopupContent}>
-          <View style={styles.feedingContainer}>
-            <Animated.View
-              style={[
-                styles.foodItem,
-                {
-                  transform: [{
-                    translateY: foodAnimation
-                  }]
-                }
-              ]}
-            >
-              <View style={styles.foodDot} />
-            </Animated.View>
-            <FishComponent 
-              width={120}
-              height={90}
-              mouthAnim={mouthAnimation}
-              direction={"left"}
-              isEating={isEating}
-              type={"orange"}
-              
-            />
-          </View>
-        
-          {feedingSuccess && (
-            <Text style={styles.feedingSuccessText}>
-              Balık başarıyla beslendi!
-            </Text>
-          )}
-        </View>
-      </Popup>
-    
-    <DailyActivitiesSection />
-    </ScrollView>
-
-    </ThemedView>
-
-  );
-}
-
-const styles = StyleSheet.create({
+const createStyles = (mode: 'light' | 'dark') => StyleSheet.create({
   container: {
     flex: FLEX.one,
+    backgroundColor: mode === 'dark' ? '#001529' : '#E6F7FF',
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: MARGIN.md,
-    marginTop: MARGIN.lg,
-},
-sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-},
   scrollContent: {
     padding: PADDING.md,
     paddingBottom: PADDING.xl * 2,
   },
   aquariumContainer: {
-    width: '100%',
     height: 250,
-    marginTop: 10,
-    borderRadius: 15,
+    borderRadius: 25,
     overflow: 'hidden',
-    position: 'relative',
+    marginVertical: MARGIN.lg,
+    backgroundColor: mode === 'dark' ? 'rgba(0, 41, 88, 0.8)' : 'rgba(191, 239, 255, 0.8)',
+    borderWidth: 2,
+    borderColor: mode === 'dark' ? 'rgba(102, 178, 255, 0.3)' : 'rgba(24, 144, 255, 0.3)',
+    shadowColor: mode === 'dark' ? '#000' : '#1890FF',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  aquarium: {
+  aquariumHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: PADDING.md,
+    paddingVertical: PADDING.sm,
+    backgroundColor: mode === 'dark' ? 'rgba(0, 29, 66, 0.9)' : 'rgba(173, 216, 230, 0.9)',
+    borderBottomWidth: 1,
+    borderBottomColor: mode === 'dark' ? 'rgba(102, 178, 255, 0.2)' : 'rgba(24, 144, 255, 0.2)',
+  },
+  aquariumTitle: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
+    color: mode === 'dark' ? '#FFFFFF' : '#001529',
+  },
+  aquariumStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  aquariumStatItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: MARGIN.md,
+    backgroundColor: mode === 'dark' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.3)',
+    paddingHorizontal: PADDING.sm,
+    paddingVertical: PADDING.xs,
+    borderRadius: BORDER_RADIUS.sm,
+  },
+  aquariumStatText: {
+    fontSize: FONT_SIZE.sm,
+    color: mode === 'dark' ? '#E6F7FF' : '#001529',
+    marginLeft: MARGIN.xs,
+  },
+  bubble: {
+    position: 'absolute',
+    borderRadius: 50,
+    zIndex: 1,
+  },
+  waterReflection: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 80,
+    opacity: 0.08,
+    transform: [{ scaleY: -1 }],
+  },
+  plantDecoration: {
+    position: 'absolute',
+    bottom: 0,
     width: '100%',
-    height: '100%',
-    position: 'relative',
-    backgroundColor: '#4a85e5',
+    height: 120,
+    opacity: 0.4,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: MARGIN.md,
+    padding: PADDING.sm,
+    backgroundColor: mode === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)',
+    borderRadius: BORDER_RADIUS.lg,
+    borderWidth: 1,
+    borderColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+  },
+  statItem: {
+    alignItems: 'center',
+    padding: PADDING.sm,
+    minWidth: 80,
+  },
+  statValue: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
+    color: mode === 'dark' ? Colors.light.text : Colors.dark.text,
+  },
+  statLabel: {
+    fontSize: FONT_SIZE.sm,
+    color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+    marginTop: 4,
+  },
+  feedButton: {
+    position: 'absolute',
+    right: MARGIN.lg,
+    bottom: MARGIN.lg,
+    backgroundColor: mode === 'dark' ? '#1890FF' : '#40A9FF',
+    padding: PADDING.md,
+    borderRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  feedButtonText: {
+    color: '#FFFFFF',
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -618,32 +262,17 @@ sectionTitle: {
     color: '#FFFFFF',
     fontWeight: 'bold',
   },
-  bubble: {
-    position: 'absolute',
-    borderRadius: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.9)',
-  },
-  waterSurface: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 15,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  welcomeSection: {
-    marginBottom: MARGIN.lg,
-  },
-  welcomeText: {
-    fontSize: 28,
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: MARGIN.md,
+    marginTop: MARGIN.lg,
+},
+sectionTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: MARGIN.xs,
-  },
-  welcomeSubtext: {
-    fontSize: 16,
-  },
+},
   wordStatsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -831,3 +460,502 @@ sectionTitle: {
     position: 'absolute',
   },
 });
+
+export default function DashboardScreen() {
+  const { mode } = useTheme();
+  const styles = useMemo(() => createStyles(mode), [mode]);
+  const { t } = useTranslation();
+  const router = useRouter();
+  const dispatch = useDispatch();
+
+  
+  // Redux'tan kelime durumunu al
+  const { id, full_name, point, known_words, unknown_words, streak_count } = useSelector((state: RootState) => state.user);
+  const wordStats = getWordStats(known_words, unknown_words, streak_count);
+
+  // Animasyon değerler
+  
+  // Yem animasyonu için değerler
+  const [isFeeding, setIsFeeding] = useState(false);
+  const [isEating, setIsEating] = useState<boolean | false>(false);
+  const [feedPopupVisible, setFeedPopupVisible] = useState(false);
+  const [feedingPopupVisible, setFeedingPopupVisible] = useState(false);
+  const [feedingSuccess, setFeedingSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [fishData, setFishData] = useState<FishDataType>([]);
+  const foodAnimation = useRef(new Animated.Value(0)).current;
+  const mouthAnimation = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const fetchUserFishes = async () => {
+      try {
+        setIsLoading(true); // Yükleme başlıyor
+        const { data: userFishes, error } = await supabase
+          .from('UserFishes')
+          .select('*')
+          .eq('user_id', id);
+        
+        if (error) {
+          console.error('Supabase hatası:', error);
+          return;
+        }
+        if (userFishes && userFishes.length > 0) {
+          setFishData(userFishes);
+        }
+      } catch (error) {
+        console.error('Balık verilerini getirirken hata:', error);
+      } finally {
+        setIsLoading(false); // Yükleme bitti (başarılı veya başarısız olsa da)
+      }
+    };
+    
+    if (id) {
+      fetchUserFishes();
+    }
+  }, [id]);
+
+  const startFeedingAnimation = () => {
+    // Yem animasyonunu başlangıç konumuna getir
+    foodAnimation.setValue(0);
+    mouthAnimation.setValue(0);
+    setFeedingSuccess(false);
+    
+    // Yem düşme animasyonu
+    Animated.sequence([
+      // Önce yemi düşür
+      Animated.timing(foodAnimation, {
+        toValue: 110, // Balığın ağzına kadar olan mesafe
+        duration: 1000,
+        useNativeDriver: true,
+        easing: Easing.linear
+      }),
+      // Sonra balığın ağzını aç
+      Animated.timing(mouthAnimation, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: false,
+        easing: Easing.linear
+      })
+    ]).start(() => {
+      // Ağız açma animasyonu bittikten sonra
+      setFeedingSuccess(true);
+      // 1.5 saniye sonra popup'ı kapat
+      setTimeout(() => {
+        setFeedingPopupVisible(false);
+        setIsFeeding(false);
+        setIsEating(false);
+      }, 1500);
+    });
+  };
+
+  useEffect(() => {
+    if (feedingPopupVisible) {
+      startFeedingAnimation();
+    }
+  }, [feedingPopupVisible]);
+
+  // Açlık seviyesine göre renk döndüren yardımcı fonksiyon
+
+  // Baloncuklar için animasyon değerleri
+  const bubbles = useRef([...Array(15)].map(() => ({
+    xPos: Math.random() * Dimensions.get('window').width * 0.8,
+    yPos: Math.random() * 300,
+    size: Math.random() * 12 + 3,
+    speed: Math.random() * 2000 + 1500,
+    xOffset: new Animated.Value(0),
+    yOffset: new Animated.Value(0),
+    opacity: new Animated.Value(Math.random() * 0.4 + 0.2),
+    scale: new Animated.Value(1),
+    rotation: new Animated.Value(0),
+    color: Math.random() > 0.7 ? 'rgba(255, 255, 255, 0.5)' : 'rgba(220, 240, 255, 0.4)',
+  }))).current;
+
+  const bubbleAnimations = useRef<Animated.CompositeAnimation[]>(bubbles.map(bubble => {
+    return Animated.loop(
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(bubble.yOffset, {
+            toValue: -bubble.size * 20,
+            duration: bubble.speed,
+            easing: Easing.linear,
+            useNativeDriver: true,
+          }),
+          Animated.timing(bubble.yOffset, {
+            toValue: bubble.yPos,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.timing(bubble.xOffset, {
+            toValue: Math.random() * 20 - 10,
+            duration: bubble.speed / 2,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
+          Animated.timing(bubble.xOffset, {
+            toValue: 0,
+            duration: bubble.speed / 2,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.timing(bubble.scale, {
+            toValue: Math.random() * 0.4 + 0.8,
+            duration: bubble.speed / 2,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
+          Animated.timing(bubble.scale, {
+            toValue: 1,
+            duration: bubble.speed / 2,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
+        ]),
+      ])
+    );
+  }));
+
+  useEffect(() => {
+    bubbleAnimations.current.forEach(animation => animation.start());
+    return () => {
+      bubbleAnimations.current.forEach(animation => animation.stop());
+    };
+  }, []);
+
+  const renderBubbles = () => {
+    return bubbles.map((bubble, index) => (
+      <Animated.View
+        key={index}
+        style={[
+          styles.bubble,
+          {
+            left: bubble.xPos,
+            top: bubble.yPos,
+            width: bubble.size,
+            height: bubble.size,
+            backgroundColor: bubble.color,
+            transform: [
+              { translateY: bubble.yOffset },
+              { translateX: bubble.xOffset },
+              { scale: bubble.scale },
+            ],
+            opacity: bubble.opacity,
+          },
+        ]}
+      />
+    ));
+  };
+
+  const renderFish = () => {
+    return fishData.map((fish, index) => {
+      const direction =  "left";
+      const mouthAnim = new Animated.Value(0);
+                
+      return (
+        <View
+          key={`fish-${index}`}
+          style={[
+            {
+              position: 'absolute',
+              top: 130,
+              left: 30,
+            }
+          ]}
+        >
+          <FishComponent
+            width={70}
+            height={70}
+            mouthAnim={mouthAnim}
+            direction={direction}
+            isEating={false}
+            type={"orange"}
+            hungerLevel={fish.hunger_level}
+            lastFeedTime={fish.last_feed_time}
+          />
+        </View>
+      );
+    });
+  };
+
+  const startFeedingProcess = () => {
+    setFeedingPopupVisible(true);
+    const FeedUserFish = async () => {
+      try {
+        // Önce mevcut hunger_level'i kontrol et
+        const { data: currentFish, error: fetchError } = await supabase
+          .from('UserFishes')
+          .select('hunger_level')
+          .eq('user_id', id)
+          .single();
+
+        if (fetchError) {
+          console.error("Balık bilgisi alınamadı:", fetchError);
+          return;
+        }
+        
+        const newHungerLevel = Math.min(currentFish.hunger_level + 50, 100);
+
+        // Balığı besle
+        const { data, error } = await supabase
+          .from('UserFishes')
+          .update({ hunger_level: newHungerLevel, last_feed_time: new Date().toISOString() })
+          .eq('user_id', id)
+          .select();
+        
+        if (error) {
+          console.error("Balık besleme hatası:", error);
+          return;
+        }
+
+        // Point'i azalt
+        const { data: userData, error: userError } = await supabase
+          .from('Users')
+          .update({ point: point - 1 })
+          .eq('id', id)
+          .select();
+
+        if (userError) {
+          console.error("Point güncellenirken hata:", userError);
+          return;
+        }
+
+
+        // Redux store'u hemen güncelle
+        if (userData && userData[0]) {
+          const updatedUser = userData[0];
+          console.log("Redux'a gönderilen veri:", updatedUser);
+          dispatch(setReduxUser(updatedUser));
+        }
+
+        // Balık verilerini güncelle
+        const [fishResponse] = await Promise.all([
+          supabase.from('UserFishes').select('*').eq('user_id', id),
+        ]);
+
+        if (fishResponse.error) {
+          console.error("Güncel balık verisi alınamadı:", fishResponse.error);
+          return;
+        }
+
+        if (fishResponse.data) {
+          setFishData(fishResponse.data);
+        }
+
+      } catch (err) {
+        console.error("Beklenmeyen hata:", err);
+      }
+    };
+  
+    FeedUserFish();
+  };
+  
+  
+  const aquariumRef = useRef(null);
+  
+
+  return (
+    <ThemedView style={styles.container}>
+      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Butonlar */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[
+              styles.feedFishButton,
+              point <= 0 ? styles.feedFishButtonDisabled : {}
+            ]}
+            onPress={startFeedingProcess}
+            disabled={isFeeding || point <= 0}
+          >
+            <Ionicons
+              name="fish-outline"
+              size={ICON_SIZE.sm}
+              color="#FFFFFF"
+              style={styles.feedFishButtonIcon}
+            />
+            <Text style={styles.feedFishButtonText}>
+              {t('dashboard.feedFish') || "Balıkları Besle"}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.foodCountContainer}
+            onPress={()=>{}}
+          >
+            <View style={styles.foodIconContainer}>
+              <Ionicons
+                name="water-outline"
+                size={ICON_SIZE.sm}
+                color="#FFFFFF"
+              />
+            </View>
+            <Text style={styles.foodCountText}>{point}</Text>
+            <TouchableOpacity 
+              style={styles.buyFoodButton}
+              onPress={()=>{}}
+            >
+              <Ionicons
+                name="add"
+                size={ICON_SIZE.xs}
+                color="#FFFFFF"
+              />
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </View>
+
+ 
+        
+        {/* Akvaryum */}
+        <View style={styles.aquariumContainer}>
+          <LinearGradient
+            colors={mode === 'dark' 
+              ? ['rgba(0, 41, 88, 0.9)', 'rgba(0, 10, 50, 0.95)']
+              : ['rgba(191, 239, 255, 0.9)', 'rgba(100, 181, 246, 0.95)']}
+            style={StyleSheet.absoluteFill}
+          />
+       
+          <View style={styles.waterReflection}>
+            <LinearGradient
+              colors={['rgba(255, 255, 255, 0.1)', 'transparent']}
+              style={StyleSheet.absoluteFill}
+            />
+          </View>
+          {renderBubbles()}
+          {renderFish()}
+          <View style={styles.plantDecoration}>
+            <LinearGradient
+              colors={['transparent', mode === 'dark' ? 'rgba(0, 100, 0, 0.2)' : 'rgba(0, 150, 0, 0.15)']}
+              style={StyleSheet.absoluteFill}
+            />
+          </View>
+        </View>
+
+        {/* Kelime İstatistikleri */}
+        <View style={styles.sectionHeader}>
+          <ThemedText style={styles.sectionTitle}>{t('dashboard.wordStatus')}</ThemedText>
+        </View>
+        
+        <View style={styles.wordStatsContainer}>
+          {wordStats.map((stat) => (
+            <TouchableOpacity 
+              key={stat.id} 
+              style={[styles.wordStatCard, { backgroundColor: Colors[mode].card }]}
+              onPress={() => router.push({
+                pathname: '/word-list',
+                params: { type: stat.title }
+              })}
+            >
+              <View style={[styles.wordStatIconContainer, { backgroundColor: stat.color + '15' }]}>
+                <Ionicons
+                  name={stat.icon as keyof typeof Ionicons.glyphMap}
+                  size={ICON_SIZE.xs}
+                  color={stat.color}
+                />
+              </View>
+              <View style={styles.wordStatContent}>
+                <View style={styles.wordStatHeader}>
+                  <ThemedText style={styles.wordStatValue}>{stat.value}</ThemedText>
+                </View>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+
+      {/* Balık seçme popup'ı */}
+      <Popup
+        visible={feedPopupVisible}
+        onClose={() => setFeedPopupVisible(false)}
+        position="center"
+        title="Hangi Balığı Beslemek İstersiniz?"
+      >
+        <View style={styles.popupContent}>
+          {fishData && fishData.map((fish) => {
+            // Balık türüne göre SVG bileşenini al
+            const hungerColor = getHungerColor(fish.hunger_level);
+            
+            return (
+              <TouchableOpacity
+                key={fish.id}
+                style={styles.fishSelectButton}
+                onPress={() => {}}
+              >
+                <View style={styles.fishPreviewContainer}>
+                  <View style={styles.hungerIndicatorPreviewContainer}>
+                    <View 
+                      style={[
+                        styles.hungerIndicatorPreview, 
+                        { width: `${fish.hunger_level}%`, backgroundColor: hungerColor }
+                      ]} 
+                    />
+                  </View>
+                  <FishComponent 
+                    width={40}
+                    height={30}
+                    mouthAnim={new Animated.Value(0)}
+                    direction={"right"}
+                    isEating={false}
+                    type={fish.type}
+                    hungerLevel={fish.hunger_level}
+                    lastFeedTime={fish.last_feed_time}
+                  />
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+   
+      </Popup>
+      
+      {/* Besleme animasyonu popup'ı */}
+      <Popup
+        visible={feedingPopupVisible}
+        onClose={() => {
+          setFeedingPopupVisible(false);
+          setIsFeeding(false);
+          setIsEating(false);
+        }}
+        position="center"
+        title="Balık Besleniyor"
+      >
+        <View style={styles.feedingPopupContent}>
+          <View style={styles.feedingContainer}>
+            <Animated.View
+              style={[
+                styles.foodItem,
+                {
+                  transform: [{
+                    translateY: foodAnimation
+                  }]
+                }
+              ]}
+            >
+              <View style={styles.foodDot} />
+            </Animated.View>
+            <FishComponent 
+              width={120}
+              height={90}
+              mouthAnim={mouthAnimation}
+              direction={"left"}
+              isEating={isEating}
+              type={"orange"}
+              
+            />
+          </View>
+        
+          {feedingSuccess && (
+            <Text style={styles.feedingSuccessText}>
+              Balık başarıyla beslendi!
+            </Text>
+          )}
+        </View>
+      </Popup>
+    
+    <DailyActivitiesSection />
+    </ScrollView>
+
+    </ThemedView>
+
+  );
+}
