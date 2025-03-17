@@ -1,6 +1,6 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'; 
+import React from 'react'; 
 import Svg, { Path, G, Circle } from 'react-native-svg'; 
-import { Animated, Easing } from 'react-native';  
+import { Animated } from 'react-native';  
 
 const AnimatedPath = Animated.createAnimatedComponent(Path); 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -20,33 +20,9 @@ const DetailedFish: React.FC<DetailedFishProps> = ({
   height = 150,   
   direction = 'right',   
   color = '#FF8C00',
-  mouthAnim: externalMouthAnim = new Animated.Value(0),
+  mouthAnim = new Animated.Value(0),
   isEating = true
 }) => {   
-  // Komponentin kendi animasyon değerini oluştur
-  const localMouthAnim = useRef(new Animated.Value(0)).current;
-  
-  // Balık yem yediğinde ağız animasyonu
-  useEffect(() => {
-    if (isEating) {
-      // Ağzın açılıp kapanması için animasyon - tek seferlik
-      Animated.sequence([
-        Animated.timing(localMouthAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: false,
-          easing: Easing.inOut(Easing.ease)
-        }),
-        Animated.timing(localMouthAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: false,
-          easing: Easing.inOut(Easing.ease)
-        })
-      ]).start(); // Animasyonu tek sefer çalıştır
-    }
-  }, [isEating, localMouthAnim]);
-
   return (     
     <AnimatedSvg       
       width={width}       
@@ -97,7 +73,7 @@ const DetailedFish: React.FC<DetailedFishProps> = ({
       />  
       {/* Balık ağzı - yeme animasyonu */}
       <AnimatedPath
-        d={localMouthAnim.interpolate({
+        d={mouthAnim.interpolate({
           inputRange: [0, 1],
           outputRange: ["M30,240 Q40,240 50,240", "M25,230 Q40,260 55,230"] // Ağzın kapalı ve açık halleri
         })}

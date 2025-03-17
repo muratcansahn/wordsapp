@@ -212,6 +212,11 @@
     "recommended": "Recommended",
     "performance": "Performance",
     "revising": "Revising",
-    "streak": "Streak"
+    "streak": "Streak",
+    "feedFish": "Feed Fish",
+    "selectFish": "Feed Your Fish",
+    "selectFishDescription": "Which fish would you like to feed?",
+    "orangeFish": "Orange Fish",
+    "blueFish": "Blue Fish"
   }
 }

@@ -196,5 +196,24 @@
     "notifications": "Benachrichtigungen",
     "theme": "Design",
     "language": "Sprache +4"
+  },
+  "dashboard": {
+    "welcome": "Hallo 👋",
+    "welcomeSubtext": "Was möchtest du heute lernen?",
+    "wordStatus": "Wortstatus",
+    "known": "Bekannt",
+    "unknown": "Unbekannt",
+    "learned": "Gelernt",
+    "dailyActivities": "Tägliche Aktivitäten",
+    "quickAccess": "Schnellzugriff",
+    "recommended": "Empfohlen",
+    "performance": "Leistung",
+    "revising": "Wiederholung",
+    "streak": "Serie",
+    "feedFish": "Fische füttern",
+    "selectFish": "Füttere deine Fische",
+    "selectFishDescription": "Welchen Fisch möchtest du füttern?",
+    "orangeFish": "Oranger Fisch",
+    "blueFish": "Blauer Fisch"
   }
 }
