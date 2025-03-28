@@ -24,6 +24,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
+import { getRandomWordsWithTranslations } from '@/services/wordService';
 
 // Kelime eşleştirme oyunu için arayüz
 interface MatchingWord {
@@ -55,7 +56,7 @@ export default function WordMatchingScreen() {
   const [score, setScore] = useState(0);
   const [totalMatches, setTotalMatches] = useState(0);
   const [gameCompleted, setGameCompleted] = useState(false);
-  const [gameStarted, setGameStarted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Animasyon değerleri
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -68,48 +69,70 @@ export default function WordMatchingScreen() {
   // Eşleşmiş kelime-çeviri çiftlerini tutmak için state
   const [matchedPairs, setMatchedPairs] = useState<{wordId: string, translation: string, word: string}[]>([]);
   
-  // Oyun için 5 rastgele kelime seç
+  // Sayfa yüklendiğinde oyunu başlat
   useEffect(() => {
-    if (words.length > 0) {
-      startNewGame();
-    }
-  }, [words]);
+    // Sayfa yüklendiğinde otomatik olarak oyunu başlat
+    startNewGame();
+  }, []);
   
   // Yeni oyun başlat
-  const startNewGame = () => {
-    // Rastgele 5 kelime seç
-    const availableWords = [...words];
-    const selectedWords: MatchingWord[] = [];
-    
-    // En az 5 kelime varsa
-    const wordCount = Math.min(5, availableWords.length);
-    
-    for (let i = 0; i < wordCount; i++) {
-      const randomIndex = Math.floor(Math.random() * availableWords.length);
-      const word = availableWords.splice(randomIndex, 1)[0];
+  const startNewGame = async () => {
+    try {
       
-      selectedWords.push({
-        id: word.id,
-        text: word.text,
-        translation: word.translation,
-        matched: false,
-        selected: false
+      // Rastgele 5 kelime çek
+      const randomWords = await getRandomWordsWithTranslations();
+      console.log( randomWords);
+      
+      if (!randomWords || randomWords.length === 0) {
+        console.error('Kelime bulunamadı veya boş dizi döndü');
+        Alert.alert('Hata', 'Kelimeler yüklenirken bir sorun oluştu.');
+        setIsLoading(false);
+        return;
+      }
+      
+      // Word tipinden MatchingWord tipine dönüştür
+      const selectedWords: MatchingWord[] = randomWords.map(word => {
+        if (!word || !word.WordTranslations || word.WordTranslations.length === 0) {
+          console.error('Kelime veya çevirisi eksik:', word);
+          return {
+            id: word?.id?.toString() || Math.random().toString(),
+            text: word?.name || 'Bilinmeyen kelime',
+            translation: 'Çeviri bulunamadı',
+            matched: false,
+            selected: false
+          };
+        }
+        
+        return {
+          id: word.id.toString(),
+          text: word.name,
+          translation: word.WordTranslations[0]?.mean || 'Çeviri bulunamadı',
+          matched: false,
+          selected: false
+        };
       });
+      
+      console.log('Dönüştürülen kelimeler:', selectedWords);
+      
+      // Çevirileri karıştır
+      const translations = selectedWords.map(word => word.translation);
+      const shuffled = [...translations].sort(() => Math.random() - 0.5);
+      
+      setMatchingWords(selectedWords);
+      setShuffledTranslations(shuffled);
+      setSelectedWord(null);
+      setSelectedTranslation(null);
+      setScore(0);
+      setTotalMatches(0);
+      setGameCompleted(false);
+      setMatchedPairs([]);
+      setIsLoading(false);
+      console.log('Oyun başlatıldı');
+    } catch (error) {
+      console.error('Oyun başlatma hatası:', error);
+      Alert.alert('Hata', 'Oyun başlatılırken bir sorun oluştu.');
+      setIsLoading(false);
     }
-    
-    // Çevirileri karıştır
-    const translations = selectedWords.map(word => word.translation);
-    const shuffled = [...translations].sort(() => Math.random() - 0.5);
-    
-    setMatchingWords(selectedWords);
-    setShuffledTranslations(shuffled);
-    setSelectedWord(null);
-    setSelectedTranslation(null);
-    setScore(0);
-    setTotalMatches(0);
-    setGameCompleted(false);
-    setGameStarted(true);
-    setMatchedPairs([]);
   };
   
   // Kelime seçimi
@@ -269,30 +292,9 @@ export default function WordMatchingScreen() {
       
       <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        {!gameStarted ? (
-          <View style={styles.startContainer}>
-            <LinearGradient
-              colors={['#7cc0fb', '#92e6fb']}
-              style={styles.startGradient}
-            >
-              <MaterialCommunityIcons name="cards-outline" size={80} color="#FFFFFF" style={styles.startIcon} />
-              <ThemedText style={styles.startTitle}>
-                Kelime Eşleştirme Oyunu
-              </ThemedText>
-              <View style={styles.startInfoContainer}>
-                <ThemedText style={styles.startDescription}>
-                  5 kelimeyi doğru çevirileriyle eşleştirin. Doğru eşleştirmeler için puan kazanın.
-                </ThemedText>
-              </View>
-              <TouchableOpacity 
-                style={styles.startButton} 
-                onPress={startNewGame}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.startButtonText}>Oyunu Başlat</Text>
-                <Ionicons name="play" size={18} color="#FFFFFF" style={styles.startButtonIcon} />
-              </TouchableOpacity>
-            </LinearGradient>
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ThemedText style={styles.loadingText}>Kelimeler yükleniyor...</ThemedText>
           </View>
         ) : gameCompleted ? (
           <Animated.View 
@@ -529,67 +531,15 @@ const styles = StyleSheet.create({
     padding: PADDING.md,
     paddingBottom: PADDING.xl * 2,
   },
-  startContainer: {
+  loadingContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: MARGIN.xl,
     paddingHorizontal: PADDING.md,
   },
-  startGradient: {
-    width: '100%',
-    borderRadius: BORDER_RADIUS.lg,
-    padding: PADDING.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  startIcon: {
-    marginBottom: MARGIN.md,
-  },
-  startTitle: {
-    fontSize: FONT_SIZE.xl,
-    fontWeight: 'bold',
-    marginBottom: MARGIN.md,
-    textAlign: 'center',
-    color: '#FFFFFF',
-  },
-  startInfoContainer: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: BORDER_RADIUS.md,
-    padding: PADDING.md,
-    width: '100%',
-    marginBottom: MARGIN.lg,
-  },
-  startDescription: {
+  loadingText: {
     fontSize: FONT_SIZE.md,
-    textAlign: 'center',
-    lineHeight: 22,
-    color: '#FFFFFF',
-  },
-  startButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingVertical: PADDING.md,
-    paddingHorizontal: PADDING.lg,
-    borderRadius: BORDER_RADIUS.full,
-    marginTop: MARGIN.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
-  },
-  startButtonText: {
-    color: '#FFFFFF',
-    fontSize: FONT_SIZE.md,
-    fontWeight: 'bold',
-    marginRight: MARGIN.xs,
-  },
-  startButtonIcon: {
-    marginLeft: MARGIN.xs,
+    color: '#4facfe',
   },
   scoreContainer: {
     marginBottom: MARGIN.md,
