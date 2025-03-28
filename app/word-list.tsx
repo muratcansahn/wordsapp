@@ -1,24 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ThemedText } from '@/components/common/typography';
 import { ThemedView } from '@/components/common/view';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import Toast from 'react-native-root-toast';
 import { RootState } from '@/store';
 import { supabase } from '@/lib/supabase';
 import { fetchWordStatuses, updateWordStatus } from '@/services/userWordStatusService';
-import { updateUserStats } from '@/store/userSlice';
-import {
-  BORDER_RADIUS,
-  FLEX,
-  FONT_SIZE,
-  ICON_SIZE,
-  MARGIN,
-  PADDING,
-} from '@/constants/AppConstants';
+import { updateUserStats, incrementWordStatusCounter } from '@/store/userSlice';
 import { Colors } from '@/constants/Colors';
+import { BORDER_RADIUS, FLEX, FONT_SIZE, ICON_SIZE, MARGIN, PADDING } from '@/constants/AppConstants';
 import { useTheme } from '@/hooks/theme/useTheme';
 import NativeLoader from '@/components/common/loader/native-loader';
 
@@ -69,6 +63,7 @@ export default function WordListScreen() {
           .eq('user_id', userId).eq('status', params.id)
         if (error) {
           console.error('Kelime durumları çekilirken hata:', error);
+          setIsLoading(false);
           return;
         }
         console.log('Kelime durumları:', data);
@@ -87,10 +82,12 @@ export default function WordListScreen() {
       }
     };
 
-    if (userId) {
+    if (userId && params.id) {
       fetchUserWordStatuses();
+    } else {
+      setIsLoading(false);
     }
-  }, [userId]);
+  }, [userId, params.id, i18n.language]);
 
   // Kelime detaylarını çek
   const fetchWordDetails = async (wordStatuses: any[]) => {
@@ -157,21 +154,33 @@ export default function WordListScreen() {
     const success = await updateWordStatus(wordId, userId, newStatus);
     
     if (success) {
-      // State'i güncelle
-      setWords(prevWords => 
-        prevWords.map(word => 
-          word.id === wordId ? { ...word, status: newStatus } : word
-        )
-      );
+      // Kelimeyi listeden kaldır
+      setWords(prevWords => {
+        const updatedWords = prevWords.filter(word => word.id !== wordId);
+        // Eğer kalan kelime yoksa, loading durumunu kapat
+        if (updatedWords.length === 0) {
+          setIsLoading(false);
+        }
+        return updatedWords;
+      });
       
-      // Kullanıcıya bilgi ver
-      Alert.alert(
-        t('success'),
+      // Toast bildirimi göster
+      Toast.show(
         newStatus === 1 
           ? t('wordMarkedAsKnown') 
           : newStatus === 2 
             ? t('wordMarkedAsUnknown')
-            : t('wordMarkedAsFavorite')
+            : t('wordMarkedAsFavorite'), 
+        {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.TOP,
+          shadow: true,
+          animation: true,
+          hideOnPress: true,
+          backgroundColor: '#10B981', // Yeşil renk (success)
+          textColor: '#FFFFFF',
+          delay: 0,
+        }
       );
       
       // Dashboard'daki kelime istatistiklerini güncelle
@@ -181,11 +190,24 @@ export default function WordListScreen() {
           known_words: knownCount,
           unknown_words: unknownCount
         }));
+        
+        // Kelime durumu sayacını artır
+        dispatch(incrementWordStatusCounter());
       } catch (error) {
         console.error('Dashboard istatistikleri güncellenirken hata:', error);
       }
     } else {
-      Alert.alert(t('error'), t('failedToUpdateWordStatus'));
+      // Hata durumunda Toast bildirimi göster
+      Toast.show(t('failedToUpdateWordStatus'), {
+        duration: Toast.durations.LONG,
+        position: Toast.positions.TOP,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        backgroundColor: '#EF4444', // Kırmızı renk
+        textColor: '#FFFFFF',
+        delay: 0,
+      });
     }
   };
    

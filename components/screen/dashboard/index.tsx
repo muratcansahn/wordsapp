@@ -8,9 +8,7 @@ import {
   Animated, 
   Easing,
   Dimensions,
-  Modal,
-  Platform,
-  StatusBar,
+
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { ThemedText } from '@/components/common/typography';
@@ -471,7 +469,7 @@ export default function DashboardScreen() {
 
   
   // Redux'tan kullanıcı bilgilerini al
-  const { id, full_name, point, known_words, unknown_words, streak_count } = useSelector((state: RootState) => state.user);
+  const { id, full_name, point, known_words, unknown_words, streak_count, wordStatusUpdateCounter } = useSelector((state: RootState) => state.user);
   const [wordStats, setWordStats] = useState<Array<{
     id: string;
     title: string;
@@ -489,7 +487,6 @@ export default function DashboardScreen() {
       try {
         // userService'den kelime durumlarını çek
         const { knownCount, unknownCount } = await fetchWordStatuses(id);
-        console.log('Kelime durumları:', { knownCount, unknownCount });
         
         // Kelime istatistiklerini güncelle
         setWordStats(getWordStats(knownCount, unknownCount, streak_count));
@@ -499,7 +496,7 @@ export default function DashboardScreen() {
     };
     
     getWordStatuses();
-  }, [id, streak_count, dispatch]);
+  }, [id, streak_count, wordStatusUpdateCounter, dispatch]);
 
   // Animasyon değerler
   

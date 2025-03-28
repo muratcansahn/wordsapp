@@ -100,8 +100,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
               point: 5,
               streak_count: 1,
               last_login_datetime: new Date().toISOString(),
-              known_words: 0,
-              unknown_words: 0,
             },
           ]);
 
@@ -156,8 +154,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
               full_name: userData.full_name || '',
               point: userData.point || 0,
               last_login_datetime: userData.last_login_datetime || '',
-              known_words: userData.known_words || 0,
-              unknown_words: userData.unknown_words || 0,
               streak_count: userData.streak_count || 0,
               id: session.user.id
             };
@@ -222,8 +218,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
               full_name: userData.full_name || '',
               point: userData.point || 0,
               last_login_datetime: userData.last_login_datetime || '',
-              known_words: userData.known_words || 0,
-              unknown_words: userData.unknown_words || 0,
               streak_count: userData.streak_count || 0,
               id: data.session.user.id
             };
@@ -424,8 +418,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
               full_name: userData.full_name || '',
               point: userData.point || 0,
               last_login_datetime: userData.last_login_datetime || '',
-              known_words: userData.known_words || 0,
-              unknown_words: userData.unknown_words || 0,
               streak_count: userData.streak_count || 0,
               id: data.session.user.id
             };
