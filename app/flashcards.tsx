@@ -1,179 +1,118 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated, PanResponder, Dimensions, TouchableOpacity, Share, FlatList, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BORDER_RADIUS, PADDING, MARGIN } from '@/constants/AppConstants';
+import { supabase } from '@/lib/supabase';
+import Loader from '@/components/common/loader/native-loader';
+import { FlashCard, fetchWordListItems } from '@/services/flashcardsService';
+import { updateWordStatus } from '@/services/userWordStatusService';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SWIPE_THRESHOLD = 0.25 * SCREEN_WIDTH;
-const SWIPE_OUT_DURATION = 250;
 
-interface FlashCard {
-  id: string;
-  word: string;
-  translation: string;
-  example: string;
-}
-
+// WordList arayüzünü tanımlayalım
 interface WordList {
   id: string;
   title: string;
   subtitle: string;
   level: string;
   cards: FlashCard[];
+  name?: string;
+  description?: string;
 }
-
-const WORD_LISTS: WordList[] = [
-  {
-    id: '1',
-    title: 'İş İngilizcesi',
-    subtitle: 'Ofis ve iş hayatında kullanılan temel kelimeler',
-    level: 'B1',
-    cards: [
-      {
-        id: '1',
-        word: 'Experience',
-        translation: 'Deneyim',
-        example: 'I have five years of work experience.',
-      },
-      {
-        id: '2',
-        word: 'Opportunity',
-        translation: 'Fırsat',
-        example: 'This is a great opportunity for your career.',
-      },
-      {
-        id: '3',
-        word: 'Consider',
-        translation: 'Düşünmek, değerlendirmek',
-        example: 'Please consider my application.',
-      },
-      {
-        id: '4',
-        word: 'Improve',
-        translation: 'Geliştirmek, iyileştirmek',
-        example: 'I want to improve my English skills.',
-      },
-      {
-        id: '5',
-        word: 'Provide',
-        translation: 'Sağlamak, temin etmek',
-        example: 'The company provides health insurance.',
-      },
-    ]
-  },
-  {
-    id: '2',
-    title: 'Günlük Konuşma',
-    subtitle: 'Günlük hayatta sık kullanılan kelimeler',
-    level: 'B1',
-    cards: [
-      {
-        id: '1',
-        word: 'Suggest',
-        translation: 'Önermek, tavsiye etmek',
-        example: 'Can you suggest a good restaurant?',
-      },
-      {
-        id: '2',
-        word: 'Discuss',
-        translation: 'Tartışmak, konuşmak',
-        example: 'Let\'s discuss this matter tomorrow.',
-      },
-      {
-        id: '3',
-        word: 'Recommend',
-        translation: 'Tavsiye etmek',
-        example: 'I recommend trying the local cuisine.',
-      },
-      {
-        id: '4',
-        word: 'Appreciate',
-        translation: 'Takdir etmek, değer vermek',
-        example: 'I really appreciate your help.',
-      },
-      {
-        id: '5',
-        word: 'Hello',
-        translation: 'Merhaba',
-        example: 'Hello, how are you?',
-      },
-    ]
-  },
-  {
-    id: '3',
-    title: 'Akademik İngilizce',
-    subtitle: 'Eğitim ve akademik hayatta kullanılan kelimeler',
-    level: 'B1',
-    cards: [
-      {
-        id: '1',
-        word: 'Determine',
-        translation: 'Belirlemek, kararlaştırmak',
-        example: 'We need to determine the best course of action.',
-      },
-      {
-        id: '2',
-        word: 'Participate',
-        translation: 'Katılmak',
-        example: 'Would you like to participate in our project?',
-      },
-      {
-        id: '3',
-        word: 'Achieve',
-        translation: 'Başarmak, elde etmek',
-        example: 'She achieved her goals through hard work.',
-      },
-      {
-        id: '4',
-        word: 'Require',
-        translation: 'Gerektirmek, ihtiyaç duymak',
-        example: 'This job requires excellent communication skills.',
-      },
-      {
-        id: '5',
-        word: 'Goodbye',
-        translation: 'Hoşça kal',
-        example: 'Goodbye, see you tomorrow!',
-      },
-    ]
-  },
-];
 
 export default function FlashcardsScreen() {
   const params = useLocalSearchParams();
-  const [selectedList, setSelectedList] = useState<WordList>(WORD_LISTS[0]);
+  const [selectedList, setSelectedList] = useState<WordList | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showTranslation, setShowTranslation] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [knownWordCount, setKnownWordCount] = useState(0);
+  const [unknownWordCount, setUnknownWordCount] = useState(0);
+  const [allWordsMarked, setAllWordsMarked] = useState(false);
   const position = useRef(new Animated.ValueXY()).current;
 
-  const [stats, setStats] = useState({
-    known: 0,
-    unknown: 0,
-    favorites: 0
-  });
-
+ 
   useEffect(() => {
-    if (!isInitialized) {
-      // Eğer listId parametresi varsa, o listeyi seç
-      if (params.listId) {
-        const listId = String(params.listId);
-        // ID'yi hem string hem de sayısal olarak karşılaştır
-        const list = WORD_LISTS.find(list => list.id === listId || list.id === ''+listId || Number(list.id) === Number(listId));
-        if (list) {
-          setSelectedList(list);
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        if (params.listId) {
+          const listId = String(params.listId);
+
+          // Doğrudan liste ID'sine ait kelimeleri çek
+          const words = await fetchWordListItems(listId);
+          
+          if (words && words.length > 0) {
+            // Sadece işaretlenmemiş kelimeleri filtrele (status=0)
+            const unmarkedWords = words.filter(word => word.status !== 1 && word.status !== 2 );
+            
+            if (unmarkedWords.length === 0) {
+              // Tüm kelimeler işaretlenmiş, tebrik mesajı göster
+              const known = words.filter(word => word.status === 1).length;
+              const unknown = words.filter(word => word.status === 2).length;
+              setKnownWordCount(known);
+              setUnknownWordCount(unknown);
+              setAllWordsMarked(true);
+              
+              // Boş liste oluştur
+              setSelectedList({
+                id: listId,
+                title: 'Kelime Listesi',
+                subtitle: 'Özel kelime listesi',
+                level: 'B1',
+                cards: []
+              });
+              
+              setIsLoading(false);
+              setIsInitialized(true);
+              return;
+            }
+            
+            // Liste bilgilerini oluştur
+            const completeList: WordList = {
+              id: listId,
+              title: 'Kelime Listesi',
+              subtitle: 'Özel kelime listesi',
+              level: 'B1',
+              cards: unmarkedWords
+            };
+            
+            const known = words.filter(word => word.status === 1).length;
+            const unknown = words.filter(word => word.status === 2).length;
+            setKnownWordCount(known);
+            setUnknownWordCount(unknown);
+            setSelectedList(completeList);
+          } else {
+            setError("Bu listede kelime bulunamadı.");
+          }
+        } else {
+          setError("Liste ID'si belirtilmedi.");
         }
+      } catch (err) {
+        setError("Veri yüklenirken bir hata oluştu.");
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+        setIsInitialized(true);
       }
-      setIsInitialized(true);
+    };
+    
+    if (!isInitialized) {
+      loadData();
     }
   }, [params, isInitialized]);
 
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onPanResponderMove: (_, gesture) => {
-      position.setValue({ x: gesture.dx, y: 0 }); // Y ekseninde hareket olmasın
+      position.setValue({ x: gesture.dx, y: 0 }); 
     },
     onPanResponderRelease: (_, gesture) => {
       if (gesture.dx > SWIPE_THRESHOLD) {
@@ -195,13 +134,64 @@ export default function FlashcardsScreen() {
     }).start(() => onSwipeComplete(direction));
   };
 
-  const onSwipeComplete = (direction: 'right' | 'left') => {
-    const item = selectedList.cards[currentIndex];
+  const onSwipeComplete = async (direction: 'right' | 'left') => {
+    const item = selectedList?.cards[currentIndex];
+    
+    if (!item) return;
+    
+    let newStatus = 0;
     if (direction === 'right') {
-      setStats(prev => ({ ...prev, known: prev.known + 1 }));
+      newStatus = 1; // Bilinen
+      
+      // Bilinen kelime sayısını artır
+      setKnownWordCount(prevCount => prevCount + 1);
+      
+      // Eğer daha önce bilinmeyen olarak işaretlendiyse, bilinmeyen sayısını azalt
+      if (item.status === 2) {
+        setUnknownWordCount(prevCount => Math.max(0, prevCount - 1));
+      }
+      // Eğer daha önce favori olarak işaretlendiyse, favori sayısını azalt
+      else if (item.status === 3) {
+        // Favori işlemi burada
+      }
     } else {
-      setStats(prev => ({ ...prev, unknown: prev.unknown + 1 }));
+      newStatus = 2; // Bilinmeyen
+      
+      // Bilinmeyen kelime sayısını artır
+      setUnknownWordCount(prevCount => prevCount + 1);
+      
+      // Eğer daha önce bilinen olarak işaretlendiyse, bilinen sayısını azalt
+      if (item.status === 1) {
+        setKnownWordCount(prevCount => Math.max(0, prevCount - 1));
+      }
+      // Eğer daha önce favori olarak işaretlendiyse, favori sayısını azalt
+      else if (item.status === 3) {
+        // Favori işlemi burada
+      }
     }
+    
+    // Kullanıcı giriş yapmışsa kelime durumunu güncelle
+    const user = await supabase.auth.getUser();
+    if (user.data?.user && item.id) {
+      const success = await updateWordStatus(parseInt(item.id), user.data.user.id, newStatus);
+      
+      if (success) {
+        // Kartın statüsünü güncelle
+        if (selectedList) {
+          const updatedCards = [...selectedList.cards];
+          updatedCards[currentIndex] = {
+            ...updatedCards[currentIndex],
+            status: newStatus
+          };
+          
+          setSelectedList({
+            ...selectedList,
+            cards: updatedCards
+          });
+        }
+      }
+    }
+    
     position.setValue({ x: 0, y: 0 });
     setCurrentIndex(currentIndex + 1);
     setShowTranslation(false);
@@ -241,6 +231,14 @@ export default function FlashcardsScreen() {
   };
 
   const renderCard = () => {
+    if (!selectedList || !selectedList.cards || selectedList.cards.length === 0) {
+      return (
+        <View style={styles.emptyCardContainer}>
+          <Text style={styles.emptyCardText}>Bu listede kelime bulunmuyor.</Text>
+        </View>
+      );
+    }
+    
     const card = selectedList.cards[currentIndex];
 
     return (
@@ -267,7 +265,7 @@ export default function FlashcardsScreen() {
               {showTranslation && (
                 <View style={styles.translationWrapper}>
                   <Text style={styles.translationText}>{card.translation}</Text>
-                  <Text style={styles.exampleText}>{card.example}</Text>
+                  <Text style={styles.exampleText}>{card.example_original || card.example}</Text>
                 </View>
               )}
             </View>
@@ -277,23 +275,83 @@ export default function FlashcardsScreen() {
     );
   };
 
-  if (currentIndex >= selectedList.cards.length) {
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Loader size="large" />
+        <Text style={styles.loadingText}>Kelime listesi yükleniyor...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Icon name="alert-circle" size={50} color="#F44336" />
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
+
+  if (!selectedList) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Icon name="alert-circle" size={50} color="#F44336" />
+        <Text style={styles.errorText}>Liste bulunamadı.</Text>
+      </View>
+    );
+  }
+
+  if (allWordsMarked) {
     return (
       <View style={styles.container}>
         <View style={styles.completionContainer}>
           <Icon name="check-circle" size={80} color="#4CAF50" />
-          <Text style={styles.noMoreCards}>Tüm kartları tamamladınız!</Text>
+          <Text style={styles.noMoreCards}>
+            Tebrikler, bu listedeki tüm kelimeleri işaretlediniz!
+          </Text>
           <Text style={styles.completionStats}>
-            {stats.known} bilinen, {stats.unknown} bilinmeyen kelime
+            {knownWordCount} bilinen, {unknownWordCount} bilinmeyen kelime
           </Text>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => {
-              setCurrentIndex(0);
-              setStats({ known: 0, unknown: 0, favorites: 0 });
+              // Ana sayfaya yönlendir
+              router.replace('/');
             }}
           >
-            <Text style={styles.backButtonText}>Tekrar Başla</Text>
+            <Text style={styles.backButtonText}>Ana Sayfaya Dön</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  if (currentIndex >= selectedList.cards.length) {
+    // Listedeki tüm kelimelerin işaretlenip işaretlenmediğini kontrol et
+    const totalWords = knownWordCount + unknownWordCount;
+    const allWordsMarked = totalWords === selectedList.cards.length;
+    
+    return (
+      <View style={styles.container}>
+        <View style={styles.completionContainer}>
+          <Icon name="check-circle" size={80} color="#4CAF50" />
+          <Text style={styles.noMoreCards}>
+            {allWordsMarked 
+              ? "Tebrikler, bu listedeki tüm kelimeleri işaretlediniz!" 
+              : "Tüm kartları tamamladınız!"}
+          </Text>
+          <Text style={styles.completionStats}>
+            {knownWordCount} bilinen, {unknownWordCount} bilinmeyen kelime
+          </Text>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => {
+              // Ana sayfaya yönlendir
+              router.replace('/');
+            }}
+          >
+            <Text style={styles.backButtonText}>Ana Sayfaya Dön</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -318,7 +376,7 @@ export default function FlashcardsScreen() {
             <Icon name="check-circle" size={24} color="#4CAF50" />
           </View>
           <View style={styles.statTextContainer}>
-            <Text style={styles.statValue}>{stats.known}</Text>
+            <Text style={styles.statValue}>{knownWordCount}</Text>
             <Text style={styles.statLabel}>Bilinen</Text>
           </View>
         </View>
@@ -328,7 +386,7 @@ export default function FlashcardsScreen() {
             <Icon name="close-circle" size={24} color="#F44336" />
           </View>
           <View style={styles.statTextContainer}>
-            <Text style={styles.statValue}>{stats.unknown}</Text>
+            <Text style={styles.statValue}>{unknownWordCount}</Text>
             <Text style={styles.statLabel}>Bilinmeyen</Text>
           </View>
         </View>
@@ -336,10 +394,6 @@ export default function FlashcardsScreen() {
         <View style={styles.statItem}>
           <View style={[styles.statIconContainer, { backgroundColor: 'rgba(255, 193, 7, 0.1)' }]}>
             <Icon name="star" size={24} color="#FFC107" />
-          </View>
-          <View style={styles.statTextContainer}>
-            <Text style={styles.statValue}>{stats.favorites}</Text>
-            <Text style={styles.statLabel}>Favori</Text>
           </View>
         </View>
       </View>
@@ -650,5 +704,33 @@ const styles = StyleSheet.create({
     marginTop: MARGIN.lg,
     marginBottom: MARGIN.md,
     fontWeight: '700',
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: MARGIN.md,
+    fontSize: 16,
+    color: '#6B7280',
+  },
+  errorText: {
+    marginTop: MARGIN.md,
+    fontSize: 16,
+    color: '#F44336',
+    textAlign: 'center',
+    paddingHorizontal: PADDING.lg,
+  },
+  emptyCardContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    borderRadius: BORDER_RADIUS.lg,
+  },
+  emptyCardText: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
   },
 });

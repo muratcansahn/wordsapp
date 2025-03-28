@@ -7,7 +7,9 @@ import { ThemedView } from '@/components/common/view';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { RootState } from '@/store';
-import { Word, markAsLearned, markAsUnknown } from '@/store/wordSlice';
+import { supabase } from '@/lib/supabase';
+import { fetchWordStatuses, updateWordStatus } from '@/services/userWordStatusService';
+import { updateUserStats } from '@/store/userSlice';
 import {
   BORDER_RADIUS,
   FLEX,
@@ -18,83 +20,204 @@ import {
 } from '@/constants/AppConstants';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
+import NativeLoader from '@/components/common/loader/native-loader';
+
+// Kelime tipi tanımı
+interface WordItem {
+  id: number;
+  text: string;
+  translation: string;
+  example: string;
+  example_original: string;
+  status: number;
+}
 
 export default function WordListScreen() {
   const { mode } = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const params = useLocalSearchParams();
   const { type } = params;
-  const dispatch = useDispatch();
   
   const [title, setTitle] = useState('');
-  const [filteredWords, setFilteredWords] = useState<Word[]>([]);
   
-  // Redux'tan kelime listesini al
-  const { words } = useSelector((state: RootState) => state.words);
+  // Redux'tan kullanıcı bilgilerini al
+  const { id: userId } = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
   
+  // Sayfa yüklendiğinde title parametresini al
   useEffect(() => {
-    // URL parametresine göre kelimeleri filtrele
-    if (type === 'learned') {
-      setFilteredWords(words.filter(word => word.learned));
-      setTitle(t('wordList.learnedWords') || 'Öğrenilen Kelimeler');
-    } else if (type === 'unknown') {
-      setFilteredWords(words.filter(word => word.unknown));
-      setTitle(t('wordList.unknownWords') || 'Bilinmeyen Kelimeler');
-    } else {
-      setFilteredWords(words);
-      setTitle(t('wordList.allWords') || 'Tüm Kelimeler');
+    if (params.title) {
+      setTitle(params.title as string);
     }
-  }, [type, words, t]);
+  }, [params]);
+  console.log(params)
   
-  // Kelimeyi öğrenildi olarak işaretle
-  const handleMarkAsLearned = (wordId: string) => {
-    dispatch(markAsLearned(wordId));
-    Alert.alert('Başarılı', 'Kelime öğrenildi olarak işaretlendi');
-  };
+  // Kelime durumlarını saklamak için state
+  const [userWordStatuses, setUserWordStatuses] = useState<any[]>([]);
+  const [words, setWords] = useState<WordItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Kelimeyi bilinmiyor olarak işaretle
-  const handleMarkAsUnknown = (wordId: string) => {
-    dispatch(markAsUnknown(wordId));
-    Alert.alert('Başarılı', 'Kelime bilinmiyor olarak işaretlendi');
-  };
+  // Sayfa yüklendiğinde kelime durumlarını çek
+  useEffect(() => {
+    const fetchUserWordStatuses = async () => {
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('UserWordStatuses')
+          .select('*')
+          .eq('user_id', userId).eq('status', params.id)
+        if (error) {
+          console.error('Kelime durumları çekilirken hata:', error);
+          return;
+        }
+        console.log('Kelime durumları:', data);
+        
+        setUserWordStatuses(data || []);
+        
+        // Kelime durumları alındıktan sonra kelime detaylarını çek
+        if (data && data.length > 0) {
+          await fetchWordDetails(data);
+        } else {
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Kelime durumları çekilirken beklenmeyen hata:', error);
+        setIsLoading(false);
+      }
+    };
 
-  const renderItem = ({ item }: { item: Word }) => {
-    // Kelime durumuna göre gösterilecek buton
-    let actionButton = null;
-    
-    if (type === 'learned' && !item.unknown) {
-      // Öğrenilen kelimeler listesindeyiz, "Bilinmiyor" olarak işaretleme butonu göster
-      actionButton = (
-        <TouchableOpacity 
-          style={styles.actionButtonRed}
-          onPress={() => handleMarkAsUnknown(item.id)}
-        >
-          <ThemedText style={styles.actionButtonText}>Bilinmiyor</ThemedText>
-        </TouchableOpacity>
-      );
-    } else if (type === 'unknown' && !item.learned) {
-      // Bilinmeyen kelimeler listesindeyiz, "Öğrenildi" olarak işaretleme butonu göster
-      actionButton = (
-        <TouchableOpacity 
-          style={styles.actionButtonGreen}
-          onPress={() => handleMarkAsLearned(item.id)}
-        >
-          <ThemedText style={styles.actionButtonText}>Öğrenildi</ThemedText>
-        </TouchableOpacity>
-      );
+    if (userId) {
+      fetchUserWordStatuses();
     }
-    
-    return (
-      <View style={[styles.wordCard, { backgroundColor: Colors[mode].card }]}>
-        <View style={styles.wordContent}>
-          <ThemedText style={styles.wordText}>{item.text}</ThemedText>
-          <ThemedText style={styles.translationText}>{item.translation}</ThemedText>
-        </View>
-        {actionButton}
-      </View>
-    );
+  }, [userId]);
+
+  // Kelime detaylarını çek
+  const fetchWordDetails = async (wordStatuses: any[]) => {
+    try {
+      // Kelime ID'lerini al
+      const wordIds = wordStatuses.map(status => status.word_id);
+      
+      // Words tablosundan kelime bilgilerini çek
+      const { data: wordsData, error: wordsError } = await supabase
+        .from('Words')
+        .select('id, name')
+        .in('id', wordIds)
+      
+      
+      if (wordsError) {
+        console.error('Kelimeler çekilirken hata:', wordsError);
+        setIsLoading(false);
+        return;
+      }
+      
+      // WordTranslations tablosundan çevirileri çek
+      const { data: translationsData, error: translationsError } = await supabase
+      .from('WordTranslations')
+      .select('word_id, mean, example_mean, example_original')
+      .in('word_id', wordIds)
+      .eq('culture', i18n.language)
+      
+      if (translationsError) {
+        console.error('Çeviriler çekilirken hata:', translationsError);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Verileri birleştir
+      const combinedWords: WordItem[] = wordsData.map(word => {
+        // Kelimeye ait çeviriyi bul
+        const translation = translationsData.find(t => t.word_id === word.id)?.mean || '';
+        const example = translationsData.find(t => t.word_id === word.id)?.example_mean || '';
+        const example_original = translationsData.find(t => t.word_id === word.id)?.example_original || '';
+        
+        // Kelimeye ait durumu bul
+        const status = wordStatuses.find(s => s.word_id === word.id)?.status || 0;
+        
+        return {
+          id: word.id,
+          text: word.name,
+          translation,
+          example,
+          example_original,
+          status
+        };
+      });
+      
+      setWords(combinedWords);
+    } catch (error) {
+      console.error('Kelime detayları çekilirken beklenmeyen hata:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  // Kelime durumunu güncelle
+  const handleUpdateStatus = async (wordId: number, newStatus: number) => {
+    const success = await updateWordStatus(wordId, userId, newStatus);
+    
+    if (success) {
+      // State'i güncelle
+      setWords(prevWords => 
+        prevWords.map(word => 
+          word.id === wordId ? { ...word, status: newStatus } : word
+        )
+      );
+      
+      // Kullanıcıya bilgi ver
+      Alert.alert(
+        t('success'),
+        newStatus === 1 
+          ? t('wordMarkedAsKnown') 
+          : newStatus === 2 
+            ? t('wordMarkedAsUnknown')
+            : t('wordMarkedAsFavorite')
+      );
+      
+      // Dashboard'daki kelime istatistiklerini güncelle
+      try {
+        const { knownCount, unknownCount } = await fetchWordStatuses(userId);
+        dispatch(updateUserStats({
+          known_words: knownCount,
+          unknown_words: unknownCount
+        }));
+      } catch (error) {
+        console.error('Dashboard istatistikleri güncellenirken hata:', error);
+      }
+    } else {
+      Alert.alert(t('error'), t('failedToUpdateWordStatus'));
+    }
+  };
+   
+  // Kelime kartını render et
+  const renderWordItem = ({ item }: { item: WordItem }) => (
+    <View style={[styles.wordCard, { backgroundColor: Colors[mode].card }]}>
+      <View style={styles.wordContent}>
+        <ThemedText style={styles.wordText}>{item.text}</ThemedText>
+        <ThemedText style={styles.translationText}>{item.translation}</ThemedText>
+        <ThemedText style={styles.exampleText}>{item.example}</ThemedText>
+        <ThemedText style={styles.exampleOriginalText}>{item.example_original}</ThemedText>
+      </View>
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        {item.status !== 1 && (
+          <TouchableOpacity
+            style={styles.actionButtonGreen}
+            onPress={() => handleUpdateStatus(item.id, 1)}
+          >
+            <ThemedText style={styles.actionButtonText}>{t('known')}</ThemedText>
+          </TouchableOpacity>
+        )}
+        {item.status !== 2 && (
+          <TouchableOpacity
+            style={styles.actionButtonRed}
+            onPress={() => handleUpdateStatus(item.id, 2)}
+          >
+            <ThemedText style={styles.actionButtonText}>{t('unknown')}</ThemedText>
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+  );
   
   return (
     <ThemedView style={styles.container}>
@@ -106,20 +229,24 @@ export default function WordListScreen() {
         <View style={styles.placeholder} />
       </View>
       
-      <FlatList
-        data={filteredWords}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <ThemedText style={styles.emptyText}>
-              {t('wordList.noWordsFound') || 'Kelime bulunamadı'}
-            </ThemedText>
-          </View>
-        }
-      />
+      {isLoading ? (
+        <View style={styles.loaderContainer}>
+          <NativeLoader />
+        </View>
+      ) : words.length > 0 ? (
+        <FlatList
+          data={words}
+          renderItem={renderWordItem}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.listContent}
+        />
+      ) : (
+        <View style={styles.emptyContainer}>
+          <ThemedText style={styles.emptyText}>
+            {t('noWordsFound')}
+          </ThemedText>
+        </View>
+      )}
     </ThemedView>
   );
 }
@@ -176,6 +303,14 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.sm,
     opacity: 0.7,
   },
+  exampleText: {
+    fontSize: FONT_SIZE.sm,
+    opacity: 0.7,
+  },
+  exampleOriginalText: {
+    fontSize: FONT_SIZE.sm,
+    opacity: 0.7,
+  },
   actionButtonGreen: {
     backgroundColor: '#10B981',
     paddingVertical: PADDING.xs,
@@ -205,5 +340,10 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: FONT_SIZE.md,
     opacity: 0.7,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

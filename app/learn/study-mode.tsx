@@ -8,9 +8,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp, FadeInRight } from 'react-native-reanimated';
 
 // Constants for styling
-const STYLE_MARGIN = Number(MARGIN);
-const STYLE_PADDING = Number(PADDING);
-const STYLE_BORDER_RADIUS = Number(BORDER_RADIUS);
+const STYLE_MARGIN = MARGIN.md;
+const STYLE_PADDING = PADDING.md;
+const STYLE_BORDER_RADIUS = BORDER_RADIUS.md;
 
 const { width, height } = Dimensions.get('window');
 

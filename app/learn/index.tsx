@@ -1,59 +1,65 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, StyleProp, ViewStyle, TextStyle, StatusBar } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, StyleProp, ViewStyle, TextStyle, StatusBar, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BORDER_RADIUS, PADDING, MARGIN } from '@/constants/AppConstants';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp, interpolate, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import { useEffect ,useState} from 'react';
+import { getWordLists } from '@/services/wordListService';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+
 
 type MaterialIconName = 'book-open-page-variant' | 'briefcase' | 'airplane' | 'check-circle' | 'chevron-right' | 'star';
 
-interface WordList {
+interface ApiWordList {
   id: number;
-  title: string;
+  name: string;
+  description: string;
+  image: string;
+}
+
+interface WordList extends ApiWordList {
   wordCount: number;
   learnedCount: number;
   icon: MaterialIconName;
-  gradient: [string, string];
-  description?: string;
+  gradient: readonly [string, string];
 }
 
-const { width } = Dimensions.get('window');
-
-const wordLists: WordList[] = [
-  {
-    id: 1,
-    title: 'Temel İngilizce',
-    wordCount: 100,
-    learnedCount: 45,
-    icon: 'book-open-page-variant',
-    gradient: ['#6366F1', '#A5B4FC'],
-    description: 'Günlük konuşmalar için temel kelimeler',
-  },
-  {
-    id: 2,
-    title: 'İş İngilizcesi',
-    wordCount: 75,
-    learnedCount: 20,
-    icon: 'briefcase',
-    gradient: ['#EC4899', '#F9A8D4'],
-    description: 'İş görüşmeleri ve profesyonel iletişim',
-  },
-  {
-    id: 3,
-    title: 'Seyahat',
-    wordCount: 50,
-    learnedCount: 0,
-    icon: 'airplane',
-    gradient: ['#F59E0B', '#FCD34D'],
-    description: 'Seyahat ederken ihtiyaç duyacağınız kelimeler',
-  },
-];
+const defaultGradients: { [key: number]: readonly [string, string] } = {
+  1: ['#6366F1', '#A5B4FC'] as const,
+  2: ['#EC4899', '#F9A8D4'] as const,
+  3: ['#F59E0B', '#FCD34D'] as const,
+};
 
 export default function LearnPage() {
   const router = useRouter();
   const scrollY = useSharedValue(0);
+  const [loading, setLoading] = useState(true);
+  const [wordLists, setWordLists] = useState<WordList[]>([]);
+
+  useEffect(() => {
+    const fetchWordList = async () => {
+      try {
+        const lists: ApiWordList[] = await getWordLists();
+        const formattedLists: WordList[] = lists.map((list) => ({
+          ...list,
+          wordCount: 100,
+          learnedCount: 0,
+          gradient: defaultGradients[list.id] || defaultGradients[1]
+        })) as WordList[];
+        
+        setWordLists(formattedLists);
+      } catch (error) {
+        console.error('Error fetching word list:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchWordList();
+  }, []);
 
   const handleListSelect = (listId: number) => {
+    console.log("listId", listId);
     router.push({
       pathname: '/learn/study-mode',
       params: { listId: String(listId) }
@@ -91,9 +97,6 @@ export default function LearnPage() {
       
       <Animated.View style={[styles.header, headerAnimatedStyle]}>
         <Text style={styles.title}>Kelime Listeleri</Text>
-        <Text style={styles.subtitle}>
-          Öğrenmek istediğiniz kelime listesini seçin
-        </Text>
       </Animated.View>
       
       <Animated.ScrollView 
@@ -105,11 +108,11 @@ export default function LearnPage() {
       >
         <View style={styles.listContainer}>
           {wordLists.map((list, index) => {
-            const progress = (list.learnedCount / list.wordCount) * 100;
+            const progress = list.learnedCount ? (list.learnedCount / (list.wordCount)) * 100 : 0;
             return (
               <Animated.View
                 key={list.id}
-                entering={FadeInUp.delay(index * 150).springify().damping(14)}
+                entering={FadeInUp.delay(index * 100).springify().damping(14)}
                 style={styles.listItem}
               >
                 <TouchableOpacity
@@ -118,25 +121,25 @@ export default function LearnPage() {
                   onPress={() => handleListSelect(list.id)}
                 >
                   <LinearGradient
-                    colors={list.gradient}
+                    colors={list.gradient || defaultGradients[1]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.gradientContainer}
                   >
                     <View style={styles.cardContent}>
                       <View style={styles.topRow}>
-                        <View style={styles.iconContainer}>
-                          <MaterialCommunityIcons 
-                            name={list.icon} 
-                            size={22} 
-                            color="#FFFFFF" 
+                        <View style={styles.imageContainer}>
+                          <Image 
+                            source={{ uri: list.image }} 
+                            style={styles.listImage}
+                            resizeMode="cover"
                           />
                         </View>
                         <View style={styles.textContainer}>
-                          <Text style={styles.listTitle}>{list.title}</Text>
-                          {list.description && (
-                            <Text style={styles.description}>{list.description}</Text>
-                          )}
+                          <Text style={styles.listTitle}>{list.name}</Text>
+                          <Text style={styles.description} numberOfLines={2}>
+                            {list.description}
+                          </Text>
                         </View>
                       </View>
                       
@@ -188,35 +191,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F9FAFB',
   },
+  header: {
+    paddingHorizontal: PADDING.lg,
+    paddingTop: PADDING.xl,
+    paddingBottom: PADDING.md,
+    backgroundColor: '#FFFFFF',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: MARGIN.xs,
+  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: PADDING.md,
-    paddingBottom: PADDING.lg,
-    paddingTop: PADDING.md,
-  },
-  header: {
-    padding: PADDING.md,
-    paddingTop: PADDING.lg,
-    backgroundColor: '#F9FAFB',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: MARGIN.xs,
-    color: '#111827',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#6B7280',
+    paddingVertical: PADDING.lg,
   },
   listContainer: {
+    paddingHorizontal: PADDING.lg,
   },
   listItem: {
-    marginBottom: MARGIN.xl,
-    borderRadius: BORDER_RADIUS.lg,
-    padding: PADDING.xs,
+    marginBottom: MARGIN.md,
   },
   listItemTouchable: {
     borderRadius: BORDER_RADIUS.lg,
@@ -224,76 +221,81 @@ const styles = StyleSheet.create({
   },
   gradientContainer: {
     borderRadius: BORDER_RADIUS.lg,
+    padding: PADDING.md,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   cardContent: {
-    padding: PADDING.md,
+    gap: MARGIN.sm,
   },
   topRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: MARGIN.md,
+    gap: MARGIN.md,
   },
-  iconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 23,
+  imageContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: BORDER_RADIUS.md,
+    overflow: 'hidden',
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: MARGIN.md,
+  },
+  listImage: {
+    width: '100%',
+    height: '100%',
   },
   textContainer: {
     flex: 1,
-    padding: PADDING.xs,
   },
   listTitle: {
-    fontSize: 19,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '600',
     color: '#FFFFFF',
-    marginBottom: MARGIN.xs,
+    marginBottom: 4,
   },
   description: {
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.9)',
-    fontWeight: '400',
+    opacity: 0.9,
   },
   bottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: MARGIN.md,
+    marginTop: MARGIN.xs,
   },
   progressInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
   },
   progressText: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.95)',
-    fontWeight: '500',
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.9)',
   },
   statusContainer: {
-    paddingHorizontal: PADDING.sm,
-    paddingVertical: PADDING.xs,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: BORDER_RADIUS.xs,
+    paddingHorizontal: PADDING.sm,
+    paddingVertical: 4,
+    borderRadius: BORDER_RADIUS.md,
   },
   statusText: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.95)',
-    fontWeight: '600',
+    color: '#FFFFFF',
+    fontWeight: '500',
   },
   progressBarContainer: {
-    height: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    borderRadius: 3,
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: BORDER_RADIUS.md,
     overflow: 'hidden',
-    marginBottom: MARGIN.md,
+    marginTop: MARGIN.xs,
   },
   progressBar: {
     height: '100%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 3,
+    borderRadius: BORDER_RADIUS.md,
   },
 });

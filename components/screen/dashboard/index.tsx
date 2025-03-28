@@ -31,17 +31,18 @@ import {
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
 import { RootState } from '@/store';
-import { setReduxUser } from '@/store/userSlice';
+import { updateUserStats, setReduxUser } from '@/store/userSlice';
 import { supabase } from '@/lib/supabase';
 import { FishTypes } from '@/assets/svg/fish';
 import DailyActivitiesSection from './DailyActivitiesSection';
+import { fetchWordStatuses } from '@/services/userService';
 import { FishComponent } from '@/components/fish/FishComponent';
 import { getHungerColor } from './utils';
 
 // Kelime istatistikleri - Redux ile değiştirildi
 const getWordStats = (learnedCount: number, unknownCount: number, streakCount: number) => [
   { id: '1', title: 'learned', value: learnedCount.toString(), icon: 'checkmark-circle', color: '#10B981', progress: 65 },
-  { id: '3', title: 'unknown', value: unknownCount.toString(), icon: 'refresh', color: '#EF4444', progress: 20 },
+  { id: '2', title: 'unknown', value: unknownCount.toString(), icon: 'refresh', color: '#EF4444', progress: 20 },
   { id: '4', title: 'streak', value: streakCount.toString(), icon: 'flame', color: '#F97316', progress: 70 }
 ];
 
@@ -469,9 +470,36 @@ export default function DashboardScreen() {
   const dispatch = useDispatch();
 
   
-  // Redux'tan kelime durumunu al
+  // Redux'tan kullanıcı bilgilerini al
   const { id, full_name, point, known_words, unknown_words, streak_count } = useSelector((state: RootState) => state.user);
-  const wordStats = getWordStats(known_words, unknown_words, streak_count);
+  const [wordStats, setWordStats] = useState<Array<{
+    id: string;
+    title: string;
+    value: string;
+    icon: string;
+    color: string;
+    progress: number;
+  }>>([]);
+  
+  // UserWordStatuses tablosundan kelime durumunu çek
+  useEffect(() => {
+    const getWordStatuses = async () => {
+      if (!id) return;
+      
+      try {
+        // userService'den kelime durumlarını çek
+        const { knownCount, unknownCount } = await fetchWordStatuses(id);
+        console.log('Kelime durumları:', { knownCount, unknownCount });
+        
+        // Kelime istatistiklerini güncelle
+        setWordStats(getWordStats(knownCount, unknownCount, streak_count));
+      } catch (error) {
+        console.error('Kelime durumları işlenirken hata:', error);
+      }
+    };
+    
+    getWordStatuses();
+  }, [id, streak_count, dispatch]);
 
   // Animasyon değerler
   
@@ -668,7 +696,7 @@ export default function DashboardScreen() {
           <FishComponent
             width={70}
             height={70}
-            mouthAnim={mouthAnim}
+            mouthAnim={fish.mouthAnim}
             direction={direction}
             isEating={false}
             type={"orange"}
@@ -726,7 +754,6 @@ export default function DashboardScreen() {
         // Redux store'u hemen güncelle
         if (userData && userData[0]) {
           const updatedUser = userData[0];
-          console.log("Redux'a gönderilen veri:", updatedUser);
           dispatch(setReduxUser(updatedUser));
         }
 
@@ -752,10 +779,6 @@ export default function DashboardScreen() {
     FeedUserFish();
   };
   
-  
-  const aquariumRef = useRef(null);
-  
-
   return (
     <ThemedView style={styles.container}>
       <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -843,7 +866,7 @@ export default function DashboardScreen() {
               style={[styles.wordStatCard, { backgroundColor: Colors[mode].card }]}
               onPress={() => router.push({
                 pathname: '/word-list',
-                params: { type: stat.title }
+                params: { type: stat.title, id: stat.id }
               })}
             >
               <View style={[styles.wordStatIconContainer, { backgroundColor: stat.color + '15' }]}>
@@ -886,14 +909,14 @@ export default function DashboardScreen() {
                     <View 
                       style={[
                         styles.hungerIndicatorPreview, 
-                        { width: `${fish.hunger_level}%`, backgroundColor: hungerColor }
+                        { width: fish.hunger_level, backgroundColor: hungerColor }
                       ]} 
                     />
                   </View>
                   <FishComponent 
                     width={40}
                     height={30}
-                    mouthAnim={new Animated.Value(0)}
+                    mouthAnim={fish.mouthAnim}
                     direction={"right"}
                     isEating={false}
                     type={fish.type}
