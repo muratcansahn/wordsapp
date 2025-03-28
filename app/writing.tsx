@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, ScrollView, Dimensions, StatusBar } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { getRandomWord } from '@/services/wordService';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+import { Animated } from 'react-native';
 
 interface FlashCard {
   id: string;
@@ -18,197 +22,55 @@ interface WordList {
   cards: FlashCard[];
 }
 
-const WORD_LISTS: WordList[] = [
-  {
-    id: '1',
-    title: 'İş İngilizcesi',
-    subtitle: 'Ofis ve iş hayatında kullanılan temel kelimeler',
-    level: 'B1',
-    cards: [
-      {
-        id: '1',
-        word: 'Experience',
-        translation: 'Deneyim',
-        description: 'Bir şeyi yaparak veya yaşayarak elde edilen bilgi ve beceri',
-        example: 'I have five years of ____ in this field.',
-      },
-      {
-        id: '2',
-        word: 'Opportunity',
-        translation: 'Fırsat',
-        description: 'Uygun şart ve durum, elverişli zaman veya imkan',
-        example: 'This is a great ____ for your career.',
-      },
-      {
-        id: '3',
-        word: 'Deadline',
-        translation: 'Son Teslim Tarihi',
-        description: 'Bir işin tamamlanması gereken son tarih veya zaman',
-        example: 'The project ____ is next Friday.',
-      },
-      {
-        id: '4',
-        word: 'Meeting',
-        translation: 'Toplant',
-        description: 'nsanlar bir araya gelerek görüşme yaptığı organizasyon',
-        example: 'We have an important ____ with clients tomorrow.',
-      },
-      {
-        id: '5',
-        word: 'Schedule',
-        translation: 'Program',
-        description: 'Yapılacak işlerin planlandığı zaman çizelgesi',
-        example: 'Please check your ____ for next week.',
-      }
-    ]
-  },
-  {
-    id: '2',
-    title: 'Günlük Konuşma',
-    subtitle: 'Günlük hayatta sık kullanılan kelimeler',
-    level: 'B1',
-    cards: [
-      {
-        id: '1',
-        word: 'Weather',
-        translation: 'Hava Durumu',
-        description: 'Belirli bir yerde ve zamanda atmosferin durumu',
-        example: 'The ____ is beautiful today.',
-      },
-      {
-        id: '2',
-        word: 'Journey',
-        translation: 'Yolculuk',
-        description: 'Bir yerden başka bir yere yapılan seyahat',
-        example: 'Have a safe ____!',
-      },
-      {
-        id: '3',
-        word: 'Delicious',
-        translation: 'Lezzetli',
-        description: 'Tadı çok güzel ve hoş olan yiyecek veya içecek',
-        example: 'This cake is absolutely ____.',
-      },
-      {
-        id: '4',
-        word: 'Comfortable',
-        translation: 'Rahat',
-        description: 'Fiziksel olarak rahatlık veren, konforu yüksek',
-        example: 'These shoes are very ____.',
-      },
-      {
-        id: '5',
-        word: 'Friendship',
-        translation: 'Arkadaşlık',
-        description: 'İki veya daha fazla kişi arasındaki yakın ve samimi ilişki',
-        example: 'Our ____ has lasted for many years.',
-      }
-    ]
-  },
-  {
-    id: '3',
-    title: 'Teknoloji',
-    subtitle: 'Teknoloji ve bilişim alanında kullanılan kelimeler',
-    level: 'B1',
-    cards: [
-      {
-        id: '1',
-        word: 'Download',
-        translation: 'İndirmek',
-        description: 'İnternetten bilgisayara veya telefona veri aktarma işlemi',
-        example: 'Please ____ the latest version of the app.',
-      },
-      {
-        id: '2',
-        word: 'Password',
-        translation: 'Şifre',
-        description: 'Güvenlik için kullanılan gizli karakter dizisi',
-        example: 'Remember to change your ____ regularly.',
-      },
-      {
-        id: '3',
-        word: 'Wireless',
-        translation: 'Kablosuz',
-        description: 'Kablo kullanmadan çalışan teknoloji veya bağlant',
-        example: 'This is a ____ keyboard.',
-      },
-      {
-        id: '4',
-        word: 'Update',
-        translation: 'Güncellemek',
-        description: 'Bir yazılımı veya sistemi en son sürüme yükseltme',
-        example: 'You need to ____ your operating system.',
-      },
-      {
-        id: '5',
-        word: 'Browser',
-        translation: 'Tarayıcı',
-        description: 'İnternet sitelerini görüntülemeye yarayan yazılım',
-        example: 'Which web ____ do you prefer?',
-      }
-    ]
-  },
-  {
-    id: '4',
-    title: 'Seyahat',
-    subtitle: 'Seyahat ve turizm ile ilgili kelimeler',
-    level: 'B1',
-    cards: [
-      {
-        id: '1',
-        word: 'Passport',
-        translation: 'Pasaport',
-        description: 'Uluslararası seyahatlerde kullanılan resmi kimlik belgesi',
-        example: 'Don\'t forget to bring your ____.',
-      },
-      {
-        id: '2',
-        word: 'Luggage',
-        translation: 'Bagaj',
-        description: 'Seyahatte yanımızda taşıdığımız çanta ve eşyalar',
-        example: 'My ____ was lost at the airport.',
-      },
-      {
-        id: '3',
-        word: 'Destination',
-        translation: 'Varış Noktası',
-        description: 'Seyahatin son bulduğu, varmak istenen yer',
-        example: 'Paris is a popular tourist ____.',
-      },
-      {
-        id: '4',
-        word: 'Reservation',
-        translation: 'Rezervasyon',
-        description: 'Önceden yapılan yer ayırtma işlemi',
-        example: 'I made a ____ at the hotel.',
-      },
-      {
-        id: '5',
-        word: 'Sightseeing',
-        translation: 'Gezme',
-        description: 'Turistik yerleri gezip görme aktivitesi',
-        example: 'We spent the day ____ in Rome.',
-      }
-    ]
-  }
-];
-
 const HangmanGame = () => {
   const [currentWord, setCurrentWord] = useState<FlashCard | null>(null);
   const [guessedLetters, setGuessedLetters] = useState<Set<string>>(new Set());
-  const [remainingXP, setRemainingXP] = useState(100);
-  const [showHint, setShowHint] = useState(false);
-  const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost' | 'ended'>('playing');
   const [score, setScore] = useState(0);
+  const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost' | 'ended'>('playing');
+  const [loading, setLoading] = useState(true);
+  const [scoreAnimation] = useState(new Animated.Value(0));
+  const [fadeAnim] = useState(new Animated.Value(0));
 
-  const selectRandomWord = () => {
-    const allCards = WORD_LISTS.flatMap(list => list.cards);
-    const randomCard = allCards[Math.floor(Math.random() * allCards.length)];
-    setCurrentWord(randomCard);
-    setGuessedLetters(new Set());
-    setRemainingXP(100);
-    setShowHint(false);
-    setGameStatus('playing');
+  const selectRandomWord = async () => {
+    try {
+      setLoading(true);
+      // Yeni kelime yüklenirken fade efekti
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true
+      }).start();
+      
+      const randomWord = await getRandomWord();
+      
+      if (randomWord) {
+        console.log('Rastgele kelime:', randomWord);
+        // Eğer API'den kelime geldiyse onu kullan
+        const wordTranslation = randomWord.WordTranslations[0];
+        const newCard: FlashCard = {
+          id: randomWord.id.toString(),
+          word: randomWord.name,
+          translation: wordTranslation.mean || '',
+          description: wordTranslation.example_translated || '',
+          example: wordTranslation.example_original || '',
+        };
+        setCurrentWord(newCard);
+      } 
+      
+      setGuessedLetters(new Set());
+      setGameStatus('playing');
+      
+      // Yeni kelime yüklendiğinde fade-in efekti
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true
+      }).start();
+    } catch (error) {
+      console.error('Kelime getirme hatası:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // İlk açılışta otomatik kelime seçimi
@@ -233,18 +95,51 @@ const HangmanGame = () => {
     newGuessedLetters.add(lowerLetter);
     setGuessedLetters(newGuessedLetters);
 
-    if (!currentWord?.word.toLowerCase().includes(lowerLetter)) {
-      setRemainingXP(prev => Math.max(0, prev - 10));
+    if (currentWord?.word.toLowerCase().includes(lowerLetter)) {
+      // Doğru tahmin için puan ekle ve haptic feedback
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      const newScore = score + 10;
+      setScore(newScore);
+      
+      // Skor animasyonu
+      Animated.sequence([
+        Animated.timing(scoreAnimation, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true
+        }),
+        Animated.timing(scoreAnimation, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true
+        })
+      ]).start();
+    } else {
+      // Yanlış tahmin için haptic feedback
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
 
     checkGameStatus(newGuessedLetters);
   };
 
-  const buyHint = () => {
-    if (remainingXP >= 15) {
-      setRemainingXP(prev => prev - 15);
-      setShowHint(true);
-    }
+  // Rastgele bir harf açma fonksiyonu
+  const revealRandomLetter = () => {
+    if (!currentWord || gameStatus !== 'playing') return;
+    
+    // Henüz tahmin edilmemiş harfleri bul
+    const unrevealed = currentWord.word.toLowerCase().split('')
+      .filter(letter => !guessedLetters.has(letter.toLowerCase()));
+    
+    // Eğer tüm harfler zaten açıksa işlem yapma
+    if (unrevealed.length === 0) return;
+    
+    // Rastgele bir harf seç
+    const randomLetter = unrevealed[Math.floor(Math.random() * unrevealed.length)];
+    
+    // Puanı düş ve haptic feedback
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    setScore(prev => Math.max(0, prev - 15));
+    guessLetter(randomLetter);
   };
 
   const checkGameStatus = (letters: Set<string>) => {
@@ -254,218 +149,259 @@ const HangmanGame = () => {
     const isComplete = Array.from(wordLetters).every(letter => letters.has(letter));
     
     if (isComplete) {
+      // Kelimeyi bildiğinde bonus puan ekle ve haptic feedback
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setScore(prev => prev + 50);
       setGameStatus('won');
-      setScore(prev => prev + remainingXP);
-      // 2 saniye sonra yeni kelimeye geç
-      setTimeout(() => {
-        selectRandomWord();
-      }, 2000);
-    } else if (remainingXP <= 0) {
+      // Artık otomatik olarak yeni kelimeye geçmiyoruz
+    } else if (letters.size > wordLetters.size + 5) {
+      // Çok fazla yanlış tahmin yapıldığında oyunu kaybet
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setGameStatus('lost');
     }
   };
 
-  const skipWord = () => {
-    setRemainingXP(prev => Math.max(0, prev - 20));
-    selectRandomWord();
-  };
-
   const endGame = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     setGameStatus('ended');
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.scoreContainer}>
-          <View style={styles.xpContainer}>
-            <Icon name="star" size={24} color="#FFC107" />
-            <Text style={styles.xpText}>{remainingXP} XP</Text>
-          </View>
-          <View style={styles.totalScoreContainer}>
-            <Icon name="emoji-events" size={24} color="#FF9800" />
-            <Text style={styles.scoreText}>Skor: {score}</Text>
-          </View>
-        </View>
-        <View style={styles.gameControls}>
-          <TouchableOpacity onPress={skipWord} style={styles.skipButton}>
-            <Icon name="skip-next" size={20} color="#fff" />
-            <Text style={styles.buttonText}>Pas (-20 XP)</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={endGame} style={styles.endButton}>
-            <Icon name="stop" size={20} color="#fff" />
-            <Text style={styles.buttonText}>Bitir</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {gameStatus === 'ended' ? (
-        <View style={styles.gameEndContainer}>
-          <Icon name="celebration" size={64} color="#FFC107" />
-          <Text style={styles.gameEndTitle}>Oyun Bitti!</Text>
-          <Text style={styles.gameEndScore}>Toplam Skor: {score}</Text>
-          <TouchableOpacity
-            style={styles.newGameButton}
-            onPress={() => {
-              setScore(0);
-              selectRandomWord();
-            }}
-          >
-            <Icon name="replay" size={20} color="#fff" />
-            <Text style={styles.buttonText}>Yeni Oyun</Text>
-          </TouchableOpacity>
-        </View>
-      ) : currentWord && (
-        <View style={styles.gameContainer}>
-          <View style={styles.wordInfoContainer}>
-            <Text style={styles.wordCategory}>İş İngilizcesi • B1 Seviye</Text>
-            <View style={styles.descriptionContainer}>
-              <Text style={styles.descriptionTitle}>Açıklama:</Text>
-              <Text style={styles.descriptionText}>{currentWord.description}</Text>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#f5f7fa" />
+      <LinearGradient
+        colors={['#f8f9fb', '#e6eaf0']}
+        style={styles.gradient}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent} 
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.header}>
+            <View style={styles.scoreContainer}>
+              <View style={styles.totalScoreContainer}>
+                <Icon name="emoji-events" size={24} color="#FF9800" />
+                <Animated.Text 
+                  style={[
+                    styles.scoreText,
+                    {
+                      transform: [
+                        {
+                          scale: scoreAnimation.interpolate({
+                            inputRange: [0, 0.5, 1],
+                            outputRange: [1, 1.2, 1]
+                          })
+                        }
+                      ]
+                    }
+                  ]}
+                >
+                  Skor: {score}
+                </Animated.Text>
+              </View>
             </View>
+            <TouchableOpacity 
+              onPress={endGame} 
+              style={styles.endButton}
+              activeOpacity={0.8}
+            >
+              <Icon name="stop" size={20} color="#fff" />
+              <Text style={styles.buttonText}>Bitir</Text>
+            </TouchableOpacity>
           </View>
 
-          <View style={styles.wordContainer}>
-            <Text style={styles.maskedWord}>{getMaskedWord()}</Text>
-            <Text style={styles.wordHint}>Bu kelime {currentWord.word.length} harften oluşuyor</Text>
-            
-            {!showHint ? (
-              <TouchableOpacity
-                style={[styles.hintButton, remainingXP < 15 && styles.disabledButton]}
-                onPress={buyHint}
-                disabled={showHint || remainingXP < 15}
-              >
-                <Icon name="lightbulb-outline" size={20} color="#fff" />
-                <Text style={styles.buttonText}>Örnek Cümle İste (-15 XP)</Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.exampleHintContainer}>
-                <Text style={styles.exampleHintTitle}>Örnek Cümle:</Text>
-                <Text style={styles.exampleHintText}>{currentWord.example}</Text>
-              </View>
-            )}
-          </View>
-
-          <View style={styles.keyboardContainer}>
-            {[
-              ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
-              ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
-              ['z', 'x', 'c', 'v', 'b', 'n', 'm']
-            ].map((row, rowIndex) => (
-              <View key={rowIndex} style={styles.keyboardRow}>
-                {row.map(letter => (
-                  <TouchableOpacity
-                    key={letter}
-                    style={[
-                      styles.letterButton,
-                      guessedLetters.has(letter) && (
-                        currentWord.word.toLowerCase().includes(letter)
-                          ? styles.correctLetter
-                          : styles.wrongLetter
-                      ),
-                      gameStatus !== 'playing' && styles.disabledButton
-                    ]}
-                    onPress={() => guessLetter(letter)}
-                    disabled={guessedLetters.has(letter) || gameStatus !== 'playing'}
-                  >
-                    <Text style={[
-                      styles.letterText,
-                      guessedLetters.has(letter) && styles.usedLetterText
-                    ]}>
-                      {letter.toUpperCase()}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            ))}
-          </View>
-
-          {gameStatus !== 'playing' && (
-            <View style={styles.gameOverContainer}>
-              <View style={[
-                styles.resultBadge,
-                gameStatus === 'won' ? styles.wonBadge : styles.lostBadge
-              ]}>
-                <Icon
-                  name={gameStatus === 'won' ? 'trophy' : 'close-circle'}
-                  size={32}
-                  color={gameStatus === 'won' ? '#4CAF50' : '#F44336'}
-                />
-                <Text style={styles.gameOverText}>
-                  {gameStatus === 'won' ? 'Tebrikler! 🎉' : 'Oyun Bitti!'}
-                </Text>
-              </View>
-              
-              <View style={styles.wordRevealContainer}>
-                <Text style={styles.wordRevealLabel}>Kelime:</Text>
-                <Text style={styles.wordRevealText}>{currentWord.word}</Text>
-                <Text style={styles.translationText}>{currentWord.translation}</Text>
-                <Text style={styles.exampleText}>Örnek: "{currentWord.example}"</Text>
-              </View>
-
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#4361EE" />
+              <Text style={styles.loadingText}>Kelime Yükleniyor...</Text>
+            </View>
+          ) : gameStatus === 'ended' ? (
+            <View style={styles.gameEndContainer}>
+              <Icon name="celebration" size={64} color="#4361EE" />
+              <Text style={styles.gameEndTitle}>Oyun Bitti!</Text>
+              <Text style={styles.gameEndScore}>Toplam Skor: {score}</Text>
               <TouchableOpacity
                 style={styles.newGameButton}
-                onPress={selectRandomWord}
+                activeOpacity={0.8}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setScore(0);
+                  selectRandomWord();
+                }}
               >
-                <Icon name="play-circle" size={20} color="#fff" />
+                <Icon name="replay" size={20} color="#fff" />
                 <Text style={styles.buttonText}>Yeni Oyun</Text>
               </TouchableOpacity>
             </View>
+          ) : currentWord && (
+            <Animated.View 
+              style={[
+                styles.gameContainer,
+                { opacity: fadeAnim }
+              ]}
+            >
+              <View style={styles.wordInfoContainer}>
+                <View style={styles.descriptionContainer}>
+                  <Text style={styles.descriptionTitle}>Türkçe Karşılığı:</Text>
+                  <Text style={styles.descriptionText}>{currentWord.translation}</Text>
+                </View>
+              </View>
+
+              <View style={styles.wordContainer}>
+                <Text style={styles.maskedWord}>{getMaskedWord()}</Text>
+                <Text style={styles.wordHint}>Bu kelime {currentWord.word.length} harften oluşuyor</Text>
+                
+                <TouchableOpacity
+                  style={styles.hintButton}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    revealRandomLetter();
+                  }}
+                  disabled={gameStatus !== 'playing'}
+                >
+                  <Icon name="lightbulb-outline" size={20} color="#fff" />
+                  <Text style={styles.buttonText}>Harf Al (-15 Puan)</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.keyboardContainer}>
+                {[
+                  ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+                  ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
+                  ['z', 'x', 'c', 'v', 'b', 'n', 'm']
+                ].map((row, rowIndex) => (
+                  <View key={rowIndex} style={styles.keyboardRow}>
+                    {row.map(letter => (
+                      <TouchableOpacity
+                        key={letter}
+                        style={[
+                          styles.letterButton,
+                          guessedLetters.has(letter) && (
+                            currentWord.word.toLowerCase().includes(letter)
+                              ? styles.correctLetter
+                              : styles.wrongLetter
+                          ),
+                          gameStatus !== 'playing' && styles.disabledButton
+                        ]}
+                        activeOpacity={0.7}
+                        onPress={() => {
+                          Haptics.selectionAsync();
+                          guessLetter(letter);
+                        }}
+                        disabled={guessedLetters.has(letter) || gameStatus !== 'playing'}
+                      >
+                        <Text style={[
+                          styles.letterText,
+                          guessedLetters.has(letter) && (
+                            currentWord.word.toLowerCase().includes(letter)
+                              ? styles.correctLetterText
+                              : styles.wrongLetterText
+                          )
+                        ]}>
+                          {letter.toUpperCase()}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                ))}
+              </View>
+
+              {gameStatus !== 'playing' && (
+                <View style={styles.gameOverContainer}>
+                  <LinearGradient
+                    colors={gameStatus === 'won' ? ['#e0f7e0', '#c8e6c9'] : ['#ffebee', '#ffcdd2']}
+                    style={[
+                      styles.resultBadge,
+                      gameStatus === 'won' ? styles.wonBadge : styles.lostBadge
+                    ]}
+                  >
+                    <Icon
+                      name={gameStatus === 'won' ? 'emoji-events' : 'sentiment-very-dissatisfied'}
+                      size={32}
+                      color={gameStatus === 'won' ? '#4CAF50' : '#F44336'}
+                    />
+                    <Text style={[
+                      styles.gameOverText,
+                      { color: gameStatus === 'won' ? '#4CAF50' : '#F44336' }
+                    ]}>
+                      {gameStatus === 'won' ? 'Tebrikler! 🎉' : 'Oyun Bitti!'}
+                    </Text>
+                  </LinearGradient>
+                  
+                  <View style={styles.wordRevealContainer}>
+                    <Text style={styles.wordRevealLabel}>Kelime:</Text>
+                    <Text style={styles.wordRevealText}>{currentWord.word}</Text>
+                    <Text style={styles.translationText}>{currentWord.translation}</Text>
+                    {currentWord.example && (
+                      <Text style={styles.exampleText}>Örnek: "{currentWord.example}"</Text>
+                    )}
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.newGameButton}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      selectRandomWord();
+                    }}
+                  >
+                    <Icon name="play-circle" size={20} color="#fff" />
+                    <Text style={styles.buttonText}>Yeni Kelime</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </Animated.View>
           )}
-        </View>
-      )}
-    </View>
+        </ScrollView>
+      </LinearGradient>
+    </SafeAreaView>
   );
 };
+
+const { width, height } = Dimensions.get('window');
+const buttonSize = Math.min(36, width / 11); // Ekran genişliğine göre buton boyutunu ayarla
+const isSmallDevice = width < 375;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#f8f9fb',
+  },
+  gradient: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
   },
   header: {
-    paddingVertical: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  scoreContainer: {
+    borderBottomColor: 'rgba(0,0,0,0.06)',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
   },
-  xpContainer: {
+  scoreContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  xpText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#424242',
-    marginLeft: 8,
   },
   totalScoreContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFF',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: 20,
-    elevation: 2,
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   scoreText: {
     fontSize: 18,
@@ -473,106 +409,135 @@ const styles = StyleSheet.create({
     color: '#424242',
     marginLeft: 8,
   },
-  gameControls: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  skipButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FF9800',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    elevation: 2,
-    marginRight: 10,
-  },
   endButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F44336',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: 20,
-    elevation: 2,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: height * 0.2,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 18,
+    color: '#757575',
+    fontWeight: '500',
+  },
+  gameContainer: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    padding: 20,
   },
   gameEndContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    paddingVertical: height * 0.15,
   },
   gameEndTitle: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: 'bold',
     color: '#212121',
     marginVertical: 20,
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   gameEndScore: {
-    fontSize: 24,
+    fontSize: 28,
     color: '#424242',
     marginBottom: 30,
+    fontWeight: '500',
   },
   wordInfoContainer: {
     width: '100%',
     alignItems: 'center',
     marginBottom: 20,
   },
-  wordCategory: {
-    fontSize: 14,
-    color: '#757575',
-    marginBottom: 10,
-  },
   descriptionContainer: {
     backgroundColor: '#FFF',
     padding: 20,
-    borderRadius: 12,
+    borderRadius: 16,
     width: '100%',
-    elevation: 2,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.03)',
   },
   descriptionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1976D2',
+    color: '#4361EE',
     marginBottom: 12,
+    textAlign: 'center',
   },
   descriptionText: {
-    fontSize: 17,
+    fontSize: 20,
     color: '#424242',
-    lineHeight: 24,
+    lineHeight: 26,
     textAlign: 'center',
+    fontWeight: '500',
   },
   wordContainer: {
     backgroundColor: '#FFF',
-    padding: 20,
-    borderRadius: 12,
+    padding: 24,
+    borderRadius: 16,
     width: '100%',
     alignItems: 'center',
-    elevation: 2,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.03)',
   },
   maskedWord: {
-    fontSize: 32,
+    fontSize: isSmallDevice ? 32 : 36,
     fontWeight: 'bold',
-    letterSpacing: 8,
+    letterSpacing: 10,
     color: '#212121',
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
   },
   wordHint: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#757575',
-    marginTop: 8,
+    marginTop: 12,
+    fontWeight: '500',
   },
   hintButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#4CAF50',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    elevation: 2,
-    marginTop: 16,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 24,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    marginTop: 20,
   },
   buttonText: {
     color: '#FFF',
@@ -581,32 +546,16 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   disabledButton: {
-    backgroundColor: '#BDBDBD',
-    elevation: 0,
-  },
-  exampleHintContainer: {
-    backgroundColor: '#E8F5E9',
-    padding: 16,
-    borderRadius: 12,
-    width: '100%',
-    marginTop: 16,
-  },
-  exampleHintTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2E7D32',
-    marginBottom: 8,
-  },
-  exampleHintText: {
-    fontSize: 15,
-    color: '#1B5E20',
-    fontStyle: 'italic',
-    textAlign: 'center',
-    lineHeight: 22,
+    opacity: 0.7,
   },
   keyboardContainer: {
-    width: '100%',
-    marginTop: 20,
+    marginTop: 24,
+    borderRadius: 16,
+    padding: 16,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.03)',
   },
   keyboardRow: {
     flexDirection: 'row',
@@ -614,28 +563,41 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   letterButton: {
-    width: 36,
-    height: 42,
+    width: buttonSize,
+    height: buttonSize * 1.2,
     margin: 3,
     borderRadius: 8,
     backgroundColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
   },
   letterText: {
-    fontSize: 18,
+    fontSize: Math.min(18, buttonSize * 0.6),
     fontWeight: 'bold',
     color: '#424242',
   },
+  correctLetterText: {
+    color: '#4CAF50',
+  },
+  wrongLetterText: {
+    color: '#F44336',
+  },
   correctLetter: {
-    backgroundColor: '#81C784',
+    backgroundColor: '#E8F5E9',
+    borderColor: '#4CAF50',
+    borderWidth: 1,
   },
   wrongLetter: {
-    backgroundColor: '#E57373',
-  },
-  usedLetterText: {
-    color: '#FFF',
+    backgroundColor: '#FFEBEE',
+    borderColor: '#F44336',
+    borderWidth: 1,
   },
   gameOverContainer: {
     position: 'absolute',
@@ -643,20 +605,25 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    zIndex: 10,
+    paddingHorizontal: 20,
+    borderRadius: 16,
   },
   resultBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
     paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderRadius: 30,
     marginBottom: 24,
     elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   wonBadge: {
     borderColor: '#4CAF50',
@@ -667,50 +634,66 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   gameOverText: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
     marginLeft: 12,
-    color: '#212121',
   },
   wordRevealContainer: {
     backgroundColor: '#FFF',
-    padding: 20,
-    borderRadius: 12,
-    width: '100%',
+    padding: 24,
+    borderRadius: 16,
+    width: '90%',
     alignItems: 'center',
-    marginBottom: 24,
-    elevation: 2,
+    marginBottom: 30,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.03)',
   },
   wordRevealLabel: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#757575',
     marginBottom: 8,
+    fontWeight: '500',
   },
   wordRevealText: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#212121',
-    marginBottom: 8,
+    marginBottom: 12,
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
   },
   translationText: {
-    fontSize: 20,
-    color: '#1976D2',
-    marginBottom: 12,
+    fontSize: 22,
+    color: '#4361EE',
+    marginBottom: 16,
+    fontWeight: '500',
+    textAlign: 'center',
   },
   exampleText: {
     fontSize: 16,
     color: '#757575',
     fontStyle: 'italic',
     textAlign: 'center',
+    lineHeight: 24,
   },
   newGameButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2196F3',
+    backgroundColor: '#4361EE',
     paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 25,
-    elevation: 3,
+    paddingVertical: 14,
+    borderRadius: 30,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
 });
 
