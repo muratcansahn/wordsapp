@@ -75,19 +75,19 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
       // Önce kullanıcının tabloda var olup olmadığını kontrol ediyoruz
       const { data: existingUser, error: queryError } = await supabase
         .from('Users')
-        .select('id')
+        .select('id, last_streak_date, streak_count')
         .eq('id', userData.id)
+        .single();
 
       if (queryError) {
         console.error('Sorgu hatası:', queryError.message);
         return;
       }
 
-      // Kullanıcının var olup olmadığını kontrol et
-      const userExists = existingUser && existingUser.length > 0;
-      console.log('Kullanıcı durumu:', userExists ? 'Bulundu' : 'Bulunamadı');
+      const now = new Date(); // Şu anki tarih ve saat
 
-      if (!userExists) {
+      // Yeni kullanıcı ise
+      if (!existingUser) {
         const { error: insertError } = await supabase
           .from('Users')
           .insert([
@@ -99,7 +99,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
                         'Anonim Kullanıcı',
               point: 5,
               streak_count: 1,
-              last_login_datetime: new Date().toISOString(),
+              last_streak_date: now.toISOString(),
+              last_login_datetime: now.toISOString(),
             },
           ]);
 
@@ -109,16 +110,61 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
           console.log('Kullanıcı başarıyla eklendi');
         }
       } else {
-        // Kullanıcı zaten varsa, son giriş zamanını güncelliyoruz
+        // Mevcut kullanıcı için streak hesaplama
+        let newStreakCount = existingUser.streak_count || 0;
+        let shouldUpdateStreakDate = false;
+        let hoursDifference = 0;
+        const lastStreakDate = existingUser.last_streak_date ? new Date(existingUser.last_streak_date) : null;
+        
+        if (!lastStreakDate) {
+          // İlk kez streak kaydı
+          newStreakCount = 1;
+          shouldUpdateStreakDate = true;
+        } else {
+          // Son giriş ile şu anki zaman arasındaki farkı saat cinsinden hesapla
+          hoursDifference = (now.getTime() - lastStreakDate.getTime()) / (1000 * 60 * 60);
+
+          if (hoursDifference < 24) {
+            // 24 saatten az - streak değişmez, tarih güncellenmez
+            newStreakCount = existingUser.streak_count;
+            shouldUpdateStreakDate = false;
+            console.log('24 saatten az süre geçmiş, streak korunuyor:', newStreakCount);
+          } else if (hoursDifference < 48) {
+            // 24-48 saat arası - streak artar, tarih güncellenir
+            newStreakCount = existingUser.streak_count + 1;
+            shouldUpdateStreakDate = true;
+            console.log('24-48 saat arası giriş, streak artıyor:', newStreakCount);
+          } else {
+            // 48 saatten fazla - streak sıfırlanır, tarih güncellenir
+            newStreakCount = 1;
+            shouldUpdateStreakDate = true;
+            console.log('48 saatten fazla süre geçmiş, streak sıfırlanıyor');
+          }
+        }
+
+        // Kullanıcı bilgilerini güncelle
+        const updateData: any = {
+          last_login_datetime: now.toISOString(),
+          streak_count: newStreakCount,
+        };
+
+        // Sadece gerekiyorsa streak tarihini güncelle
+        if (shouldUpdateStreakDate) {
+          updateData.last_streak_date = now.toISOString();
+          console.log('Streak tarihi güncelleniyor:', now.toISOString());
+        }
+
         const { error: updateError } = await supabase
           .from('Users')
-          .update({ last_login_datetime: new Date().toISOString() })
+          .update(updateData)
           .eq('id', userData.id);
 
         if (updateError) {
           console.error('Kullanıcı güncelleme hatası:', updateError);
         } else {
-          console.log('Kullanıcı son giriş zamanı güncellendi');
+          const hours = Math.floor(hoursDifference);
+          const minutes = Math.floor((hoursDifference - hours) * 60);
+          console.log(`Kullanıcı bilgileri güncellendi. Yeni streak: ${newStreakCount}, Son girişten bu yana: ${hours} saat ${minutes} dakika`);
         }
       }
     } catch (error) {
