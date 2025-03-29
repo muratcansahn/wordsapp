@@ -17,16 +17,11 @@ const TabLayout = () => {
         tabBarActiveTintColor: Colors[mode].primary || Colors[mode].button,
         headerShown: false
       }}
+      initialRouteName="index"
     >
+   
       <Tabs.Screen
-        name="dashboard"
-        options={{
-          title: t('header.dashboard'),
-          tabBarIcon: ({ color }) => <TabBarIcon name={'stats-chart'} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="home"
+        name="index"
         options={{
           title: t('header.home'),
           tabBarIcon: ({ color }) => <TabBarIcon name={'home'} color={color} />,
@@ -38,15 +33,6 @@ const TabLayout = () => {
           title: t('header.learn'),
           tabBarIcon: ({ color }) => (
             <TabBarIcon name={'book-open'} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="exercises"
-        options={{
-          title: t('header.exercises'),
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name={'clipboard'} color={color} />
           ),
         }}
       />
