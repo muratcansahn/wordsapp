@@ -1,135 +1,104 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, SafeAreaView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
-import { BORDER_RADIUS, PADDING, MARGIN } from '@/constants/AppConstants';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeInUp, FadeOut } from 'react-native-reanimated';
+import { fetchWordListItems, FlashCard } from '@/services/flashcardsService';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
-// Statik test verileri
+// Quiz sorusu arayüzü
 interface QuizQuestion {
-  id: number;
+  id: string;
   word: string;
   correctAnswer: string;
   options: string[];
 }
 
-// Kelime listelerine göre statik sorular
-const quizQuestions: Record<string, QuizQuestion[]> = {
-  "1": [ // Temel İngilizce
-    {
-      id: 1,
-      word: "apple",
-      correctAnswer: "elma",
-      options: ["elma", "armut", "portakal", "muz"]
-    },
-    {
-      id: 2,
-      word: "house",
-      correctAnswer: "ev",
-      options: ["araba", "ev", "okul", "bahçe"]
-    },
-    {
-      id: 3,
-      word: "book",
-      correctAnswer: "kitap",
-      options: ["kitap", "defter", "kalem", "silgi"]
-    },
-    {
-      id: 4,
-      word: "water",
-      correctAnswer: "su",
-      options: ["ateş", "hava", "su", "toprak"]
-    },
-    {
-      id: 5,
-      word: "friend",
-      correctAnswer: "arkadaş",
-      options: ["aile", "arkadaş", "öğretmen", "komşu"]
-    }
-  ],
-  "2": [ // İş İngilizcesi
-    {
-      id: 1,
-      word: "meeting",
-      correctAnswer: "toplantı",
-      options: ["toplantı", "rapor", "sunum", "proje"]
-    },
-    {
-      id: 2,
-      word: "deadline",
-      correctAnswer: "son teslim tarihi",
-      options: ["başlangıç", "son teslim tarihi", "erteleme", "iptal"]
-    },
-    {
-      id: 3,
-      word: "report",
-      correctAnswer: "rapor",
-      options: ["rapor", "belge", "dosya", "tablo"]
-    },
-    {
-      id: 4,
-      word: "manager",
-      correctAnswer: "yönetici",
-      options: ["çalışan", "yönetici", "müşteri", "ortak"]
-    },
-    {
-      id: 5,
-      word: "client",
-      correctAnswer: "müşteri",
-      options: ["patron", "müşteri", "rakip", "tedarikçi"]
-    }
-  ],
-  "3": [ // Seyahat
-    {
-      id: 1,
-      word: "airport",
-      correctAnswer: "havalimanı",
-      options: ["havalimanı", "tren istasyonu", "otobüs durağı", "liman"]
-    },
-    {
-      id: 2,
-      word: "ticket",
-      correctAnswer: "bilet",
-      options: ["pasaport", "bilet", "vize", "bagaj"]
-    },
-    {
-      id: 3,
-      word: "hotel",
-      correctAnswer: "otel",
-      options: ["otel", "restoran", "müze", "park"]
-    },
-    {
-      id: 4,
-      word: "beach",
-      correctAnswer: "plaj",
-      options: ["dağ", "plaj", "orman", "göl"]
-    },
-    {
-      id: 5,
-      word: "passport",
-      correctAnswer: "pasaport",
-      options: ["kimlik", "pasaport", "ehliyet", "kredi kartı"]
-    }
-  ]
-};
-
 export default function QuizPage() {
   const { listId } = useLocalSearchParams();
   const router = useRouter();
   const { mode } = useTheme();
-  
+  const [loading, setLoading] = useState(true);
+  const [flashcards, setFlashcards] = useState<FlashCard[]>([]);
+  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
   
-  const questions = quizQuestions[listId as string] || [];
+  // Flashcardları çek
+  useEffect(() => {
+    const loadFlashcards = async () => {
+      if (!listId) return;
+      
+      try {
+        setLoading(true);
+        const cards = await fetchWordListItems(listId as string);
+        setFlashcards(cards);
+        
+        if (cards.length > 0) {
+          // Flashcardlardan quiz soruları oluştur
+          const quizQuestions = generateQuizQuestions(cards);
+          setQuestions(quizQuestions);
+        }
+      } catch (error) {
+        console.error('Flashcard yükleme hatası:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadFlashcards();
+  }, [listId]);
+  
+  // Flashcardlardan quiz soruları oluştur
+  const generateQuizQuestions = (cards: FlashCard[]): QuizQuestion[] => {
+    // Her kelime için bir soru oluştur
+    return cards.map(card => {
+      // Doğru cevap
+      const correctAnswer = card.translation;
+      
+      // Yanlış cevaplar için diğer kelimelerin çevirilerinden rastgele 3 tane seç
+      const otherTranslations = cards
+        .filter(c => c.id !== card.id)
+        .map(c => c.translation);
+      
+      // Rastgele 3 yanlış cevap seç (eğer yeterli sayıda kelime varsa)
+      let wrongAnswers: string[] = [];
+      
+      // Yeterli sayıda farklı çeviri yoksa, mevcut olanları kullan
+      if (otherTranslations.length >= 3) {
+        // Çevirileri karıştır
+        const shuffled = [...otherTranslations].sort(() => 0.5 - Math.random());
+        wrongAnswers = shuffled.slice(0, 3);
+      } else {
+        // Mevcut tüm farklı çevirileri kullan
+        wrongAnswers = [...otherTranslations];
+        
+        // Eksik kalan şıklar için varsayılan değerler ekle
+        const defaultAnswers = ['Çeviri bulunamadı 1', 'Çeviri bulunamadı 2', 'Çeviri bulunamadı 3'];
+        
+        for (let i = wrongAnswers.length; i < 3; i++) {
+          wrongAnswers.push(defaultAnswers[i]);
+        }
+      }
+      
+      // Tüm şıkları birleştir ve karıştır
+      const allOptions = [correctAnswer, ...wrongAnswers].sort(() => 0.5 - Math.random());
+      
+      return {
+        id: card.id,
+        word: card.word,
+        correctAnswer,
+        options: allOptions
+      };
+    });
+  };
+  
   const currentQuestion = questions[currentQuestionIndex];
   
   const handleAnswerSelect = (answer: string) => {
@@ -167,7 +136,22 @@ export default function QuizPage() {
     router.back();
   };
   
-  if (!currentQuestion && !showResult) {
+  // Yükleme durumu
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: Colors[mode].background }]}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#6366F1" />
+          <Text style={[styles.loadingText, { color: Colors[mode].text }]}>
+            Sorular yükleniyor...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+  
+  // Soru bulunamadı durumu
+  if ((!currentQuestion && !showResult) || questions.length === 0) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: Colors[mode].background }]}>
         <View style={styles.noQuestionsContainer}>
@@ -533,5 +517,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'center',
     marginBottom: 24,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  loadingText: {
+    fontSize: 18,
+    marginTop: 16,
   },
 });
