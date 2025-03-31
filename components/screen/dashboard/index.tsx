@@ -469,7 +469,7 @@ export default function DashboardScreen() {
 
   
   // Redux'tan kullanıcı bilgilerini al
-  const { id, full_name, point, known_words, unknown_words, streak_count, wordStatusUpdateCounter } = useSelector((state: RootState) => state.user);
+  const { id, full_name, point, streak_count, wordStatusUpdateCounter } = useSelector((state: RootState) => state.user);
   const [wordStats, setWordStats] = useState<Array<{
     id: string;
     title: string;

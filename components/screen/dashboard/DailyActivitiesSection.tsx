@@ -1,102 +1,261 @@
 import { useTranslation } from 'react-i18next';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet, Platform, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { BORDER_RADIUS, FLEX, FONT_SIZE, ICON_SIZE, MARGIN, PADDING } from '@/constants/AppConstants';
+import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { FONT_SIZE, ICON_SIZE, MARGIN, PADDING } from '@/constants/AppConstants';
 import { useTheme } from '@/hooks/theme/useTheme';
 import { ThemedText } from '@/components/common/typography';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/SupabaseProvider';
+import Dialog from '@/components/common/modal/dialog';
+import { Colors } from '@/constants/Colors';
+import { updateGameRequestAndTimestamp, type GameType } from '@/services/gameRequestServices';
+
+interface GameStatus {
+    remaining: number;
+    lastPlayed: string | null;
+}
 
 const DailyActivitiesSection = () => {
     const { t } = useTranslation();
     const router = useRouter();
     const { mode } = useTheme();
+    const { user } = useAuth();
+    const [gameStatus, setGameStatus] = useState<Record<string, GameStatus>>({});
+    const [countdown, setCountdown] = useState<Record<string, string>>({});
+    const [dialogVisible, setDialogVisible] = useState(false);
+    const [selectedGame, setSelectedGame] = useState<string>('');
+
+    // Sayfa fokuslandığında oyun haklarını güncelle
+    useFocusEffect(
+        useCallback(() => {
+            const updateGameStatuses = async () => {
+                if (!user?.id) return;
+                
+                const { data: lastRequests } = await supabase
+                    .from('UserGameRequestDates')
+                    .select('dailywords_remaining, wordguess_remaining, wordmatching_remaining, dailywords, wordguess, wordmatching')
+                    .eq('user_id', user.id)
+                    .single();
+
+                if (lastRequests) {
+                    setGameStatus({
+                        dailywords: { 
+                            remaining: lastRequests.dailywords_remaining,
+                            lastPlayed: lastRequests.dailywords
+                        },
+                        wordguess: { 
+                            remaining: lastRequests.wordguess_remaining,
+                            lastPlayed: lastRequests.wordguess
+                        },
+                        wordmatching: { 
+                            remaining: lastRequests.wordmatching_remaining,
+                            lastPlayed: lastRequests.wordmatching
+                        }
+                    });
+                }
+            };
+
+            updateGameStatuses();
+        }, [user])
+    );
+
+    useEffect(() => {
+        const fetchGameStatus = async () => {
+            if (!user) return;
+
+            const { data, error } = await supabase
+                .from('UserGameRequestDates')
+                .select('dailywords, wordguess, wordmatching, dailywords_remaining, wordguess_remaining, wordmatching_remaining')
+                .eq('user_id', user.id)
+                .single();
+
+            if (error) {
+                console.error('Oyun durumu getirilemedi:', error);
+                return;
+            }
+
+            setGameStatus({
+                dailywords: {
+                    remaining: data.dailywords_remaining || 0,
+                    lastPlayed: data.dailywords
+                },
+                wordguess: {
+                    remaining: data.wordguess_remaining || 0,
+                    lastPlayed: data.wordguess
+                },
+                wordmatching: {
+                    remaining: data.wordmatching_remaining || 0,
+                    lastPlayed: data.wordmatching
+                }
+            });
+        };
+
+        fetchGameStatus();
+    }, [user]);
+
+    useEffect(() => {
+        const updateCountdown = () => {
+            if (!gameStatus) return;
+
+            const newCountdown: Record<string, string> = {};
+            const now = new Date();
+            
+            Object.entries(gameStatus).forEach(([gameType, status]) => {
+                if (!status?.lastPlayed) return;
+
+                // ISO string'i local tarihe çevir
+                const lastPlayedUTC = new Date(status.lastPlayed);
+                const lastPlayedLocal = new Date(lastPlayedUTC.getTime() - (lastPlayedUTC.getTimezoneOffset() * 60000));
+                const nextRewardTime = new Date(lastPlayedLocal.getTime() + (4 * 60 * 60 * 1000));
+                const diffMs = nextRewardTime.getTime() - now.getTime();
+
+                if (diffMs > 0 && status.remaining < 2) {
+                    const totalMinutes = Math.floor(diffMs / (1000 * 60));
+                    const hours = Math.floor(totalMinutes / 60);
+                    const minutes = totalMinutes % 60;
+                    
+                    if (hours > 0) {
+                        newCountdown[gameType] = `${hours}s ${minutes}d sonra`;
+                    } else {
+                        newCountdown[gameType] = `${minutes}d sonra`;
+                    }
+                }
+            });
+            
+            setCountdown(newCountdown);
+        };
+
+        updateCountdown();
+        const timer = setInterval(updateCountdown, 60000);
+        return () => clearInterval(timer);
+    }, [gameStatus]);
 
     const dailyContent = useMemo(() => [
         {
           id: '1',
           title: 'Günlük Çalışma',
           description: 'Bugün için belirlenen yeni kelimeleri öğren',
-          progress: 75,
           icon: 'calendar',
           gradient: ['#FF9A9E', '#FAD0C4'] as readonly [string, string],
           action: 'flashcards',
+          gameType: 'dailywords'
         },
         {
           id: '3',
           title: 'Kelime Tahmin Oyunu',
           description: 'Kelime bilginizi eğlenceli bir oyunla test edin',
-          progress: 0,
           icon: 'game-controller',
           gradient: ['#4facfe', '#00f2fe'] as readonly [string, string],
           action: 'writing',
+          gameType: 'wordguess'
         },
         {
           id: '4',
           title: 'Kelime Eşleştirme',
           description: 'Kelimeleri anlamlarıyla eşleştirin',
-          progress: 0,
           icon: 'link',
           gradient: ['#43e97b', '#38f9d7'] as readonly [string, string],
           action: 'word-matching',
+          gameType: 'wordmatching'
         },
     ], []);
 
-    const renderDailyCard = useMemo(() => (item: typeof dailyContent[0]) => (
-        <TouchableOpacity 
-            key={item.id}
-            style={styles.dailyCard}
-            onPress={() => router.push(item.action)}
-        >
-            <LinearGradient
-                colors={item.gradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.dailyCardGradient}
+    const handleGamePress = useCallback(async (route: string, gameType: string) => {
+        const status = gameStatus[gameType];
+        if (status && status.remaining === 0 && countdown[gameType]) {
+            setSelectedGame(gameType);
+            setDialogVisible(true);
+        } else {
+            const userId = user?.id;
+            if (!userId) return;
+
+            const result = await updateGameRequestAndTimestamp(userId, gameType as GameType);
+            if (result?.success) {
+                router.push(route);
+            } else {
+                // Hata durumunda kullanıcıyı bilgilendir
+                Alert.alert('Hata', 'Oyun başlatılırken bir hata oluştu.');
+            }
+        }
+    }, [gameStatus, countdown, router, user]);
+
+    const renderDailyCard = useMemo(() => (item: typeof dailyContent[0]) => {
+        const status = gameStatus[item.gameType];
+        const timeLeft = status?.remaining < 2 ? countdown[item.gameType] : null;
+
+        return (
+            <TouchableOpacity 
+                key={item.id}
+                style={styles.dailyCard}
+                onPress={() => handleGamePress(item.action, item.gameType)}
             >
-                <View style={styles.dailyCardContent}>
-                    <View style={styles.dailyCardInfo}>
-                        <Ionicons
-                            name={item.icon as keyof typeof Ionicons.glyphMap}
-                            size={ICON_SIZE.md}
-                            color="#FFFFFF"
-                            style={styles.dailyCardIcon}
-                        />
-                        <View>
-                            <Text style={styles.dailyCardTitle}>{item.title}</Text>
-                            <Text style={styles.dailyCardDescription}>{item.description}</Text>
+                <LinearGradient
+                    colors={item.gradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.dailyCardGradient}
+                >
+                    <View style={styles.cardOverlay} />
+                    {(status?.remaining !== undefined && status.remaining >= 0) && (
+                        <View style={styles.remainingBadge}>
+                            <FontAwesome5 name="heart" size={12} color="#FFFFFF" solid />
+                            <Text style={styles.remainingBadgeText}>
+                                {status.remaining}
+                            </Text>
                         </View>
-                    </View>
-                    
-                    <View style={styles.progressContainer}>
-                        <View style={styles.progressTrack}>
-                            <View 
-                                style={[
-                                    styles.progressFill, 
-                                    { width: `${item.progress}%` }
-                                ]} 
-                            />
+                    )}
+                    <View style={styles.dailyCardContent}>
+                        <View style={styles.dailyCardHeader}>
+                            <View style={styles.iconContainer}>
+                                <Ionicons
+                                    name={item.icon as keyof typeof Ionicons.glyphMap}
+                                    size={ICON_SIZE.md}
+                                    color="#FFFFFF"
+                                />
+                            </View>
+                            <View style={styles.headerTextContainer}>
+                                <Text style={styles.dailyCardTitle}>{item.title}</Text>
+                                <Text style={styles.dailyCardDescription}>{item.description}</Text>
+                            </View>
                         </View>
-                        <Text style={styles.progressText}>{item.progress}%</Text>
+                        {timeLeft && (
+                            <View style={styles.gameStatus}>
+                                <Text style={styles.timeText}>
+                                    Sonraki hak: {timeLeft}
+                                </Text>
+                            </View>
+                        )}
                     </View>
-                </View>
-            </LinearGradient>
-        </TouchableOpacity>
-    ), [router]);
+                </LinearGradient>
+            </TouchableOpacity>
+        );
+    }, [router, gameStatus, countdown, handleGamePress]);
 
     return (
-        <View>
-            <View style={styles.sectionHeader}>
-                <ThemedText style={styles.sectionTitle}>{t('dashboard.dailyActivities')}</ThemedText>
-            </View>
+        <>
+            <View>
+                <View style={styles.sectionHeader}>
+                    <ThemedText style={styles.sectionTitle}>{t('dashboard.dailyActivities')}</ThemedText>
+                </View>
 
-            {dailyContent.map(renderDailyCard)}
-
-            <View style={styles.sectionHeader}>
-                <ThemedText style={styles.sectionTitle}>{t('dashboard.recommended')}</ThemedText>
+                {dailyContent.map(renderDailyCard)}
             </View>
-        </View>
+            <Dialog
+                visible={dialogVisible}
+                setVisible={setDialogVisible}
+                title="Oyun Hakkı Yok"
+                description={`Yeni oyun hakkınız için beklemeniz gereken süre:\n\n${countdown[selectedGame] || ''}`}
+                bgColor={Colors[mode].background}
+                rightButton="Tamam"
+                onConfirm={() => setDialogVisible(false)}
+                showCancel={false}
+            >
+                <></>
+            </Dialog>
+        </>
     );
 };
 
@@ -109,67 +268,104 @@ const styles = StyleSheet.create({
         marginTop: MARGIN.lg,
     },
     sectionTitle: {
-        fontSize: 18,
+        fontSize: FONT_SIZE.lg,
         fontWeight: 'bold',
     },
     dailyCard: {
         marginBottom: MARGIN.md,
-        borderRadius: BORDER_RADIUS.md,
+        borderRadius: 16,
         overflow: 'hidden',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.15,
+                shadowRadius: 8,
+            },
+            android: {
+                elevation: 4,
+            },
+        }),
     },
     dailyCardGradient: {
-        borderRadius: BORDER_RADIUS.md,
+        position: 'relative',
+        minHeight: 120,
+    },
+    cardOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0, 0, 0, 0.1)',
     },
     dailyCardContent: {
         padding: PADDING.md,
-    },
-    dailyCardInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: MARGIN.md,
-    },
-    dailyCardIcon: {
-        marginRight: MARGIN.md,
-        backgroundColor: 'rgba(255,255,255,0.2)',
-        borderRadius: 50,
-        padding: PADDING.sm,
-    },
-    dailyCardTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#FFFFFF',
-        marginBottom: MARGIN.xs,
-    },
-    dailyCardDescription: {
-        fontSize: 14,
-        color: 'rgba(255,255,255,0.9)',
-    },
-    progressContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    progressTrack: {
         flex: 1,
-        height: 6,
-        backgroundColor: 'rgba(255,255,255,0.3)',
-        borderRadius: 3,
+        justifyContent: 'space-between',
+    },
+    dailyCardHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    iconContainer: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
         marginRight: MARGIN.sm,
     },
-    progressFill: {
-        height: '100%',
-        backgroundColor: '#FFFFFF',
-        borderRadius: 3,
+    headerTextContainer: {
+        flex: 1,
     },
-    progressText: {
-        fontSize: 14,
-        fontWeight: 'bold',
+    dailyCardTitle: {
+        fontSize: FONT_SIZE.md,
+        fontWeight: '700',
         color: '#FFFFFF',
+        marginBottom: 4,
+        textShadowColor: 'rgba(0, 0, 0, 0.15)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 4,
     },
+    dailyCardDescription: {
+        fontSize: FONT_SIZE.sm,
+        color: '#FFFFFF',
+        opacity: 0.9,
+    },
+    remainingBadge: {
+        position: 'absolute',
+        top: PADDING.sm,
+        right: PADDING.sm,
+        backgroundColor: 'rgba(0, 0, 0, 0.25)',
+        borderRadius: 999,
+        paddingHorizontal: PADDING.sm,
+        paddingVertical: 4,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+    },
+    remainingBadgeText: {
+        color: '#FFFFFF',
+        fontSize: FONT_SIZE.sm,
+        fontWeight: '600',
+    },
+    gameStatus: {
+        marginTop: MARGIN.sm,
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        borderRadius: 8,
+        paddingHorizontal: PADDING.sm,
+        paddingVertical: PADDING.xs,
+        alignSelf: 'flex-start',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    timeText: {
+        color: '#FFFFFF',
+        fontSize: FONT_SIZE.sm,
+        fontWeight: '500',
+        opacity: 0.9,
+    }
 });
 
 export default DailyActivitiesSection;

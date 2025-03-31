@@ -94,9 +94,7 @@ const DailyActivities = () => {
 
             {dailyContent.map(renderDailyCard)}
 
-            <View style={styles.sectionHeader}>
-                <ThemedText style={styles.sectionTitle}>{t('dashboard.recommended')}</ThemedText>
-            </View>
+        
         </View>
     );
 };

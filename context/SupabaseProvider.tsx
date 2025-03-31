@@ -19,7 +19,7 @@ import {
   clearReduxUser,
   updateUserStats 
 } from '../store/userSlice';
-
+import { checkAndUpdateGameRequests } from '@/services/gameRequestServices';
 
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
@@ -85,6 +85,9 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
       }
 
       const now = new Date(); // Şu anki tarih ve saat
+
+      // Oyun haklarını kontrol et ve güncelle
+      await checkAndUpdateGameRequests(userData.id);
 
       // Yeni kullanıcı ise
       if (!existingUser) {
@@ -201,7 +204,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
               point: userData.point || 0,
               last_login_datetime: userData.last_login_datetime || '',
               streak_count: userData.streak_count || 0,
-              id: session.user.id
+              id: session.user.id,
+              wordStatusUpdateCounter: 0
             };
             dispatch(setReduxUser(userState));
           }
@@ -265,7 +269,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
               point: userData.point || 0,
               last_login_datetime: userData.last_login_datetime || '',
               streak_count: userData.streak_count || 0,
-              id: data.session.user.id
+              id: data.session.user.id,
+              wordStatusUpdateCounter: 0
             };
             dispatch(setReduxUser(userState));
           }
@@ -465,7 +470,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
               point: userData.point || 0,
               last_login_datetime: userData.last_login_datetime || '',
               streak_count: userData.streak_count || 0,
-              id: data.session.user.id
+              id: data.session.user.id,
+              wordStatusUpdateCounter: 0
             };
             dispatch(setReduxUser(userState));
           }

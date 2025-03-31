@@ -4,8 +4,6 @@ interface UserState {
   id: string;
   full_name: string;
   point: number;
-  known_words: number;
-  unknown_words: number;
   streak_count: number;
   wordStatusUpdateCounter: number;
 }
@@ -16,8 +14,6 @@ export const convertUserToUserState = (user: any): UserState => {
     id: user.id,
     full_name: user.user_metadata.full_name,
     point: user.app_metadata.point,
-    known_words: user.app_metadata.known_words,
-    unknown_words: user.app_metadata.unknown_words,
     streak_count: user.app_metadata.streak_count,
     wordStatusUpdateCounter: 0,
   };
@@ -27,8 +23,6 @@ const initialState: UserState = {
   id: '',
   full_name: '',
   point: 0,
-  known_words: 0,
-  unknown_words: 0,
   streak_count: 0,
   wordStatusUpdateCounter: 0,
 };

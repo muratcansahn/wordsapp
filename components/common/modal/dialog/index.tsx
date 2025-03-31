@@ -1,4 +1,4 @@
-import { Modal, StyleSheet, Pressable, View } from 'react-native';
+import { Modal, StyleSheet, Pressable, View, ViewStyle } from 'react-native';
 import React, { useEffect, useCallback } from 'react';
 import Animated, {
   Easing,
@@ -35,6 +35,7 @@ const Dialog = ({
   isLoading,
   visible,
   setVisible,
+  showCancel = true,
   animationDuration = ANIMATION_DURATION.D3,
 }: {
   title: string;
@@ -46,6 +47,7 @@ const Dialog = ({
   isLoading?: boolean;
   visible: boolean;
   setVisible: (visible: boolean) => void;
+  showCancel?: boolean;
   animationDuration?: number;
 }) => {
   const { t } = useTranslation();
@@ -128,21 +130,23 @@ const Dialog = ({
               {title}
             </ThemedText>
             <ThemedText style={styles.description}>{description}</ThemedText>
-            <View style={styles.buttonContainer}>
-              <Button
-                onPress={closeModal}
-                style={styles.button}
-                bgColor={Colors[mode].backgroundOpacity}
-                disabled={isLoading}
-              >
-                <ThemedText style={styles.buttonText}>
-                  {t('buttons.cancel')}
-                </ThemedText>
-              </Button>
+            <View style={[styles.buttonContainer, !showCancel && styles.singleButtonContainer]}>
+              {showCancel && (
+                <Button
+                  onPress={closeModal}
+                  style={styles.button}
+                  bgColor={Colors[mode].backgroundOpacity}
+                  disabled={isLoading}
+                >
+                  <ThemedText style={styles.buttonText}>
+                    {t('buttons.cancel')}
+                  </ThemedText>
+                </Button>
+              )}
               <Button
                 onPress={handleConfirm}
-                style={styles.button}
-                bgColor={Colors[mode].error}
+                style={showCancel ? styles.button : { ...styles.button, ...styles.singleButton }}
+                bgColor={showCancel ? Colors[mode].error : Colors[mode].primary}
                 disabled={isLoading}
                 loading={isLoading}
               >
@@ -203,11 +207,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: MARGIN.md,
   },
+  singleButtonContainer: {
+    justifyContent: 'center',
+  },
   button: {
     flex: FLEX.one,
     marginHorizontal: MARGIN.sm,
     height: BUTTON_HEIGHT.sm,
     borderRadius: BORDER_RADIUS.sm,
+  },
+  singleButton: {
+    flex: 0,
+    width: '50%',
   },
   buttonText: {
     fontSize: FONT_SIZE.md,
