@@ -236,7 +236,7 @@ const DailyActivitiesSection = () => {
 
     return (
         <>
-            <View>
+            <View style={styles.container}>
                 <View style={styles.sectionHeader}>
                     <ThemedText style={styles.sectionTitle}>{t('dashboard.dailyActivities')}</ThemedText>
                 </View>
@@ -260,21 +260,24 @@ const DailyActivitiesSection = () => {
 };
 
 const styles = StyleSheet.create({
+    container: {
+        paddingBottom: PADDING.xl * 2,
+    },
     sectionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: MARGIN.md,
-        marginTop: MARGIN.lg,
+        marginBottom: MARGIN.lg,
+        marginTop: MARGIN.md,
     },
     sectionTitle: {
         fontSize: FONT_SIZE.lg,
         fontWeight: 'bold',
     },
     dailyCard: {
-        marginBottom: MARGIN.md,
         borderRadius: 16,
         overflow: 'hidden',
+        marginBottom: MARGIN.lg,
         ...Platform.select({
             ios: {
                 shadowColor: '#000',

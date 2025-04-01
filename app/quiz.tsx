@@ -1,11 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, SafeAreaView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
-import Animated, { FadeInDown, FadeInUp, FadeOut } from 'react-native-reanimated';
-import { fetchWordListItems, FlashCard } from '@/services/flashcardsService';
+import Animated, { 
+  FadeInDown, 
+  FadeInUp, 
+  FadeOut,
+  useAnimatedStyle,
+  withSpring,
+  withSequence,
+  useSharedValue,
+  withTiming
+} from 'react-native-reanimated';
+import { fetchWordListItems, FlashCard, WordListWithItems } from '@/services/flashcardsService';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '@/store';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { PADDING, MARGIN } from '@/constants/AppConstants';
+import { incrementUserPointWithRedux } from '@/services/userService';
+import { supabase } from '@/lib/supabase';
 
 const { width } = Dimensions.get('window');
 
@@ -29,7 +44,31 @@ export default function QuizPage() {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
-  
+  const userPoint = useSelector((state: RootState) => state.user.point);
+  const [wordList, setWordList] = useState<WordListWithItems | null>(null);
+
+  const dispatch = useDispatch();
+  const pointScale = useSharedValue(1);
+  const pointOpacity = useSharedValue(1);
+
+  const pointAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: pointScale.value }],
+      opacity: pointOpacity.value,
+    };
+  });
+
+  const animatePoint = () => {
+    pointScale.value = withSequence(
+      withSpring(1.3),
+      withSpring(1)
+    );
+    pointOpacity.value = withSequence(
+      withTiming(0.6, { duration: 100 }),
+      withTiming(1, { duration: 100 })
+    );
+  };
+
   // Flashcardları çek
   useEffect(() => {
     const loadFlashcards = async () => {
@@ -37,12 +76,13 @@ export default function QuizPage() {
       
       try {
         setLoading(true);
-        const cards = await fetchWordListItems(listId as string);
-        setFlashcards(cards);
+        const wordList = await fetchWordListItems(listId as string);
+        setFlashcards(wordList.cards);
+        setWordList(wordList);
         
-        if (cards.length > 0) {
+        if (wordList.cards.length > 0) {
           // Flashcardlardan quiz soruları oluştur
-          const quizQuestions = generateQuizQuestions(cards);
+          const quizQuestions = generateQuizQuestions(wordList.cards);
           setQuestions(quizQuestions);
         }
       } catch (error) {
@@ -101,7 +141,7 @@ export default function QuizPage() {
   
   const currentQuestion = questions[currentQuestionIndex];
   
-  const handleAnswerSelect = (answer: string) => {
+  const handleAnswerSelect = async (answer: string) => {
     if (selectedAnswer !== null) return; // Prevent multiple selections
     
     setSelectedAnswer(answer);
@@ -110,6 +150,13 @@ export default function QuizPage() {
     
     if (correct) {
       setScore(prev => prev + 1);
+      
+      // Doğru cevap verildiğinde point'i artır
+      const user = await supabase.auth.getUser();
+      if (user.data?.user) {
+        await incrementUserPointWithRedux(user.data.user.id, dispatch);
+        animatePoint(); // Point artınca animasyonu başlat
+      }
     }
     
     // Move to next question after delay
@@ -139,12 +186,9 @@ export default function QuizPage() {
   // Yükleme durumu
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: Colors[mode].background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: mode === 'dark' ? Colors.dark.background : Colors.light.background }]}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#6366F1" />
-          <Text style={[styles.loadingText, { color: Colors[mode].text }]}>
-            Sorular yükleniyor...
-          </Text>
         </View>
       </SafeAreaView>
     );
@@ -153,11 +197,9 @@ export default function QuizPage() {
   // Soru bulunamadı durumu
   if ((!currentQuestion && !showResult) || questions.length === 0) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: Colors[mode].background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: mode === 'dark' ? Colors.dark.background : Colors.light.background }]}>
         <View style={styles.noQuestionsContainer}>
-          <Text style={[styles.noQuestionsText, { color: Colors[mode].text }]}>
-            Bu liste için henüz soru bulunmamaktadır.
-          </Text>
+          <Text style={styles.noQuestionsText}>Bu liste için henüz soru bulunmamaktadır.</Text>
           <TouchableOpacity 
             style={styles.backButton}
             onPress={handleBackToStudyMode}
@@ -171,25 +213,19 @@ export default function QuizPage() {
   
   if (showResult) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: Colors[mode].background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: mode === 'dark' ? Colors.dark.background : Colors.light.background }]}>
         <Animated.View 
           entering={FadeInUp}
           style={styles.resultContainer}
         >
-          <Text style={[styles.resultTitle, { color: Colors[mode].text }]}>
-            Test Tamamlandı!
-          </Text>
+          <Text style={styles.resultTitle}>Test Tamamlandı!</Text>
           
           <View style={styles.scoreContainer}>
-            <Text style={styles.scoreText}>
-              {score} / {questions.length}
-            </Text>
-            <Text style={styles.scoreLabel}>
-              Doğru Cevap
-            </Text>
+            <Text style={styles.scoreText}>{score} / {questions.length}</Text>
+            <Text style={styles.scoreLabel}>Doğru Cevap</Text>
           </View>
           
-          <Text style={[styles.resultMessage, { color: Colors[mode].text }]}>
+          <Text style={styles.resultMessage}>
             {score === questions.length 
               ? 'Mükemmel! Tüm soruları doğru cevapladınız.' 
               : score >= questions.length / 2 
@@ -218,31 +254,35 @@ export default function QuizPage() {
   }
   
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: Colors[mode].background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: mode === 'dark' ? Colors.dark.background : Colors.light.background }]}>
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backIcon}
-          onPress={handleBackToStudyMode}
-        >
-          <MaterialCommunityIcons 
-            name="arrow-left" 
-            size={24} 
-            color={Colors[mode].text} 
-          />
-        </TouchableOpacity>
-        
-        <View style={styles.progressContainer}>
-          <Text style={[styles.progressText, { color: Colors[mode].text }]}>
-            {currentQuestionIndex + 1} / {questions.length}
-          </Text>
-          <View style={styles.progressBarContainer}>
-            <View 
-              style={[
-                styles.progressBar, 
-                { width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }
-              ]} 
+        <View>
+          <Text style={styles.headerTitle}>{wordList?.title}</Text>
+          <Text style={styles.headerSubtitle}>{wordList?.subtitle}</Text>
+        </View>
+        <View style={styles.pointContainer}>
+          <View style={styles.pointIconWrapper}>
+            <Icon
+              name="water"
+              size={24}
+              color="#FFFFFF"
             />
           </View>
+          <Animated.Text style={[styles.pointText, pointAnimatedStyle]}>
+            {userPoint}
+          </Animated.Text>
+        </View>
+      </View>
+      
+      <View style={styles.headerProgress}>
+        <Text style={styles.progressText}>{currentQuestionIndex + 1} / {questions.length}</Text>
+        <View style={styles.progressBarContainer}>
+          <View 
+            style={[
+              styles.progressBar, 
+              { width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }
+            ]} 
+          />
         </View>
       </View>
       
@@ -332,31 +372,72 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light.background,
+    paddingTop: PADDING.xxxl,
   },
   header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingHorizontal: PADDING.md,
+    paddingBottom: PADDING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
-  backIcon: {
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#4B5563',
+  },
+  pointContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4a85e5',
+    borderRadius: 25,
     padding: 8,
+    marginLeft: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  progressContainer: {
-    flex: 1,
-    marginLeft: 16,
+  pointIconWrapper: {
+    backgroundColor: '#3a75d5',
+    borderRadius: 20,
+    padding: 5,
+    marginRight: 8,
+  },
+  pointText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginRight: 8,
+  },
+  headerProgress: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: PADDING.md,
+    paddingVertical: PADDING.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
   progressText: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 4,
+    color: '#1F2937',
   },
   progressBarContainer: {
     height: 6,
     backgroundColor: 'rgba(0, 0, 0, 0.1)',
     borderRadius: 3,
     overflow: 'hidden',
+    width: '70%',
   },
   progressBar: {
     height: '100%',
@@ -365,8 +446,8 @@ const styles = StyleSheet.create({
   },
   questionContainer: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 40,
+    paddingHorizontal: PADDING.md,
+    paddingTop: PADDING.md,
     alignItems: 'center',
   },
   questionLabel: {
@@ -377,10 +458,10 @@ const styles = StyleSheet.create({
   },
   wordContainer: {
     backgroundColor: '#6366F1',
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+    paddingVertical: PADDING.md,
+    paddingHorizontal: PADDING.lg,
     borderRadius: 12,
-    marginBottom: 40,
+    marginBottom: PADDING.md,
     minWidth: width * 0.7,
     alignItems: 'center',
   },
@@ -391,14 +472,14 @@ const styles = StyleSheet.create({
   },
   optionsContainer: {
     width: '100%',
-    marginTop: 16,
+    marginTop: PADDING.md,
   },
   optionButton: {
     backgroundColor: '#F3F4F6',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingVertical: PADDING.md,
+    paddingHorizontal: PADDING.lg,
     borderRadius: 12,
-    marginBottom: 16,
+    marginBottom: PADDING.sm,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -421,14 +502,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   optionIcon: {
-    marginLeft: 8,
+    marginLeft: PADDING.sm,
   },
   feedbackContainer: {
     position: 'absolute',
-    bottom: 40,
-    left: 24,
-    right: 24,
-    padding: 16,
+    bottom: PADDING.md,
+    left: PADDING.md,
+    right: PADDING.md,
+    padding: PADDING.md,
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -444,18 +525,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#FFFFFF',
-    marginLeft: 8,
+    marginLeft: PADDING.sm,
   },
   resultContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: PADDING.md,
   },
   resultTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 32,
+    marginBottom: PADDING.md,
     textAlign: 'center',
   },
   scoreContainer: {
@@ -465,7 +546,7 @@ const styles = StyleSheet.create({
     borderRadius: 80,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: PADDING.md,
   },
   scoreText: {
     fontSize: 36,
@@ -475,12 +556,12 @@ const styles = StyleSheet.create({
   scoreLabel: {
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.9)',
-    marginTop: 4,
+    marginTop: PADDING.sm,
   },
   resultMessage: {
     fontSize: 18,
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: PADDING.md,
     lineHeight: 24,
   },
   buttonContainer: {
@@ -489,10 +570,10 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   button: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingVertical: PADDING.sm,
+    paddingHorizontal: PADDING.md,
     borderRadius: 8,
-    marginHorizontal: 8,
+    marginHorizontal: PADDING.sm,
     minWidth: 120,
     alignItems: 'center',
   },
@@ -511,21 +592,21 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: PADDING.md,
   },
   noQuestionsText: {
     fontSize: 18,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: PADDING.md,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: PADDING.md,
   },
   loadingText: {
     fontSize: 18,
-    marginTop: 16,
+    marginTop: PADDING.sm,
   },
 });

@@ -1,31 +1,45 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, PanResponder, Dimensions, TouchableOpacity, Share, FlatList, ScrollView } from 'react-native';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  Dimensions, 
+  TouchableOpacity, 
+  Share, 
+  ScrollView,
+  Animated as RNAnimated,
+  PanResponder,
+  PanResponderGestureState
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useLocalSearchParams, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BORDER_RADIUS, PADDING, MARGIN } from '@/constants/AppConstants';
+import { BORDER_RADIUS, PADDING, MARGIN, FONT_SIZE } from '@/constants/AppConstants';
 import { supabase } from '@/lib/supabase';
 import Loader from '@/components/common/loader/native-loader';
-import { FlashCard, fetchWordListItems } from '@/services/flashcardsService';
+import { FlashCard, WordListWithItems, fetchWordListItems } from '@/services/flashcardsService';
 import { updateWordStatus } from '@/services/userWordStatusService';
+import { useDispatch, useSelector } from 'react-redux';
+import { incrementWordStatusCounter, incrementPoint } from '@/store/userSlice';
+import { incrementUserPointWithRedux } from '@/services/userService';
+import { RootState } from '@/store';
+import { ThemedText } from '@/components/common/typography';
+import { useTheme } from '@/hooks/theme/useTheme';
+import Animated, { 
+  useAnimatedStyle,
+  withSpring,
+  withSequence,
+  useSharedValue,
+  withTiming,
+  AnimatedProps
+} from 'react-native-reanimated';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const SWIPE_THRESHOLD = 0.25 * SCREEN_WIDTH;
-
-// WordList arayüzünü tanımlayalım
-interface WordList {
-  id: string;
-  title: string;
-  subtitle: string;
-  level: string;
-  cards: FlashCard[];
-  name?: string;
-  description?: string;
-}
+const SWIPE_THRESHOLD = 0.1 * SCREEN_WIDTH;
 
 export default function FlashcardsScreen() {
   const params = useLocalSearchParams();
-  const [selectedList, setSelectedList] = useState<WordList | null>(null);
+  const [selectedList, setSelectedList] = useState<WordListWithItems | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showTranslation, setShowTranslation] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -34,9 +48,31 @@ export default function FlashcardsScreen() {
   const [knownWordCount, setKnownWordCount] = useState(0);
   const [unknownWordCount, setUnknownWordCount] = useState(0);
   const [allWordsMarked, setAllWordsMarked] = useState(false);
-  const position = useRef(new Animated.ValueXY()).current;
+  const position = useRef(new RNAnimated.ValueXY()).current;
+  const newCardAnimation = useRef(new RNAnimated.Value(0)).current;
+  const dispatch = useDispatch();
+  const { mode } = useTheme();
+  const userPoint = useSelector((state: RootState) => state.user.point);
+  
+  const pointScale = useSharedValue(1);
+  const pointOpacity = useSharedValue(1);
 
- 
+  const pointAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pointScale.value }],
+    opacity: pointOpacity.value,
+  }));
+
+  const animatePoint = () => {
+    pointScale.value = withSequence(
+      withSpring(1.3, { damping: 10, stiffness: 100 }),
+      withSpring(1, { damping: 10, stiffness: 100 })
+    );
+    pointOpacity.value = withSequence(
+      withTiming(0.6, { duration: 100 }),
+      withTiming(1, { duration: 100 })
+    );
+  };
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -45,28 +81,22 @@ export default function FlashcardsScreen() {
         
         if (params.listId) {
           const listId = String(params.listId);
-
-          // Doğrudan liste ID'sine ait kelimeleri çek
-          const words = await fetchWordListItems(listId);
+          const wordList = await fetchWordListItems(listId);
           
-          if (words && words.length > 0) {
+          if (wordList.cards && wordList.cards.length > 0) {
             // Sadece işaretlenmemiş kelimeleri filtrele (status=0)
-            const unmarkedWords = words.filter(word => word.status !== 1 && word.status !== 2 );
+            const unmarkedWords = wordList.cards.filter((word: FlashCard) => word.status !== 1 && word.status !== 2);
             
             if (unmarkedWords.length === 0) {
               // Tüm kelimeler işaretlenmiş, tebrik mesajı göster
-              const known = words.filter(word => word.status === 1).length;
-              const unknown = words.filter(word => word.status === 2).length;
+              const known = wordList.cards.filter((word: FlashCard) => word.status === 1).length;
+              const unknown = wordList.cards.filter((word: FlashCard) => word.status === 2).length;
               setKnownWordCount(known);
               setUnknownWordCount(unknown);
               setAllWordsMarked(true);
               
-              // Boş liste oluştur
               setSelectedList({
-                id: listId,
-                title: 'Kelime Listesi',
-                subtitle: 'Özel kelime listesi',
-                level: 'B1',
+                ...wordList,
                 cards: []
               });
               
@@ -75,20 +105,15 @@ export default function FlashcardsScreen() {
               return;
             }
             
-            // Liste bilgilerini oluştur
-            const completeList: WordList = {
-              id: listId,
-              title: 'Kelime Listesi',
-              subtitle: 'Özel kelime listesi',
-              level: 'B1',
+            setSelectedList({
+              ...wordList,
               cards: unmarkedWords
-            };
-            
-            const known = words.filter(word => word.status === 1).length;
-            const unknown = words.filter(word => word.status === 2).length;
+            });
+
+            const known = wordList.cards.filter((word: FlashCard) => word.status === 1).length;
+            const unknown = wordList.cards.filter((word: FlashCard) => word.status === 2).length;
             setKnownWordCount(known);
             setUnknownWordCount(unknown);
-            setSelectedList(completeList);
           } else {
             setError("Bu listede kelime bulunamadı.");
           }
@@ -109,12 +134,16 @@ export default function FlashcardsScreen() {
     }
   }, [params, isInitialized]);
 
+  useEffect(() => {
+    resetNewCard();
+  }, []);
+
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
-    onPanResponderMove: (_, gesture) => {
+    onPanResponderMove: (_: any, gesture: PanResponderGestureState) => {
       position.setValue({ x: gesture.dx, y: 0 }); 
     },
-    onPanResponderRelease: (_, gesture) => {
+    onPanResponderRelease: async (_: any, gesture: PanResponderGestureState) => {
       if (gesture.dx > SWIPE_THRESHOLD) {
         forceSwipe('right');
       } else if (gesture.dx < -SWIPE_THRESHOLD) {
@@ -126,8 +155,8 @@ export default function FlashcardsScreen() {
   });
 
   const forceSwipe = (direction: 'right' | 'left') => {
-    const x = direction === 'right' ? SCREEN_WIDTH : -SCREEN_WIDTH;
-    Animated.timing(position, {
+    const x = direction === 'right' ? SCREEN_WIDTH * 1.5 : -SCREEN_WIDTH * 1.5;
+    RNAnimated.timing(position, {
       toValue: { x, y: 0 },
       duration: 500,
       useNativeDriver: false,
@@ -150,10 +179,6 @@ export default function FlashcardsScreen() {
       if (item.status === 2) {
         setUnknownWordCount(prevCount => Math.max(0, prevCount - 1));
       }
-      // Eğer daha önce favori olarak işaretlendiyse, favori sayısını azalt
-      else if (item.status === 3) {
-        // Favori işlemi burada
-      }
     } else {
       newStatus = 2; // Bilinmeyen
       
@@ -164,10 +189,6 @@ export default function FlashcardsScreen() {
       if (item.status === 1) {
         setKnownWordCount(prevCount => Math.max(0, prevCount - 1));
       }
-      // Eğer daha önce favori olarak işaretlendiyse, favori sayısını azalt
-      else if (item.status === 3) {
-        // Favori işlemi burada
-      }
     }
     
     // Kullanıcı giriş yapmışsa kelime durumunu güncelle
@@ -176,6 +197,13 @@ export default function FlashcardsScreen() {
       const success = await updateWordStatus(parseInt(item.id), user.data.user.id, newStatus);
       
       if (success) {
+        // Redux'taki wordStatusUpdateCounter'ı artır
+        dispatch(incrementWordStatusCounter());
+        
+        // Kullanıcının point değerini artır ve animasyonu başlat
+        await incrementUserPointWithRedux(user.data.user.id, dispatch);
+        animatePoint(); // Animasyonu başlat
+        
         // Kartın statüsünü güncelle
         if (selectedList) {
           const updatedCards = [...selectedList.cards];
@@ -195,82 +223,89 @@ export default function FlashcardsScreen() {
     position.setValue({ x: 0, y: 0 });
     setCurrentIndex(currentIndex + 1);
     setShowTranslation(false);
+    resetNewCard();
   };
 
   const resetPosition = () => {
-    Animated.spring(position, {
+    RNAnimated.spring(position, {
       toValue: { x: 0, y: 0 },
+      friction: 4,
       useNativeDriver: false,
-      friction: 5,
-      tension: 40
     }).start();
   };
 
-  const getCardStyle = () => {
-    const rotate = position.x.interpolate({
-      inputRange: [-SCREEN_WIDTH * 1.5, 0, SCREEN_WIDTH * 1.5],
-      outputRange: ['-30deg', '0deg', '30deg'],
-    });
+  const resetNewCard = () => {
+    position.setValue({ x: 0, y: 0 });
+    newCardAnimation.setValue(0);
+    RNAnimated.timing(newCardAnimation, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  };
 
-    const borderColor = position.x.interpolate({
-      inputRange: [-SCREEN_WIDTH * 0.5, 0, SCREEN_WIDTH * 0.5],
-      outputRange: ['#F44336', 'transparent', '#4CAF50'],
-    });
-
-    const borderWidth = position.x.interpolate({
-      inputRange: [-SCREEN_WIDTH * 0.5, -50, 0, 50, SCREEN_WIDTH * 0.5],
-      outputRange: [15, 0, 0, 0, 15],
-    });
-
-    return {
-      ...position.getLayout(),
-      transform: [{ rotate }],
-      borderColor,
-      borderWidth,
-    };
+  const cardStyle = {
+    ...position.getLayout(),
+    opacity: newCardAnimation,
+    transform: [
+      ...position.getTranslateTransform(),
+      {
+        scale: newCardAnimation.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.8, 1]
+        })
+      }
+    ]
   };
 
   const renderCard = () => {
     if (!selectedList || !selectedList.cards || selectedList.cards.length === 0) {
       return (
-        <View style={styles.emptyCardContainer}>
-          <Text style={styles.emptyCardText}>Bu listede kelime bulunmuyor.</Text>
+        <View style={styles.noCardsContainer}>
+          <Text style={styles.noCardsText}>Bu listede kart bulunmuyor</Text>
         </View>
       );
     }
-    
-    const card = selectedList.cards[currentIndex];
+
+    const rightOpacity = position.x.interpolate({
+      inputRange: [0, SCREEN_WIDTH * 0.3],
+      outputRange: [0, 1]
+    });
+
+    const leftOpacity = position.x.interpolate({
+      inputRange: [-SCREEN_WIDTH * 0.3, 0],
+      outputRange: [1, 0]
+    });
 
     return (
       <View style={styles.cardContainer}>
-        <Animated.View
-          style={[styles.card, getCardStyle()]}
+        <RNAnimated.View
+          style={[styles.card, cardStyle]}
           {...panResponder.panHandlers}
         >
+          <RNAnimated.View style={[styles.statusOverlay, styles.knowOverlay, { opacity: rightOpacity }]}>
+            <Text style={styles.statusText}>Biliyorum</Text>
+          </RNAnimated.View>
+          <RNAnimated.View style={[styles.statusOverlay, styles.dontKnowOverlay, { opacity: leftOpacity }]}>
+            <Text style={styles.statusText}>Bilmiyorum</Text>
+          </RNAnimated.View>
           <LinearGradient
             colors={['#6366F1', '#A5B4FC']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.gradientContainer}
           >
-            <View style={styles.cardHeader}>
-              <View style={styles.iconContainer}>
-                <Icon name="book-open-page-variant" size={24} color="#FFFFFF" />
-              </View>
-              <Text style={styles.cardHeaderText}>Kelime Kartı</Text>
-            </View>
-            
             <View style={styles.cardContent}>
-              <Text style={styles.wordText}>{card.word}</Text>
+              <Text style={styles.wordText}>{selectedList.cards[currentIndex].word}</Text>
               {showTranslation && (
                 <View style={styles.translationWrapper}>
-                  <Text style={styles.translationText}>{card.translation}</Text>
-                  <Text style={styles.exampleText}>{card.example_original || card.example}</Text>
+                  <Text style={styles.translationText}>{selectedList.cards[currentIndex].translation}</Text>
+                  <Text style={styles.exampleText}>{selectedList.cards[currentIndex].example_original || selectedList.cards[currentIndex].example}</Text>
                 </View>
               )}
             </View>
           </LinearGradient>
-        </Animated.View>
+        </RNAnimated.View>
       </View>
     );
   };
@@ -316,7 +351,6 @@ export default function FlashcardsScreen() {
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => {
-              // Ana sayfaya yönlendir
               router.replace('/');
             }}
           >
@@ -328,7 +362,6 @@ export default function FlashcardsScreen() {
   }
 
   if (currentIndex >= selectedList.cards.length) {
-    // Listedeki tüm kelimelerin işaretlenip işaretlenmediğini kontrol et
     const totalWords = knownWordCount + unknownWordCount;
     const allWordsMarked = totalWords === selectedList.cards.length;
     
@@ -347,7 +380,6 @@ export default function FlashcardsScreen() {
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => {
-              // Ana sayfaya yönlendir
               router.replace('/');
             }}
           >
@@ -365,8 +397,17 @@ export default function FlashcardsScreen() {
           <Text style={styles.headerTitle}>{selectedList.title}</Text>
           <Text style={styles.headerSubtitle}>{selectedList.subtitle}</Text>
         </View>
-        <View style={styles.levelBadge}>
-          <Text style={styles.levelText}>{selectedList.level}</Text>
+        <View style={styles.pointContainer}>
+          <View style={styles.pointIconWrapper}>
+            <Icon
+              name="water"
+              size={24}
+              color="#FFFFFF"
+            />
+          </View>
+          <Animated.Text style={[styles.pointText, pointAnimatedStyle]}>
+            {userPoint}
+          </Animated.Text>
         </View>
       </View>
 
@@ -388,12 +429,6 @@ export default function FlashcardsScreen() {
           <View style={styles.statTextContainer}>
             <Text style={styles.statValue}>{unknownWordCount}</Text>
             <Text style={styles.statLabel}>Bilinmeyen</Text>
-          </View>
-        </View>
-        <View style={[styles.statDivider, { backgroundColor: '#eee' }]} />
-        <View style={styles.statItem}>
-          <View style={[styles.statIconContainer, { backgroundColor: 'rgba(255, 193, 7, 0.1)' }]}>
-            <Icon name="star" size={24} color="#FFC107" />
           </View>
         </View>
       </View>
@@ -450,7 +485,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    paddingTop: PADDING.md,
+    paddingTop: PADDING.xxxl,
+
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -483,6 +523,31 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: '#4B5563',
+  },
+  pointContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4a85e5',
+    borderRadius: 25,
+    padding: 8,
+    marginLeft: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  pointIconWrapper: {
+    backgroundColor: '#3a75d5',
+    borderRadius: 20,
+    padding: 5,
+    marginRight: 8,
+  },
+  pointText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginRight: 8,
   },
   statsContainer: {
     flexDirection: 'row',
@@ -580,27 +645,6 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.lg,
     padding: 0,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: PADDING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  cardHeaderText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginLeft: MARGIN.md,
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   cardContent: {
     flex: 1,
     alignItems: 'center',
@@ -657,7 +701,7 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: FONT_SIZE.md,
     fontWeight: '600',
     marginLeft: MARGIN.sm,
   },
@@ -673,64 +717,78 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: PADDING.lg,
   },
-  completionStats: {
-    fontSize: 16,
-    color: '#6B7280',
-    marginBottom: MARGIN.lg,
-    marginTop: MARGIN.md,
-  },
-  backButton: {
-    backgroundColor: '#6366F1',
-    paddingHorizontal: PADDING.lg,
-    paddingVertical: PADDING.md,
-    borderRadius: BORDER_RADIUS.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-  },
-  backButtonText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
   noMoreCards: {
-    fontSize: 24,
+    fontSize: FONT_SIZE.xl,
     color: '#1F2937',
     textAlign: 'center',
     marginTop: MARGIN.lg,
     marginBottom: MARGIN.md,
     fontWeight: '700',
   },
-  centerContent: {
+  completionStats: {
+    fontSize: FONT_SIZE.md,
+    color: '#6B7280',
+    marginBottom: MARGIN.md,
+  },
+  backButton: {
+    backgroundColor: '#6366F1',
+    paddingHorizontal: PADDING.md,
+    paddingVertical: PADDING.xs,
+    borderRadius: BORDER_RADIUS.md,
+  },
+  backButtonText: {
+    fontSize: FONT_SIZE.md,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  errorContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: MARGIN.md,
-    fontSize: 16,
-    color: '#6B7280',
+    padding: PADDING.lg,
   },
   errorText: {
-    marginTop: MARGIN.md,
-    fontSize: 16,
+    fontSize: FONT_SIZE.md,
     color: '#F44336',
     textAlign: 'center',
-    paddingHorizontal: PADDING.lg,
+    marginBottom: MARGIN.md,
   },
-  emptyCardContainer: {
+  noCardsContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F3F4F6',
     borderRadius: BORDER_RADIUS.lg,
   },
-  emptyCardText: {
-    fontSize: 16,
+  noCardsText: {
+    fontSize: FONT_SIZE.md,
     color: '#6B7280',
     textAlign: 'center',
+  },
+  loadingText: {
+    marginTop: MARGIN.md,
+    fontSize: FONT_SIZE.md,
+    color: '#6B7280',
+  },
+  statusOverlay: {
+    position: 'absolute',
+    top: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    zIndex: 999,
+  },
+  knowOverlay: {
+    left: 20,
+    backgroundColor: 'rgba(76, 175, 80, 0.9)',
+  },
+  dontKnowOverlay: {
+    right: 20,
+    backgroundColor: 'rgba(244, 67, 54, 0.9)',
+  },
+  statusText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

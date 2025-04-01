@@ -39,9 +39,9 @@ import { getHungerColor } from './utils';
 
 // Kelime istatistikleri - Redux ile değiştirildi
 const getWordStats = (learnedCount: number, unknownCount: number, streakCount: number) => [
-  { id: '1', title: 'learned', value: learnedCount.toString(), icon: 'checkmark-circle', color: '#10B981', progress: 65 },
-  { id: '2', title: 'unknown', value: unknownCount.toString(), icon: 'refresh', color: '#EF4444', progress: 20 },
-  { id: '4', title: 'streak', value: streakCount.toString(), icon: 'flame', color: '#F97316', progress: 70 }
+  { id: '1', title: 'learned', value: learnedCount.toString(), icon: 'checkmark-circle', color: '#10B981', clickable: true },
+  { id: '2', title: 'unknown', value: unknownCount.toString(), icon: 'refresh', color: '#EF4444', clickable: true },
+  { id: '4', title: 'streak', value: streakCount.toString(), icon: 'flame', color: '#F97316', clickable: false }
 ];
 
 interface FishDataInterface {
@@ -75,7 +75,8 @@ const createStyles = (mode: 'light' | 'dark') => StyleSheet.create({
   },
   scrollContent: {
     padding: PADDING.md,
-    paddingBottom: PADDING.xl * 2,
+    // paddingBottom: PADDING.xl * 2,
+    paddingVertical: PADDING.xl ,
   },
   aquariumContainer: {
     height: 250,
@@ -224,7 +225,7 @@ const createStyles = (mode: 'light' | 'dark') => StyleSheet.create({
     marginRight: 8,
   },
   foodCountText: {
-    color: '#FFFFFF',
+    color: '#001529',
     fontSize: 16,
     fontWeight: 'bold',
     marginRight: 8,
@@ -458,6 +459,34 @@ sectionTitle: {
     fontSize: 16,
     position: 'absolute',
   },
+  pointContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4a85e5',
+    borderRadius: 25,
+    padding: 8,
+    marginTop: 10,
+    marginBottom: 10,
+    alignSelf: 'flex-end', // Sağ tarafa yerleşim
+    marginRight: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  pointIconWrapper: {
+    backgroundColor: '#3a75d5',
+    borderRadius: 20,
+    padding: 5,
+    marginRight: 8,
+  },
+  pointText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginRight: 8,
+  },
 });
 
 export default function DashboardScreen() {
@@ -476,7 +505,7 @@ export default function DashboardScreen() {
     value: string;
     icon: string;
     color: string;
-    progress: number;
+    clickable: boolean;
   }>>([]);
   
   // UserWordStatuses tablosundan kelime durumunu çek
@@ -487,7 +516,6 @@ export default function DashboardScreen() {
       try {
         // userService'den kelime durumlarını çek
         const { knownCount, unknownCount } = await fetchWordStatuses(id);
-        
         // Kelime istatistiklerini güncelle
         setWordStats(getWordStats(knownCount, unknownCount, streak_count));
       } catch (error) {
@@ -799,29 +827,18 @@ export default function DashboardScreen() {
               {t('dashboard.feedFish') || "Balıkları Besle"}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.foodCountContainer}
-            onPress={()=>{}}
-          >
-            <View style={styles.foodIconContainer}>
-              <Ionicons
-                name="water-outline"
-                size={ICON_SIZE.sm}
-                color="#FFFFFF"
-              />
+     
+            <View style={styles.pointContainer}>
+              <View style={styles.pointIconWrapper}>
+                <Ionicons
+                  name="water-outline"
+                  size={ICON_SIZE.sm}
+                  color="#FFFFFF"
+                />
+              </View>
+              <Text style={styles.pointText}>{point}</Text>
             </View>
-            <Text style={styles.foodCountText}>{point}</Text>
-            <TouchableOpacity 
-              style={styles.buyFoodButton}
-              onPress={()=>{}}
-            >
-              <Ionicons
-                name="add"
-                size={ICON_SIZE.xs}
-                color="#FFFFFF"
-              />
-            </TouchableOpacity>
-          </TouchableOpacity>
+       
         </View>
 
  
@@ -860,11 +877,19 @@ export default function DashboardScreen() {
           {wordStats.map((stat) => (
             <TouchableOpacity 
               key={stat.id} 
-              style={[styles.wordStatCard, { backgroundColor: Colors[mode].card }]}
-              onPress={() => router.push({
-                pathname: '/word-list',
-                params: { type: stat.title, id: stat.id }
-              })}
+              style={[
+                styles.wordStatCard, 
+                { backgroundColor: Colors[mode].card }
+              ]}
+              onPress={() => {
+                if (stat.clickable) {
+                  router.push({
+                    pathname: '/word-list',
+                    params: { type: stat.title, id: stat.id }
+                  });
+                }
+              }}
+              disabled={!stat.clickable}
             >
               <View style={[styles.wordStatIconContainer, { backgroundColor: stat.color + '15' }]}>
                 <Ionicons

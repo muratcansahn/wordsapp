@@ -41,8 +41,11 @@ const userSlice = createSlice({
     incrementWordStatusCounter: (state) => {
       return { ...state, wordStatusUpdateCounter: state.wordStatusUpdateCounter + 1 };
     },
+    incrementPoint: (state) => {
+      return { ...state, point: state.point + 1 };
+    },
   }
 });
 
-export const { setReduxUser, clearReduxUser, updateUserStats, incrementWordStatusCounter } = userSlice.actions;
+export const { setReduxUser, clearReduxUser, updateUserStats, incrementWordStatusCounter, incrementPoint } = userSlice.actions;
 export default userSlice.reducer;
