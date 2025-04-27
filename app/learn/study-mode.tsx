@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
@@ -27,21 +28,22 @@ interface StudyMode {
 const studyModes: StudyMode[] = [
   {
     id: 'flashcards',
-    title: 'Kelime Kartları',
-    description: 'Kelimeleri kartlar halinde öğrenin',
+    title: 'studyMode.flashcards.title',
+    description: 'studyMode.flashcards.description',
     icon: 'cards',
     gradient: ['#6366F1', '#4F46E5'],
   },
   {
     id: 'quiz',
-    title: 'Çoktan Seçmeli Test',
-    description: 'Kelimeleri test ederek öğrenin',
+    title: 'studyMode.quiz.title',
+    description: 'studyMode.quiz.description',
     icon: 'format-list-checks',
     gradient: ['#EC4899', '#D946EF'],
   },
 ];
 
 export default function StudyModePage() {
+  const { t } = useTranslation();
   const { listId } = useLocalSearchParams();
   const router = useRouter();
   const { mode } = useTheme();
@@ -67,11 +69,11 @@ export default function StudyModePage() {
         entering={FadeInUp}
         style={styles.header}
       >
-        <Text style={[styles.title, { color: Colors[mode].text }]}>
-          Nasıl öğrenmek istersiniz?
+        <Text style={[styles.title, { color: Colors[mode].text }]}> 
+          {t('studyMode.title')}
         </Text>
-        <Text style={[styles.subtitle, { color: Colors[mode].placeholderColor }]}>
-          Size en uygun öğrenme yöntemini seçin ve hemen öğrenmeye başlayın
+        <Text style={[styles.subtitle]}> 
+          {t('studyMode.subtitle')}
         </Text>
       </Animated.View>
 
@@ -101,12 +103,8 @@ export default function StudyModePage() {
                       color="#FFFFFF" 
                     />
                   </View>
-                  <Text style={styles.modeTitle}>
-                    {studyMode.title}
-                  </Text>
-                  <Text style={[styles.modeDescription, { color: 'rgba(255, 255, 255, 0.9)' }]}>
-                    {studyMode.description}
-                  </Text>
+                  <Text style={styles.modeTitle}>{t(studyMode.title)}</Text>
+                  <Text style={styles.modeDescription}>{t(studyMode.description)}</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </Animated.View>
@@ -139,6 +137,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     maxWidth: width * 0.8,
     opacity: 0.7,
+    color:'rgba(0, 0, 0, 0.7)'
   },
   gridContainer: {
     flex: 1,
@@ -194,5 +193,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     maxWidth: '85%',
     lineHeight: 20,
+    color: 'rgba(255, 255, 255, 0.8)',
   },
 });

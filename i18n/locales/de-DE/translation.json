@@ -198,6 +198,9 @@
     "language": "Sprache +4"
   },
   "dashboard": {
+    "noGameRightTitle": "Kein Spielrecht!",
+    "noGameRightDesc": "Für ein neues Spielrecht musst du etwas warten.\n\n{{time}}",
+    "okButton": "Okay",
     "welcome": "Hallo 👋",
     "welcomeSubtext": "Was möchtest du heute lernen?",
     "wordStatus": "Wortstatus",
@@ -215,5 +218,67 @@
     "selectFishDescription": "Welchen Fisch möchtest du füttern?",
     "orangeFish": "Oranger Fisch",
     "blueFish": "Blauer Fisch"
+  },
+  "flashcards": {
+    "noCards": "Keine Karten zum Anzeigen.",
+    "know": "Ich weiß es",
+    "dontKnow": "Ich weiß es nicht",
+    "loading": "Wortliste wird geladen...",
+    "listNotFound": "Liste nicht gefunden.",
+    "allMarked": "Glückwunsch, Sie haben alle Wörter in dieser Liste markiert!",
+    "allCardsCompleted": "Sie haben alle Karten abgeschlossen!",
+    "known": "Bekannt",
+    "unknown": "Unbekannt",
+    "counter": "{{current}} / {{total}}",
+    "hide": "Ausblenden",
+    "show": "Anzeigen",
+    "share": "Teilen",
+    "backToHome": "Zurück zur Startseite",
+    "knownWords": "bekanntes Wort",
+    "unknownWords": "unbekanntes Wort"
+  },
+  "studyMode": {
+    "title": "Wie möchten Sie lernen?",
+    "subtitle": "Wählen Sie die für Sie am besten geeignete Lernmethode und beginnen Sie sofort mit dem Lernen",
+    "flashcards": {
+      "title": "Karteikarten",
+      "description": "Lernen Sie Wörter mit Karteikarten"
+    },
+    "quiz": {
+      "title": "Multiple Choice Test",
+      "description": "Lernen Sie durch Testen der Wörter"
+    }
+  },
+  "learnLayout": {
+    "indexTitle": "Lernen",
+    "studyModeTitle": "Studienmodus"
+  },
+  "quiz": {
+    "questionLabel": "Was bedeutet das folgende Wort?"
+  },
+  "learnIndex": {
+    "wordListsTitle": "Wortlisten",
+    "wordCountProgress": "{{learned}} / {{total}} Wörter",
+    "completed": "Abgeschlossen",
+    "notStarted": "Nicht begonnen"
+  },
+  "dailyActivities": {
+    "countdownHours": "in {{hours}}Std {{minutes}}Min",
+    "countdownMinutes": "in {{minutes}}Min",
+    "nextRight": "Nächste Möglichkeit: {{time}}",
+    "dailyContent": {
+      "1": {
+        "title": "Tägliches Lernen",
+        "description": "Lerne neue Wörter, die für heute zugewiesen wurden"
+      },
+      "3": {
+        "title": "Wort-Ratespiel",
+        "description": "Teste deinen Wortschatz mit einem lustigen Spiel"
+      },
+      "4": {
+        "title": "Wortzuordnung",
+        "description": "Ordne Wörter ihren Bedeutungen zu"
+      }
+    }
   }
 }

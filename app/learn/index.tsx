@@ -4,6 +4,7 @@ import { BORDER_RADIUS, PADDING, MARGIN } from '@/constants/AppConstants';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp, interpolate, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useEffect ,useState} from 'react';
+import { useTranslation } from 'react-i18next';
 import { getWordLists } from '@/services/wordListService';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
@@ -31,6 +32,7 @@ const defaultGradients: { [key: number]: readonly [string, string] } = {
 };
 
 export default function LearnPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const scrollY = useSharedValue(0);
   const [loading, setLoading] = useState(true);
@@ -96,7 +98,7 @@ export default function LearnPage() {
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
       <Animated.View style={[styles.header, headerAnimatedStyle]}>
-        <Text style={styles.title}>Kelime Listeleri</Text>
+        <Text style={styles.title}>{t('learnIndex.wordListsTitle')}</Text>
       </Animated.View>
       
       <Animated.ScrollView 
@@ -151,17 +153,17 @@ export default function LearnPage() {
                             color="rgba(255, 255, 255, 0.9)" 
                           />
                           <Text style={styles.progressText}>
-                            {`${list.learnedCount} / ${list.wordCount} kelime`}
+                            {t('learnIndex.wordCountProgress', { learned: list.learnedCount, total: list.wordCount })}
                           </Text>
                         </View>
                         
                         <View style={styles.statusContainer}>
                           {progress > 0 ? (
                             <Text style={styles.statusText}>
-                              {progress === 100 ? 'Tamamlandı' : `${Math.round(progress)}%`}
+                              {progress === 100 ? t('learnIndex.completed') : `${Math.round(progress)}%`}
                             </Text>
                           ) : (
-                            <Text style={styles.statusText}>Başlanmadı</Text>
+                            <Text style={styles.statusText}>{t('learnIndex.notStarted')}</Text>
                           )}
                         </View>
                       </View>

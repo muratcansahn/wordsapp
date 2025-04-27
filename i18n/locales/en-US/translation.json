@@ -201,6 +201,9 @@
     "language": "Language"
   },
   "dashboard": {
+    "noGameRightTitle": "No Game Right!",
+    "noGameRightDesc": "You need to wait a bit for a new right.\n\n{{time}}",
+    "okButton": "Okay",
     "welcome": "Hello ",
     "welcomeSubtext": "What would you like to learn today?", 
     "wordStatus": "Word Status",
@@ -218,5 +221,67 @@
     "selectFishDescription": "Which fish would you like to feed?",
     "orangeFish": "Orange Fish",
     "blueFish": "Blue Fish"
+  },
+  "flashcards": {
+    "noCards": "No cards to show.",
+    "know": "I know",
+    "dontKnow": "I don't know",
+    "loading": "Loading word list...",
+    "listNotFound": "List not found.",
+    "allMarked": "Congratulations, you have marked all words in this list!",
+    "allCardsCompleted": "You have completed all cards!",
+    "known": "Known",
+    "unknown": "Unknown",
+    "counter": "{{current}} / {{total}}",
+    "hide": "Hide",
+    "show": "Show",
+    "share": "Share",
+    "backToHome": "Back to Home",
+    "knownWords": "known word",
+    "unknownWords": "unknown word"
+  },
+  "studyMode": {
+    "title": "How would you like to learn?",
+    "subtitle": "Choose the most suitable learning method for you and start learning right away",
+    "flashcards": {
+      "title": "Flashcards",
+      "description": "Learn words with flashcards"
+    },
+    "quiz": {
+      "title": "Multiple Choice Quiz",
+      "description": "Learn by testing words"
+    }
+  },
+  "learnLayout": {
+    "indexTitle": "Learn",
+    "studyModeTitle": "Study Mode"
+  },
+  "quiz": {
+    "questionLabel": "What is the meaning of the following word?"
+  },
+  "learnIndex": {
+    "wordListsTitle": "Word Lists",
+    "wordCountProgress": "{{learned}} / {{total}} words",
+    "completed": "Completed",
+    "notStarted": "Not Started"
+  },
+  "dailyActivities": {
+    "countdownHours": "in {{hours}}h {{minutes}}m",
+    "countdownMinutes": "in {{minutes}}m",
+    "nextRight": "Next right: {{time}}",
+    "dailyContent": {
+      "1": {
+        "title": "Daily Study",
+        "description": "Learn new words assigned for today"
+      },
+      "3": {
+        "title": "Word Guess Game",
+        "description": "Test your vocabulary knowledge with a fun game"
+      },
+      "4": {
+        "title": "Word Matching",
+        "description": "Match words with their meanings"
+      }
+    }
   }
 }

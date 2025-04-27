@@ -6,6 +6,7 @@ export interface FlashCard {
   translation: string;
   example: string;
   example_original?: string;
+  example_translated?: string;
   status?: number;
 }
 
@@ -13,16 +14,22 @@ export interface WordListWithItems {
   id: string;
   title: string;
   subtitle?: string;
+  image?: string;
+  desc_tr?: string;
+  desc_de?: string;
+  desc_es?: string;
   level?: string;
   cards: FlashCard[];
 }
 
-export const fetchWordListItems = async (listId: string): Promise<WordListWithItems> => {
+import i18n from 'i18next';
+
+export const fetchWordListItems = async (listId: string, languageCode?: string): Promise<WordListWithItems> => {
   try {
     // Önce kelime listesinin detaylarını çek
     const { data: wordList, error: wordListError } = await supabase
       .from('WordLists')
-      .select('id, name, description')
+      .select('id, name, image, desc_tr, desc_de, desc_es')
       .eq('id', listId)
       .single();
 
@@ -35,38 +42,59 @@ export const fetchWordListItems = async (listId: string): Promise<WordListWithIt
       .from('WordListItems')
       .select('word_id')
       .eq('word_list_id', listId);
-    
-    if (wordListItemsError) {
-      throw new Error(`Liste kelimeleri çekilirken hata: ${wordListItemsError.message}`);
-    }
-    
+      
+      if (wordListItemsError) {
+        throw new Error(`Liste kelimeleri çekilirken hata: ${wordListItemsError.message}`);
+      }
+          
     // Kelime ID'lerini al
     const wordIds = wordListItems.map(item => item.word_id);
-    
-    // Kelimeleri çek
+
+    // Eğer kelime yoksa, direkt boş dön
+    if (!wordIds || wordIds.length === 0) {
+      return {
+        id: listId,
+        title: wordList.name,
+        subtitle: wordList.desc_tr,
+        image: wordList.image,
+        desc_tr: wordList.desc_tr,
+        desc_de: wordList.desc_de,
+        desc_es: wordList.desc_es,
+        cards: []
+      };
+    }
+
+    // Sadece ilgili kelimeleri çek
     const { data: words, error: wordsError } = await supabase
       .from('Words')
       .select('id, name')
       .in('id', wordIds);
-    
+
     if (wordsError) {
       throw new Error(`Kelimeler çekilirken hata: ${wordsError.message}`);
     }
-    
+
     if (!words || words.length === 0) {
       return {
         id: listId,
         title: wordList.name,
-        subtitle: wordList.description,
+        subtitle: wordList.desc_tr,
+        image: wordList.image,
+        desc_tr: wordList.desc_tr,
+        desc_de: wordList.desc_de,
+        desc_es: wordList.desc_es,
         cards: []
       };
     }
     
-    // Kelimelerin çevirilerini çek
+    // Dil kodu parametre olarak gelmezse i18n'den al
+    const selectedLanguage = languageCode || i18n.language;
+    // Kelimelerin çevirilerini çek (sadece seçili dile göre)
     const { data: translations, error: translationsError } = await supabase
       .from('WordTranslations')
-      .select('word_id, mean, example_mean, example_original')
-      .in('word_id', wordIds);
+      .select('word_id, mean, example_mean, example_original, example_translated')
+      .in('word_id', wordIds)
+      .eq('language_code', selectedLanguage);
     
     if (translationsError) {
       throw new Error(`Çeviriler çekilirken hata: ${translationsError.message}`);
@@ -89,24 +117,32 @@ export const fetchWordListItems = async (listId: string): Promise<WordListWithIt
     }
     
     // Kelimeleri, çevirileri ve durumları birleştir
+    // İlk harfi büyük yapan yardımcı fonksiyon
+
     const flashCards: FlashCard[] = words.map(word => {
       const wordTranslation = translations?.find(t => t.word_id === word.id);
+      console.log(wordTranslation);
       const wordStatus = wordStatuses.find(s => s.word_id === word.id);
-      
-      return {
+      const flashCard: FlashCard = {
         id: word.id.toString(),
         word: word.name,
         translation: wordTranslation?.mean || '',
         example: wordTranslation?.example_mean || '',
         example_original: wordTranslation?.example_original || '',
+        example_translated: wordTranslation?.example_translated ,
         status: wordStatus?.status || 0
       };
+      return flashCard;
     });
     
     return {
       id: listId,
       title: wordList.name,
-      subtitle: wordList.description,
+      subtitle: wordList.desc_tr,
+      image: wordList.image,
+      desc_tr: wordList.desc_tr,
+      desc_de: wordList.desc_de,
+      desc_es: wordList.desc_es,
       cards: flashCards
     };
   } catch (error) {

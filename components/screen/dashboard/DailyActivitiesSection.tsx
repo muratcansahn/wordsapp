@@ -118,10 +118,10 @@ const DailyActivitiesSection = () => {
                     const minutes = totalMinutes % 60;
                     
                     if (hours > 0) {
-                        newCountdown[gameType] = `${hours}s ${minutes}d sonra`;
-                    } else {
-                        newCountdown[gameType] = `${minutes}d sonra`;
-                    }
+    newCountdown[gameType] = t('dailyActivities.countdownHours', { hours, minutes });
+} else {
+    newCountdown[gameType] = t('dailyActivities.countdownMinutes', { minutes });
+}
                 }
             });
             
@@ -136,8 +136,8 @@ const DailyActivitiesSection = () => {
     const dailyContent = useMemo(() => [
         {
           id: '1',
-          title: 'Günlük Çalışma',
-          description: 'Bugün için belirlenen yeni kelimeleri öğren',
+          title: t('dailyActivities.dailyContent.1.title'),
+          description: t('dailyActivities.dailyContent.1.description'),
           icon: 'calendar',
           gradient: ['#FF9A9E', '#FAD0C4'] as readonly [string, string],
           action: 'flashcards',
@@ -145,8 +145,8 @@ const DailyActivitiesSection = () => {
         },
         {
           id: '3',
-          title: 'Kelime Tahmin Oyunu',
-          description: 'Kelime bilginizi eğlenceli bir oyunla test edin',
+          title: t('dailyActivities.dailyContent.3.title'),
+          description: t('dailyActivities.dailyContent.3.description'),
           icon: 'game-controller',
           gradient: ['#4facfe', '#00f2fe'] as readonly [string, string],
           action: 'writing',
@@ -154,8 +154,8 @@ const DailyActivitiesSection = () => {
         },
         {
           id: '4',
-          title: 'Kelime Eşleştirme',
-          description: 'Kelimeleri anlamlarıyla eşleştirin',
+          title: t('dailyActivities.dailyContent.4.title'),
+          description: t('dailyActivities.dailyContent.4.description'),
           icon: 'link',
           gradient: ['#43e97b', '#38f9d7'] as readonly [string, string],
           action: 'word-matching',
@@ -224,8 +224,8 @@ const DailyActivitiesSection = () => {
                         {timeLeft && (
                             <View style={styles.gameStatus}>
                                 <Text style={styles.timeText}>
-                                    Sonraki hak: {timeLeft}
-                                </Text>
+  {t('dailyActivities.nextRight', { time: timeLeft })}
+</Text>
                             </View>
                         )}
                     </View>
@@ -246,10 +246,10 @@ const DailyActivitiesSection = () => {
             <Dialog
                 visible={dialogVisible}
                 setVisible={setDialogVisible}
-                title="Oyun Hakkı Yok"
-                description={`Yeni oyun hakkınız için beklemeniz gereken süre:\n\n${countdown[selectedGame] || ''}`}
+                title={t('dashboard.noGameRightTitle')}
+                description={t('dashboard.noGameRightDesc', { time: countdown[selectedGame] || '' })}
                 bgColor={Colors[mode].background}
-                rightButton="Tamam"
+                rightButton={t('dashboard.okButton')}
                 onConfirm={() => setDialogVisible(false)}
                 showCancel={false}
             >

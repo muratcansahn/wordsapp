@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, SafeAreaView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -33,6 +34,7 @@ interface QuizQuestion {
 }
 
 export default function QuizPage() {
+  const { t } = useTranslation();
   const { listId } = useLocalSearchParams();
   const router = useRouter();
   const { mode } = useTheme();
@@ -291,7 +293,7 @@ export default function QuizPage() {
         entering={FadeInDown}
         style={styles.questionContainer}
       >
-        <Text style={styles.questionLabel}>Aşağıdaki kelimenin anlamı nedir?</Text>
+        <Text style={styles.questionLabel}>{t('quiz.questionLabel')}</Text>
         <View style={styles.wordContainer}>
           <Text style={styles.wordText}>{currentQuestion.word}</Text>
         </View>

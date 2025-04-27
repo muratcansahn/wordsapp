@@ -198,6 +198,9 @@
     "language": "Idioma +4"
   },
   "dashboard": {
+    "noGameRightTitle": "¡Sin intento disponible!",
+    "noGameRightDesc": "Debes esperar un poco para un nuevo intento.\n\n{{time}}",
+    "okButton": "Aceptar",
     "welcome": "¡Hola 👋",
     "welcomeSubtext": "¿Qué te gustaría aprender hoy?",
     "wordStatus": "Estado de Palabras",
@@ -215,5 +218,67 @@
     "selectFishDescription": "¿Qué pez te gustaría alimentar?",
     "orangeFish": "Pez Naranja",
     "blueFish": "Pez Azul"
+  },
+  "flashcards": {
+    "noCards": "No hay tarjetas para mostrar.",
+    "know": "Lo sé",
+    "dontKnow": "No lo sé",
+    "loading": "Cargando lista de palabras...",
+    "listNotFound": "Lista no encontrada.",
+    "allMarked": "¡Felicidades, has marcado todas las palabras de esta lista!",
+    "allCardsCompleted": "¡Has completado todas las tarjetas!",
+    "known": "Conocido",
+    "unknown": "Desconocido",
+    "counter": "{{current}} / {{total}}",
+    "hide": "Ocultar",
+    "show": "Mostrar",
+    "share": "Compartir",
+    "backToHome": "Volver al inicio",
+    "knownWords": "palabra conocida",
+    "unknownWords": "palabra desconocida"
+  },
+  "studyMode": {
+    "title": "¿Cómo te gustaría aprender?",
+    "subtitle": "Elige el método de aprendizaje que más te convenga y empieza a aprender de inmediato",
+    "flashcards": {
+      "title": "Tarjetas de palabras",
+      "description": "Aprende palabras con tarjetas"
+    },
+    "quiz": {
+      "title": "Prueba de opción múltiple",
+      "description": "Aprende poniendo a prueba las palabras"
+    }
+  },
+  "learnLayout": {
+    "indexTitle": "Aprender",
+    "studyModeTitle": "Modo de estudio"
+  },
+  "quiz": {
+    "questionLabel": "¿Cuál es el significado de la siguiente palabra?"
+  },
+  "learnIndex": {
+    "wordListsTitle": "Listas de palabras",
+    "wordCountProgress": "{{learned}} / {{total}} palabras",
+    "completed": "Completado",
+    "notStarted": "No iniciado"
+  },
+  "dailyActivities": {
+    "countdownHours": "en {{hours}}h {{minutes}}min",
+    "countdownMinutes": "en {{minutes}}min",
+    "nextRight": "Siguiente intento: {{time}}",
+    "dailyContent": {
+      "1": {
+        "title": "Estudio diario",
+        "description": "Aprende las nuevas palabras asignadas para hoy"
+      },
+      "3": {
+        "title": "Juego de adivinar palabras",
+        "description": "Pon a prueba tu vocabulario con un juego divertido"
+      },
+      "4": {
+        "title": "Emparejamiento de palabras",
+        "description": "Empareja las palabras con sus significados"
+      }
+    }
   }
 }

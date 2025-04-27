@@ -219,5 +219,72 @@
     "selectFishDescription": "Hangi balığı beslemek istiyorsunuz?",
     "orangeFish": "Turuncu Balık",
     "blueFish": "Mavi Balık"
+  },
+  "flashcards": {
+    "noCards": "Gösterilecek kart yok.",
+    "know": "Biliyorum",
+    "dontKnow": "Bilmiyorum",
+    "loading": "Kelime listesi yükleniyor...",
+    "listNotFound": "Liste bulunamadı.",
+    "allMarked": "Tebrikler, bu listedeki tüm kelimeleri işaretlediniz!",
+    "allCardsCompleted": "Tüm kartları tamamladınız!",
+    "known": "Bilinen",
+    "unknown": "Bilinmeyen",
+    "counter": "{{current}} / {{total}}",
+    "hide": "Gizle",
+    "show": "Göster",
+    "share": "Paylaş",
+    "backToHome": "Ana Sayfaya Dön",
+    "knownWords": "bilinen kelime",
+    "unknownWords": "bilinmeyen kelime"
+  },
+  "studyMode": {
+    "title": "Nasıl öğrenmek istersiniz?",
+    "subtitle": "Size en uygun öğrenme yöntemini seçin ve hemen öğrenmeye başlayın",
+    "flashcards": {
+      "title": "Kelime Kartları",
+      "description": "Kelimeleri kartlar halinde öğrenin"
+    },
+    "quiz": {
+      "title": "Çoktan Seçmeli Test",
+      "description": "Kelimeleri test ederek öğrenin"
+    }
+  },
+  "learnLayout": {
+    "indexTitle": "Öğren",
+    "studyModeTitle": "Çalışma Modu"
+  },
+  "quiz": {
+    "questionLabel": "Aşağıdaki kelimenin anlamı nedir?"
+  },
+  "learnIndex": {
+    "wordListsTitle": "Kelime Listeleri",
+    "wordCountProgress": "{{learned}} / {{total}} kelime",
+    "completed": "Tamamlandı",
+    "notStarted": "Başlanmadı"
+  },
+  "dailyActivities": {
+    "countdownHours": "{{hours}}s {{minutes}}d sonra",
+    "countdownMinutes": "{{minutes}}d sonra",
+    "nextRight": "Sonraki hak: {{time}}",
+    "dailyContent": {
+      "1": {
+        "title": "Günlük Çalışma",
+        "description": "Bugün için belirlenen yeni kelimeleri öğren"
+      },
+      "3": {
+        "title": "Kelime Tahmin Oyunu",
+        "description": "Kelime bilginizi eğlenceli bir oyunla test edin"
+      },
+      "4": {
+        "title": "Kelime Eşleştirme",
+        "description": "Kelimeleri anlamlarıyla eşleştirin"
+      }
+    }
+  },
+  "dashboard": {
+    "noGameRightTitle": "Oyun Hakkı Yok",
+    "noGameRightDesc": "Yeni oyun hakkınız için beklemeniz gereken süre:\n\n{{time}}",
+    "okButton": "Tamam"
   }
 }

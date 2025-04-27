@@ -37,7 +37,10 @@ import Animated, {
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SWIPE_THRESHOLD = 0.1 * SCREEN_WIDTH;
 
+import { useTranslation } from 'react-i18next';
+
 export default function FlashcardsScreen() {
+  const { t } = useTranslation();
   const params = useLocalSearchParams();
   const [selectedList, setSelectedList] = useState<WordListWithItems | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -262,7 +265,7 @@ export default function FlashcardsScreen() {
     if (!selectedList || !selectedList.cards || selectedList.cards.length === 0) {
       return (
         <View style={styles.noCardsContainer}>
-          <Text style={styles.noCardsText}>Bu listede kart bulunmuyor</Text>
+          <Text style={styles.noCardsText}>{t('flashcards.noCards')}</Text>
         </View>
       );
     }
@@ -276,7 +279,6 @@ export default function FlashcardsScreen() {
       inputRange: [-SCREEN_WIDTH * 0.3, 0],
       outputRange: [1, 0]
     });
-
     return (
       <View style={styles.cardContainer}>
         <RNAnimated.View
@@ -284,10 +286,10 @@ export default function FlashcardsScreen() {
           {...panResponder.panHandlers}
         >
           <RNAnimated.View style={[styles.statusOverlay, styles.knowOverlay, { opacity: rightOpacity }]}>
-            <Text style={styles.statusText}>Biliyorum</Text>
+            <Text style={styles.statusText}>{t('flashcards.know')}</Text>
           </RNAnimated.View>
           <RNAnimated.View style={[styles.statusOverlay, styles.dontKnowOverlay, { opacity: leftOpacity }]}>
-            <Text style={styles.statusText}>Bilmiyorum</Text>
+            <Text style={styles.statusText}>{t('flashcards.dontKnow')}</Text>
           </RNAnimated.View>
           <LinearGradient
             colors={['#6366F1', '#A5B4FC']}
@@ -296,11 +298,14 @@ export default function FlashcardsScreen() {
             style={styles.gradientContainer}
           >
             <View style={styles.cardContent}>
-              <Text style={styles.wordText}>{selectedList.cards[currentIndex].word}</Text>
+            <Text style={styles.wordText}>
+  {selectedList.cards[currentIndex].word.charAt(0).toUpperCase() + selectedList.cards[currentIndex].word.slice(1).toLowerCase()}
+</Text>
               {showTranslation && (
                 <View style={styles.translationWrapper}>
                   <Text style={styles.translationText}>{selectedList.cards[currentIndex].translation}</Text>
-                  <Text style={styles.exampleText}>{selectedList.cards[currentIndex].example_original || selectedList.cards[currentIndex].example}</Text>
+                  <Text style={styles.exampleText}>{selectedList.cards[currentIndex].example_original}</Text>
+                  <Text style={styles.exampleText}>{selectedList.cards[currentIndex].example_translated}</Text>
                 </View>
               )}
             </View>
@@ -314,7 +319,7 @@ export default function FlashcardsScreen() {
     return (
       <View style={[styles.container, styles.centerContent]}>
         <Loader size="large" />
-        <Text style={styles.loadingText}>Kelime listesi yükleniyor...</Text>
+        <Text style={styles.loadingText}>{t('flashcards.loading')}</Text>
       </View>
     );
   }
@@ -332,48 +337,55 @@ export default function FlashcardsScreen() {
     return (
       <View style={[styles.container, styles.centerContent]}>
         <Icon name="alert-circle" size={50} color="#F44336" />
-        <Text style={styles.errorText}>Liste bulunamadı.</Text>
+        <Text style={styles.errorText}>{t('flashcards.listNotFound')}</Text>
       </View>
     );
   }
 
-  if (allWordsMarked) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.completionContainer}>
-          <Icon name="check-circle" size={80} color="#4CAF50" />
-          <Text style={styles.noMoreCards}>
-            Tebrikler, bu listedeki tüm kelimeleri işaretlediniz!
-          </Text>
+  // Profesyonel tamamlanma ekranı fonksiyonu
+  const CompletionView = () => (
+    <View style={[styles.container, {backgroundColor: '#f6fafd'}]}>
+      <LinearGradient
+        colors={["#e0ffe8", "#f6fafd"]}
+        style={styles.completionGradient}
+      >
+        <View style={styles.completionCard}>
+          <View style={styles.completionIconCircle}>
+            <Icon name="check-circle" size={64} color="#4CAF50" />
+          </View>
+          <Text style={styles.noMoreCards}>{t('flashcards.allMarked')}</Text>
           <Text style={styles.completionStats}>
-            {knownWordCount} bilinen, {unknownWordCount} bilinmeyen kelime
+            {knownWordCount} {t('flashcards.knownWords')}, {unknownWordCount} {t('flashcards.unknownWords')}
           </Text>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => {
               router.replace('/');
             }}
+            activeOpacity={0.85}
           >
             <Text style={styles.backButtonText}>Ana Sayfaya Dön</Text>
           </TouchableOpacity>
         </View>
-      </View>
-    );
+      </LinearGradient>
+    </View>
+  );
+
+  if (allWordsMarked) {
+    return <CompletionView />;
   }
 
   if (currentIndex >= selectedList.cards.length) {
     const totalWords = knownWordCount + unknownWordCount;
     const allWordsMarked = totalWords === selectedList.cards.length;
-    
+    if (allWordsMarked) {
+      return <CompletionView />;
+    }
     return (
       <View style={styles.container}>
         <View style={styles.completionContainer}>
           <Icon name="check-circle" size={80} color="#4CAF50" />
-          <Text style={styles.noMoreCards}>
-            {allWordsMarked 
-              ? "Tebrikler, bu listedeki tüm kelimeleri işaretlediniz!" 
-              : "Tüm kartları tamamladınız!"}
-          </Text>
+          <Text style={styles.noMoreCards}>{t('flashcards.allCardsCompleted')}</Text>
           <Text style={styles.completionStats}>
             {knownWordCount} bilinen, {unknownWordCount} bilinmeyen kelime
           </Text>
@@ -418,7 +430,7 @@ export default function FlashcardsScreen() {
           </View>
           <View style={styles.statTextContainer}>
             <Text style={styles.statValue}>{knownWordCount}</Text>
-            <Text style={styles.statLabel}>Bilinen</Text>
+            <Text style={styles.statLabel}>{t('flashcards.known')}</Text>
           </View>
         </View>
         <View style={[styles.statDivider, { backgroundColor: '#eee' }]} />
@@ -428,19 +440,19 @@ export default function FlashcardsScreen() {
           </View>
           <View style={styles.statTextContainer}>
             <Text style={styles.statValue}>{unknownWordCount}</Text>
-            <Text style={styles.statLabel}>Bilinmeyen</Text>
+            <Text style={styles.statLabel}>{t('flashcards.unknown')}</Text>
           </View>
         </View>
       </View>
 
       <View style={styles.cardControlsContainer}>
-        <Text style={styles.counterText}>{currentIndex + 1} / {selectedList.cards.length}</Text>
+        <Text style={styles.counterText}>{t('flashcards.counter', { current: currentIndex + 1, total: selectedList.cards.length })}</Text>
         <TouchableOpacity 
           style={styles.controlButton}
           onPress={() => setShowTranslation(!showTranslation)}
         >
           <Icon name={showTranslation ? 'eye-off' : 'eye'} size={22} color="#6366F1" />
-          <Text style={styles.controlButtonText}>{showTranslation ? 'Gizle' : 'Göster'}</Text>
+          <Text style={styles.controlButtonText}>{showTranslation ? t('flashcards.hide') : t('flashcards.show')}</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.controlButton}
@@ -453,7 +465,7 @@ export default function FlashcardsScreen() {
           }}
         >
           <Icon name="share-variant" size={22} color="#6366F1" />
-          <Text style={styles.controlButtonText}>Paylaş</Text>
+          <Text style={styles.controlButtonText}>{t('flashcards.share')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -467,14 +479,14 @@ export default function FlashcardsScreen() {
           onPress={() => forceSwipe('left')}
         >
           <Icon name="close" size={24} color="#fff" />
-          <Text style={styles.actionButtonText}>Bilmiyorum</Text>
+          <Text style={styles.actionButtonText}>{t('flashcards.dontKnow')}</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={[styles.actionButton, styles.knowButton]}
           onPress={() => forceSwipe('right')}
         >
           <Icon name="check" size={24} color="#fff" />
-          <Text style={styles.actionButtonText}>Biliyorum</Text>
+          <Text style={styles.actionButtonText}>{t('flashcards.know')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -711,35 +723,79 @@ const styles = StyleSheet.create({
   dontKnowButton: {
     backgroundColor: '#F44336',
   },
+  completionGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 0,
+  },
   completionContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: PADDING.lg,
   },
+  completionCard: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    paddingVertical: 36,
+    paddingHorizontal: 28,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.10,
+    shadowRadius: 16,
+    elevation: 8,
+    minWidth: 320,
+    maxWidth: '90%',
+  },
+  completionIconCircle: {
+    backgroundColor: '#e8f5e9',
+    borderRadius: 50,
+    width: 90,
+    height: 90,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 18,
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 6,
+  },
   noMoreCards: {
-    fontSize: FONT_SIZE.xl,
-    color: '#1F2937',
+    fontSize: FONT_SIZE.xl + 2,
+    color: '#22223b',
     textAlign: 'center',
-    marginTop: MARGIN.lg,
-    marginBottom: MARGIN.md,
-    fontWeight: '700',
+    marginTop: 8,
+    marginBottom: 12,
+    fontWeight: '800',
+    letterSpacing: 0.2,
   },
   completionStats: {
     fontSize: FONT_SIZE.md,
-    color: '#6B7280',
-    marginBottom: MARGIN.md,
+    color: '#4CAF50',
+    fontWeight: '600',
+    marginBottom: 24,
+    textAlign: 'center',
   },
   backButton: {
     backgroundColor: '#6366F1',
-    paddingHorizontal: PADDING.md,
-    paddingVertical: PADDING.xs,
-    borderRadius: BORDER_RADIUS.md,
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: 16,
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 4,
+    marginTop: 4,
   },
   backButtonText: {
-    fontSize: FONT_SIZE.md,
-    color: '#FFFFFF',
-    fontWeight: '600',
+    fontSize: FONT_SIZE.md + 1,
+    color: '#fff',
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   errorContainer: {
     flex: 1,

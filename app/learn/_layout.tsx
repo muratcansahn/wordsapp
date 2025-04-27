@@ -1,8 +1,10 @@
 import { Stack } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
 
 export default function LearnLayout() {
+  const { t } = useTranslation();
   const { mode } = useTheme();
 
   return (
@@ -20,13 +22,13 @@ export default function LearnLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: 'Öğren',
+          title: t('learnLayout.indexTitle'),
         }}
       />
       <Stack.Screen
         name="study-mode"
         options={{
-          title: 'Çalışma Modu',
+          title: t('learnLayout.studyModeTitle'),
         }}
       />
     </Stack>
