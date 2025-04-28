@@ -1,5 +1,8 @@
 {
   "appName": "Ship Mobile Fast",
+  "common": {
+    "goBack": "Geri Dön"
+  },
   "language": "Dil",
   "success": "Başarılı",
   "error": "Hata",
@@ -218,7 +221,10 @@
     "selectFish": "Balıklarınızı Besleyin",
     "selectFishDescription": "Hangi balığı beslemek istiyorsunuz?",
     "orangeFish": "Turuncu Balık",
-    "blueFish": "Mavi Balık"
+    "blueFish": "Mavi Balık",
+    "noGameRightTitle": "Oyun Hakkı Yok",
+    "noGameRightDesc": "Yeni oyun hakkınız için beklemeniz gereken süre:\n\n{{time}}",
+    "okButton": "Tamam"
   },
   "flashcards": {
     "noCards": "Gösterilecek kart yok.",
@@ -237,6 +243,21 @@
     "backToHome": "Ana Sayfaya Dön",
     "knownWords": "bilinen kelime",
     "unknownWords": "bilinmeyen kelime"
+  },
+  "wordMatching": {
+    "title": "Kelime Eşleştirme",
+    "wordsLoadError": "Kelimeler yüklenirken bir sorun oluştu.",
+    "gameStartError": "Oyun başlatılırken bir sorun oluştu.",
+    "loadingWords": "Kelimeler yükleniyor...",
+    "congratulations": "Tebrikler!",
+    "yourScore": "Skorunuz: {{score}}",
+    "allMatched": "Tüm kelimeleri başarıyla eşleştirdiniz.",
+    "newGame": "Yeni Oyun",
+    "score": "Skor: {{score}}",
+    "english": "İngilizce",
+    "turkish": "Türkçe",
+    "matchedWords": "Eşleşen Kelimeler",
+    "language": "Türkçe"
   },
   "studyMode": {
     "title": "Nasıl öğrenmek istersiniz?",
@@ -281,10 +302,6 @@
         "description": "Kelimeleri anlamlarıyla eşleştirin"
       }
     }
-  },
-  "dashboard": {
-    "noGameRightTitle": "Oyun Hakkı Yok",
-    "noGameRightDesc": "Yeni oyun hakkınız için beklemeniz gereken süre:\n\n{{time}}",
-    "okButton": "Tamam"
   }
+
 }

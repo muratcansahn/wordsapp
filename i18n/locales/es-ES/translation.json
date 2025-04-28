@@ -1,5 +1,8 @@
 {
   "appName": "Ship Mobile Fast",
+  "common": {
+    "goBack": "Volver"
+  },
   "language": "Idioma",
   "success": "Éxito",
   "error": "Error",
@@ -236,6 +239,21 @@
     "backToHome": "Volver al inicio",
     "knownWords": "palabra conocida",
     "unknownWords": "palabra desconocida"
+  },
+  "wordMatching": {
+    "title": "Word Matching",
+    "wordsLoadError": "Hubo un problema al cargar las palabras.",
+    "gameStartError": "Hubo un problema al iniciar el juego.",
+    "loadingWords": "Cargando palabras...",
+    "congratulations": "¡Felicidades!",
+    "yourScore": "Tu puntuación: {{score}}",
+    "allMatched": "Has emparejado correctamente todas las palabras.",
+    "newGame": "Nuevo Juego",
+    "score": "Puntuación: {{score}}",
+    "english": "Inglés",
+    "turkish": "Turco",
+    "matchedWords": "Palabras emparejadas",
+    "language": "Español"
   },
   "studyMode": {
     "title": "¿Cómo te gustaría aprender?",
