@@ -1,16 +1,19 @@
 import { supabase } from '@/lib/supabase';
 
+export interface WordTranslation {
+  word_id: number;
+  culture?: string; // Eski veritabanı yapısı için opsiyonel
+  language_code?: string; // Yeni veritabanı yapısı için opsiyonel
+  mean: string;
+  example_original: string;
+  example_translated: string;
+  pronunciation?: string; // Opsiyonel yaptım çünkü bazı sorgularda dönmüyor
+}
+
 export interface Word {
   id: number;
   name: string;
-  WordTranslations: {
-    word_id: number;
-    culture: string;
-    mean: string;
-    example_original: string;
-    example_translated: string;
-    pronunciation: string;
-  }[];
+  WordTranslations: WordTranslation[];
 }
 
 /**
@@ -45,10 +48,10 @@ export const getRandomWord = async (): Promise<Word | null> => {
         name,
         WordTranslations (
           word_id,
-          culture,
+          language_code,
           mean,
           example_original,
-          example_translated,
+          example_translated
         )
       `)
       .range(randomOffset, randomOffset)
@@ -59,7 +62,8 @@ export const getRandomWord = async (): Promise<Word | null> => {
       return null;
     }
 
-    return data;
+    // Tip uyumluluğunu sağlamak için Word tipine dönüştürüyoruz
+    return data as Word;
   } catch (error) {
     console.error('Rastgele kelime getirme hatası:', error);
     return null;
@@ -72,16 +76,20 @@ export const getRandomWord = async (): Promise<Word | null> => {
  */
 export const getRandomWordsWithTranslations = async (culture: string): Promise<Word[]> => {
   try {
-    console.log('Rastgele kelimeler getiriliyor...');
+    console.log('Rastgele kelimeler getiriliyor... Dil:', culture);
 
+    // Dil kodu dönüşümü yap
+    // Veritabanında culture alanı muhtemelen "de", "en", "tr" gibi değerler bekliyor
+    // Eğer veritabanında language_code alanı varsa, culture yerine onu kullanalım
+    
     // Önce bu culture'a sahip çevirisi olan kelime sayısını öğrenelim
     const { count, error: countError } = await supabase
       .from('Words')
-      .select('id,WordTranslations!inner(culture)', {
+      .select('id,WordTranslations!inner(language_code)', {
         count: 'exact',
         head: true
       })
-      .eq('WordTranslations.culture', culture);
+      .eq('WordTranslations.language_code', culture);
 
     if (countError) {
       console.error('Kelime sayısı sorgu hatası:', countError);
@@ -115,13 +123,13 @@ export const getRandomWordsWithTranslations = async (culture: string): Promise<W
           name,
           WordTranslations!inner(
             word_id,
-            culture,
+            language_code,
             mean,
             example_original,
             example_translated
           )
         `)
-        .eq('WordTranslations.culture', culture)
+        .eq('WordTranslations.language_code', culture)
         .range(offset, offset)
         .limit(1);
 
@@ -131,7 +139,9 @@ export const getRandomWordsWithTranslations = async (culture: string): Promise<W
       }
 
       if (data && data.length > 0) {
-        randomWords.push(data[0]);
+        // Tip uyumluluğunu sağlamak için Word tipine dönüştürüyoruz
+        const wordData = data[0] as Word;
+        randomWords.push(wordData);
       }
     }
 

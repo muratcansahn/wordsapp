@@ -752,36 +752,9 @@ export default function DashboardScreen() {
             </View>
        
         </View>
-
- 
-        
-        {/* Akvaryum */}
-        <View style={styles.aquariumContainer}>
-          <LinearGradient
-            colors={mode === 'dark' 
-              ? ['rgba(0, 41, 88, 0.9)', 'rgba(0, 10, 50, 0.95)']
-              : ['rgba(191, 239, 255, 0.9)', 'rgba(100, 181, 246, 0.95)']}
-            style={StyleSheet.absoluteFill}
-          />
-       
-          <View style={styles.waterReflection}>
-            <LinearGradient
-              colors={['rgba(255, 255, 255, 0.1)', 'transparent']}
-              style={StyleSheet.absoluteFill}
-            />
-          </View>
-          {renderFish()}
-          <View style={styles.plantDecoration}>
-            <LinearGradient
-              colors={['transparent', mode === 'dark' ? 'rgba(0, 100, 0, 0.2)' : 'rgba(0, 150, 0, 0.15)']}
-              style={StyleSheet.absoluteFill}
-            />
-          </View>
-        </View>
         <Aquarium 
           fishData={fishData[0]}
         />
-
         {/* Kelime İstatistikleri */}
         <View style={styles.sectionHeader}>
           <ThemedText style={styles.sectionTitle}>{t('dashboard.wordStatus')}</ThemedText>

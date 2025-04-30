@@ -5,6 +5,7 @@ import { getRandomWord } from '@/services/wordService';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Animated } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 interface FlashCard {
   id: string;
@@ -23,6 +24,7 @@ interface WordList {
 }
 
 const HangmanGame = () => {
+  // Mevcut kültür değerini ayarlayın (varsayılan olarak Türkçe)  
   const [currentWord, setCurrentWord] = useState<FlashCard | null>(null);
   const [guessedLetters, setGuessedLetters] = useState<Set<string>>(new Set());
   const [score, setScore] = useState(0);
@@ -30,6 +32,7 @@ const HangmanGame = () => {
   const [loading, setLoading] = useState(true);
   const [scoreAnimation] = useState(new Animated.Value(0));
   const [fadeAnim] = useState(new Animated.Value(0));
+  const { i18n } = useTranslation();
 
   const selectRandomWord = async () => {
     try {
@@ -44,9 +47,13 @@ const HangmanGame = () => {
       const randomWord = await getRandomWord();
       
       if (randomWord) {
-        console.log('Rastgele kelime:', randomWord);
-        // Eğer API'den kelime geldiyse onu kullan
-        const wordTranslation = randomWord.WordTranslations[0];
+        // Mevcut kültüre göre çeviriyi filtrele
+        const wordTranslation = randomWord.WordTranslations.filter(
+          translation => (
+            translation.language_code === i18n.language
+          )
+        )[0] || randomWord.WordTranslations[0]; // Eğer filtreleme sonucu boşsa ilk çeviriyi kullan
+        
         const newCard: FlashCard = {
           id: randomWord.id.toString(),
           word: randomWord.name,
@@ -55,6 +62,7 @@ const HangmanGame = () => {
           example: wordTranslation.example_original || '',
         };
         setCurrentWord(newCard);
+        console.log('Yeni kelime:', newCard);
       } 
       
       setGuessedLetters(new Set());

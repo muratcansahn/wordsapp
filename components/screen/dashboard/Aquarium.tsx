@@ -155,7 +155,6 @@ export const Aquarium: FC<AquariumProps> = ({
             isFacingRight = false;
             setIsTurning(false);
             fishRotation.setValue(0);
-            console.log("Balık sağ kenara çarptı - sola döndü");
           });
         }
       } else if (xPosition <= -boundaryWidth) {
@@ -189,7 +188,6 @@ export const Aquarium: FC<AquariumProps> = ({
             isFacingRight = true;
             setIsTurning(false);
             fishRotation.setValue(0);
-            console.log("Balık sol kenara çarptı - sağa döndü");
           });
         }
       }
