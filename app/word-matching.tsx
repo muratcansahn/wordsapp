@@ -12,6 +12,7 @@ import {
   Platform,
   StatusBar as RNStatusBar
 } from 'react-native';
+import Loader from '@/components/common/loader/native-loader';
 import { useRouter } from 'expo-router';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
@@ -75,6 +76,7 @@ export default function WordMatchingScreen() {
   
   // Yeni oyun başlat
   const startNewGame = async () => {
+    setIsLoading(true);
     try {
       
       // Rastgele 5 kelime çek
@@ -310,34 +312,14 @@ export default function WordMatchingScreen() {
         <ThemedText style={styles.title}>{t('wordMatching.title')}</ThemedText>
         <View style={styles.placeholder} />
       </View>
-      
       <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ThemedText style={styles.loadingText}>{t('wordMatching.loadingWords')}</ThemedText>
-          </View>
+          <View style={[styles.container, styles.centerContent]}>
+          <Loader size="large" />
+          <Text style={styles.loadingText}>{t('flashcards.loading')}</Text>
+        </View>
         ) : (
-          <>
-            <View style={styles.scoreContainer}>
-              {/* <LinearGradient
-                colors={['#7cc0fb', '#92e6fb']}
-                style={styles.scoreGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                {/* <View style={styles.scoreItem}>
-                  <Ionicons name="trophy-outline" size={24} color="#FFFFFF" />
-                  <ThemedText style={styles.scoreText}>{t('wordMatching.score', { score })}</ThemedText>
-                </View> */}
-                {/* <View style={styles.scoreItem}>
-                  <Ionicons name="checkmark-circle-outline" size={24} color="#FFFFFF" />
-                  <ThemedText style={styles.matchesText}>
-                    {totalMatches}/{matchingWords.length}
-                  </ThemedText>
-                </View> */}
-              {/* </LinearGradient> */}
-            </View>
             
             <View style={styles.gameContainer}>
               <View style={styles.matchingLayout}>
@@ -490,14 +472,12 @@ export default function WordMatchingScreen() {
               )}
             </View>
             
-            {/* <TouchableOpacity style={styles.newGameButton} onPress={startNewGame}>
-              <Text style={styles.newGameButtonText}>{t('wordMatching.newGame')}</Text>
-            </TouchableOpacity> */}
-          </>
-        )}
-      </ScrollView>
-    </ThemedView>
-  );
+          )}
+          
+  
+</ScrollView>
+</ThemedView>
+    );
 }
 
 const styles = StyleSheet.create({
@@ -862,6 +842,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     fontWeight: '500',
     letterSpacing: 0.1,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

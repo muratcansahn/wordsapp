@@ -9,7 +9,7 @@ interface FishComponentProps {
   width: number;
   height: number;
   mouthAnim: Animated.Value;
-  direction: "right" | "left";
+  direction?: "right" | "left";
   isEating: boolean;
   type: FishType;
   hungerLevel?: number;

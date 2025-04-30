@@ -36,6 +36,7 @@ import DailyActivitiesSection from './DailyActivitiesSection';
 import { fetchWordStatuses } from '@/services/userService';
 import { FishComponent } from '@/components/fish/FishComponent';
 import { getHungerColor } from './utils';
+import { Aquarium } from './Aquarium';
 
 // Kelime istatistikleri - Redux ile değiştirildi
 const getWordStats = (learnedCount: number, unknownCount: number, streakCount: number) => [
@@ -609,98 +610,9 @@ export default function DashboardScreen() {
 
   // Açlık seviyesine göre renk döndüren yardımcı fonksiyon
 
-  // Baloncuklar için animasyon değerleri
-  const bubbles = useRef([...Array(15)].map(() => ({
-    xPos: Math.random() * Dimensions.get('window').width * 0.8,
-    yPos: Math.random() * 300,
-    size: Math.random() * 12 + 3,
-    speed: Math.random() * 2000 + 1500,
-    xOffset: new Animated.Value(0),
-    yOffset: new Animated.Value(0),
-    opacity: new Animated.Value(Math.random() * 0.4 + 0.2),
-    scale: new Animated.Value(1),
-    rotation: new Animated.Value(0),
-    color: Math.random() > 0.7 ? 'rgba(255, 255, 255, 0.5)' : 'rgba(220, 240, 255, 0.4)',
-  }))).current;
 
-  const bubbleAnimations = useRef<Animated.CompositeAnimation[]>(bubbles.map(bubble => {
-    return Animated.loop(
-      Animated.parallel([
-        Animated.sequence([
-          Animated.timing(bubble.yOffset, {
-            toValue: -bubble.size * 20,
-            duration: bubble.speed,
-            easing: Easing.linear,
-            useNativeDriver: true,
-          }),
-          Animated.timing(bubble.yOffset, {
-            toValue: bubble.yPos,
-            duration: 0,
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.sequence([
-          Animated.timing(bubble.xOffset, {
-            toValue: Math.random() * 20 - 10,
-            duration: bubble.speed / 2,
-            easing: Easing.inOut(Easing.sin),
-            useNativeDriver: true,
-          }),
-          Animated.timing(bubble.xOffset, {
-            toValue: 0,
-            duration: bubble.speed / 2,
-            easing: Easing.inOut(Easing.sin),
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.sequence([
-          Animated.timing(bubble.scale, {
-            toValue: Math.random() * 0.4 + 0.8,
-            duration: bubble.speed / 2,
-            easing: Easing.inOut(Easing.sin),
-            useNativeDriver: true,
-          }),
-          Animated.timing(bubble.scale, {
-            toValue: 1,
-            duration: bubble.speed / 2,
-            easing: Easing.inOut(Easing.sin),
-            useNativeDriver: true,
-          }),
-        ]),
-      ])
-    );
-  }));
 
-  useEffect(() => {
-    bubbleAnimations.current.forEach(animation => animation.start());
-    return () => {
-      bubbleAnimations.current.forEach(animation => animation.stop());
-    };
-  }, []);
 
-  const renderBubbles = () => {
-    return bubbles.map((bubble, index) => (
-      <Animated.View
-        key={index}
-        style={[
-          styles.bubble,
-          {
-            left: bubble.xPos,
-            top: bubble.yPos,
-            width: bubble.size,
-            height: bubble.size,
-            backgroundColor: bubble.color,
-            transform: [
-              { translateY: bubble.yOffset },
-              { translateX: bubble.xOffset },
-              { scale: bubble.scale },
-            ],
-            opacity: bubble.opacity,
-          },
-        ]}
-      />
-    ));
-  };
 
   const renderFish = () => {
     return fishData.map((fish, index) => {
@@ -858,7 +770,6 @@ export default function DashboardScreen() {
               style={StyleSheet.absoluteFill}
             />
           </View>
-          {renderBubbles()}
           {renderFish()}
           <View style={styles.plantDecoration}>
             <LinearGradient
@@ -867,6 +778,9 @@ export default function DashboardScreen() {
             />
           </View>
         </View>
+        <Aquarium 
+          fishData={fishData[0]}
+        />
 
         {/* Kelime İstatistikleri */}
         <View style={styles.sectionHeader}>
