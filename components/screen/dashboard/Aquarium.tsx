@@ -1,9 +1,6 @@
 import React, { FC, useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Animated, Dimensions, Easing, Text } from 'react-native';
 import { FishComponent } from '@/components/fish/FishComponent';
-import * as THREE from 'three';
-import { Renderer } from 'expo-three';
-import { GLView } from 'expo-gl';
 
 interface AquariumProps {
   fishType?: string;
@@ -268,8 +265,8 @@ export const Aquarium: FC<AquariumProps> = ({
           ]}
         >
           <FishComponent
-            width={50}
-            height={50}
+            width={60}
+            height={60}
             mouthAnim={mouthAnim}
             isEating={false}
             type={fishType as any}
