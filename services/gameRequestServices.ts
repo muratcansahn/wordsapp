@@ -25,7 +25,53 @@ interface UserGameRequestDates {
   dailywords_remaining: number;
   wordguess_remaining: number;
   wordmatching_remaining: number;
+  skipped_wordlist_ids?: string[];
 }
+
+/**
+ * Kullanıcının skipped_wordlist_ids alanına bir wordListId ekler
+ * @param userId Kullanıcı ID'si
+ * @param wordListId Eklenecek kelime listesi ID'si
+ */
+export const addSkippedWordListId = async (userId: string, wordListId: string): Promise<{ success: boolean; error?: string }> => {
+  try {
+    // Önce mevcut skipped_wordlist_ids dizisini al
+    const { data, error } = await supabase
+      .from('UserGameRequestDates')
+      .select('skipped_wordlist_ids')
+      .eq('user_id', userId)
+      .single();
+
+    let newSkippedIds: string[] = [];
+    if (data && Array.isArray(data.skipped_wordlist_ids)) {
+      // Zaten varsa, tekrar eklenmesin
+      if (!data.skipped_wordlist_ids.includes(wordListId)) {
+        newSkippedIds = [...data.skipped_wordlist_ids, wordListId];
+      } else {
+        newSkippedIds = data.skipped_wordlist_ids;
+      }
+    } else {
+      newSkippedIds = [wordListId];
+    }
+
+    // upsert ile güncelle veya ekle
+    const { error: upsertError } = await supabase
+      .from('UserGameRequestDates')
+      .upsert([
+        {
+          user_id: userId,
+          skipped_wordlist_ids: newSkippedIds
+        }
+      ], { onConflict: 'user_id' });
+
+    if (upsertError) {
+      return { success: false, error: upsertError.message };
+    }
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+};
 
 /**
  * Kullanıcının oyun haklarını kontrol eder ve günceller

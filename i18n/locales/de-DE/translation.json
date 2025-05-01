@@ -294,7 +294,18 @@
     "studyModeTitle": "Studienmodus"
   },
   "quiz": {
-    "questionLabel": "Was bedeutet das folgende Wort?"
+    "questionLabel": "Was bedeutet das folgende Wort?",
+  
+      "resultTitle": "Quiz abgeschlossen!",
+      "scoreLabel": "Richtige Antwort",
+      "resultPerfect": "Perfekt! Sie haben alle Fragen richtig beantwortet.",
+      "resultGood": "Gut gemacht! Die meisten Fragen wurden richtig beantwortet.",
+      "resultPractice": "Sie können sich durch mehr Übung verbessern.",
+      "retry": "Erneut versuchen",
+      "correct": "Richtig!",
+      "incorrect": "Falsch! Richtige Antwort: {{answer}}",
+      "back": "Zurück"
+
   },
   "learnIndex": {
     "wordListsTitle": "Wortlisten",

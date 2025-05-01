@@ -275,7 +275,17 @@
     "studyModeTitle": "Çalışma Modu"
   },
   "quiz": {
-    "questionLabel": "Aşağıdaki kelimenin anlamı nedir?"
+    "questionLabel": "Aşağıdaki kelimenin anlamı nedir?",
+      "resultTitle": "Test Tamamlandı!",
+      "scoreLabel": "Doğru Cevap",
+      "resultPerfect": "Mükemmel! Tüm soruları doğru cevapladınız.",
+      "resultGood": "İyi iş! Çoğu soruyu doğru cevapladınız.",
+      "resultPractice": "Daha fazla pratik yaparak gelişebilirsiniz.",
+      "retry": "Tekrar Dene",
+      "correct": "Doğru!",
+      "incorrect": "Yanlış! Doğru cevap: {{answer}}",
+      "back": "Geri Dön"
+    
   },
   "learnIndex": {
     "wordListsTitle": "Kelime Listeleri",

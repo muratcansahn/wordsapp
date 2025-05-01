@@ -294,7 +294,17 @@
     "studyModeTitle": "Modo de estudio"
   },
   "quiz": {
-    "questionLabel": "¿Cuál es el significado de la siguiente palabra?"
+    "questionLabel": "¿Cuál es el significado de la siguiente palabra?",
+      "resultTitle": "¡Quiz completado!",
+      "scoreLabel": "Respuesta correcta",
+      "resultPerfect": "¡Perfecto! Has respondido correctamente a todas las preguntas.",
+      "resultGood": "¡Buen trabajo! Has respondido correctamente a la mayoría de las preguntas.",
+      "resultPractice": "Puedes mejorar practicando más.",
+      "retry": "Intentar de nuevo",
+      "correct": "¡Correcto!",
+      "incorrect": "¡Incorrecto! Respuesta correcta: {{answer}}",
+      "back": "Volver"
+    
   },
   "learnIndex": {
     "wordListsTitle": "Listas de palabras",

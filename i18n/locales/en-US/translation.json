@@ -8,6 +8,7 @@
   "error": "Error",
   "loading": "Loading...",
   "notFound": "Oops! Page not found",
+
   "buttons": {
     "delete": "Delete",
     "cancel": "Cancel",
@@ -275,7 +276,16 @@
     "studyModeTitle": "Study Mode"
   },
   "quiz": {
-    "questionLabel": "What is the meaning of the following word?"
+      "resultTitle": "Quiz Completed!",
+      "scoreLabel": "Correct Answer",
+      "resultPerfect": "Perfect! You answered all questions correctly.",
+      "resultGood": "Good job! You answered most questions correctly.",
+      "resultPractice": "You can improve by practicing more.",
+      "retry": "Try Again",
+      "correct": "Correct!",
+      "incorrect": "Incorrect! Correct answer: {{answer}}",
+      "back": "Back"
+    
   },
   "learnIndex": {
     "wordListsTitle": "Word Lists",

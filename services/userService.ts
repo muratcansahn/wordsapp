@@ -7,6 +7,52 @@ interface WordStatusResult {
 }
 
 /**
+ * Belirli bir kelime listesinde kullanıcının "biliyorum" ve "bilmiyorum" olarak işaretlediği kelime sayılarını döner
+ * @param userId Kullanıcı ID'si
+ * @param listId Kelime listesi ID'si
+ * @returns Bilinen ve bilinmeyen kelime sayılarını içeren nesne
+ */
+export const fetchKnownUnknownCounts = async (
+  userId: string,
+  listId: number
+): Promise<{ biliyorum: number; bilmiyorum: number }> => {
+  if (!userId || !listId) {
+    return { biliyorum: 0, bilmiyorum: 0 };
+  }
+  try {
+    // Önce ilgili kelime listesine ait word_id'leri al (WordListItems üzerinden)
+    const { data: listItems, error: listItemsError } = await supabase
+      .from('WordListItems')
+      .select('word_id')
+      .eq('word_list_id', listId);
+  
+    if (listItemsError || !listItems) {
+      throw new Error('Kelime listesi itemları alınamadı');
+    }
+    const wordIds = listItems.map((item: { word_id: number }) => item.word_id);
+    if (wordIds.length === 0) {
+      return { biliyorum: 0, bilmiyorum: 0 };
+    }
+    // Kullanıcının bu kelimeler için işaretlediği durumları çek
+    const { data: statuses, error: statusesError } = await supabase
+      .from('UserWordStatuses')
+      .select('status')
+      .eq('user_id', userId)
+      .in('word_id', wordIds);
+    if (statusesError || !statuses) {
+      throw new Error('Kullanıcı kelime durumları alınamadı');
+    }
+    // Durumlara göre sayım yap
+    const biliyorum = statuses.filter((s: { status: number }) => s.status === 1).length;
+    const bilmiyorum = statuses.filter((s: { status: number }) => s.status === 2).length;
+    return { biliyorum, bilmiyorum };
+  } catch (error) {
+    console.error('Kullanıcı kelime listesi istatistiği alınırken hata:', error);
+    return { biliyorum: 0, bilmiyorum: 0 };
+  }
+};
+
+/**
  * UserWordStatuses tablosundan kullanıcının kelime durumlarını çeker
  * @param userId Kullanıcı ID'si
  * @returns Bilinen ve bilinmeyen kelime sayılarını içeren nesne

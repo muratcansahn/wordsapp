@@ -213,33 +213,39 @@ export default function WordListScreen() {
    
   // Kelime kartını render et
   const renderWordItem = ({ item }: { item: WordItem }) => (
-    <View style={[styles.wordCard, { backgroundColor: Colors[mode].card }]}>
-      <View style={styles.wordContent}>
-        <ThemedText style={styles.wordText}>{item.text}</ThemedText>
-        <ThemedText style={styles.translationText}>{item.translation}</ThemedText>
-        <ThemedText style={styles.exampleText}>{item.example}</ThemedText>
-        <ThemedText style={styles.exampleOriginalText}>{item.example_original}</ThemedText>
-      </View>
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        {item.status !== 1 && (
-          <TouchableOpacity
-            style={styles.actionButtonGreen}
-            onPress={() => handleUpdateStatus(item.id, 1)}
-          >
-            <ThemedText style={styles.actionButtonText}>{t('known')}</ThemedText>
-          </TouchableOpacity>
-        )}
-        {item.status !== 2 && (
-          <TouchableOpacity
-            style={styles.actionButtonRed}
-            onPress={() => handleUpdateStatus(item.id, 2)}
-          >
-            <ThemedText style={styles.actionButtonText}>{t('unknown')}</ThemedText>
-          </TouchableOpacity>
-        )}
-      </View>
+  <View style={styles.wordCardModern}>
+    <View style={styles.wordContentModern}>
+      <ThemedText style={styles.wordTextModern}>{item.text}</ThemedText>
+      <ThemedText style={styles.translationTextModern}>{item.translation}</ThemedText>
+      {item.example ? (
+        <ThemedText style={styles.exampleTextModern}>{item.example}</ThemedText>
+      ) : null}
+      {item.example_original ? (
+        <ThemedText style={styles.exampleOriginalTextModern}>{item.example_original}</ThemedText>
+      ) : null}
     </View>
-  );
+    <View style={styles.actionButtonsRow}>
+      {item.status !== 1 && (
+        <TouchableOpacity
+          style={styles.actionButtonModernGreen}
+          onPress={() => handleUpdateStatus(item.id, 1)}
+          activeOpacity={0.85}
+        >
+          <ThemedText style={styles.actionButtonModernText}>{t('known')}</ThemedText>
+        </TouchableOpacity>
+      )}
+      {item.status !== 2 && (
+        <TouchableOpacity
+          style={styles.actionButtonModernRed}
+          onPress={() => handleUpdateStatus(item.id, 2)}
+          activeOpacity={0.85}
+        >
+          <ThemedText style={styles.actionButtonModernText}>{t('unknown')}</ThemedText>
+        </TouchableOpacity>
+      )}
+    </View>
+  </View>
+);
   
   return (
     <ThemedView style={styles.container}>
@@ -299,60 +305,94 @@ const styles = StyleSheet.create({
     padding: PADDING.md,
     paddingBottom: PADDING.xl * 2,
   },
-  wordCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: PADDING.md,
-    borderRadius: BORDER_RADIUS.md,
+  wordCardModern: {
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    backgroundColor: '#fff',
+    borderRadius: 18,
     marginBottom: MARGIN.md,
-    marginHorizontal: MARGIN.xs,
+    marginHorizontal: 2,
+    padding: PADDING.lg,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.08)',
   },
-  wordContent: {
+  wordContentModern: {
     flex: 1,
+    width: '100%',
+    marginBottom: 10,
   },
-  wordText: {
+  wordTextModern: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  translationTextModern: {
+    fontSize: FONT_SIZE.md,
+    color: '#10B981',
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  exampleTextModern: {
+    fontSize: FONT_SIZE.sm,
+    color: '#374151',
+    opacity: 0.85,
+    marginBottom: 2,
+  },
+  exampleOriginalTextModern: {
+    fontSize: FONT_SIZE.sm,
+    color: '#6B7280',
+    opacity: 0.7,
+    marginBottom: 2,
+  },
+  actionButtonsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    width: '100%',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  actionButtonModernGreen: {
+    backgroundColor: '#10B981',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 80,
+    marginLeft: 0,
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  actionButtonModernRed: {
+    backgroundColor: '#EF4444',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 80,
+    marginLeft: 0,
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.16,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  actionButtonModernText: {
+    color: '#fff',
     fontSize: FONT_SIZE.md,
     fontWeight: 'bold',
-    marginBottom: MARGIN.xxs,
-  },
-  translationText: {
-    fontSize: FONT_SIZE.sm,
-    opacity: 0.7,
-  },
-  exampleText: {
-    fontSize: FONT_SIZE.sm,
-    opacity: 0.7,
-  },
-  exampleOriginalText: {
-    fontSize: FONT_SIZE.sm,
-    opacity: 0.7,
-  },
-  actionButtonGreen: {
-    backgroundColor: '#10B981',
-    paddingVertical: PADDING.xs,
-    paddingHorizontal: PADDING.sm,
-    borderRadius: BORDER_RADIUS.sm,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  actionButtonRed: {
-    backgroundColor: '#EF4444',
-    paddingVertical: PADDING.xs,
-    paddingHorizontal: PADDING.sm,
-    borderRadius: BORDER_RADIUS.sm,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  actionButtonText: {
-    color: 'white',
-    fontSize: FONT_SIZE.sm,
-    fontWeight: 'bold',
+    letterSpacing: 0.3,
   },
   emptyContainer: {
     alignItems: 'center',

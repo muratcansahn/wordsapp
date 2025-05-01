@@ -7,6 +7,8 @@ import { useEffect ,useState} from 'react';
 import { useTranslation } from 'react-i18next';
 import { getWordLists } from '@/services/wordListService';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { fetchKnownUnknownCounts } from '@/services/userService';
+import { useAuth } from '@/context/SupabaseProvider';
 
 
 type MaterialIconName = 'book-open-page-variant' | 'briefcase' | 'airplane' | 'check-circle' | 'chevron-right' | 'star';
@@ -31,12 +33,16 @@ const defaultGradients: { [key: number]: readonly [string, string] } = {
   3: ['#F59E0B', '#FCD34D'] as const,
 };
 
+
+
 export default function LearnPage() {
   const { t } = useTranslation();
   const router = useRouter();
   const scrollY = useSharedValue(0);
   const [loading, setLoading] = useState(true);
   const [wordLists, setWordLists] = useState<WordList[]>([]);
+  const [knownUnknownMap, setKnownUnknownMap] = useState<Record<number, { biliyorum: number; bilmiyorum: number }>>({});
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchWordList = async () => {
@@ -48,17 +54,28 @@ export default function LearnPage() {
           learnedCount: 0,
           gradient: defaultGradients[list.id] || defaultGradients[1]
         })) as WordList[];
-        
+
         setWordLists(formattedLists);
+
+        // Her liste için biliyorum/bilmiyorum istatistiklerini çek
+        if (user?.id) {
+          const results: Record<number, { biliyorum: number; bilmiyorum: number }> = {};
+          await Promise.all(
+            formattedLists.map(async (list) => {
+              const stats = await fetchKnownUnknownCounts(user.id, list.id);
+              results[list.id] = stats;
+            })
+          );
+          setKnownUnknownMap(results);
+        }
       } catch (error) {
         console.error('Error fetching word list:', error);
       } finally {
         setLoading(false);
       }
     };
-    
     fetchWordList();
-  }, []);
+  }, [user]);
 
   const handleListSelect = (listId: number) => {
     console.log("listId", listId);
@@ -110,7 +127,9 @@ export default function LearnPage() {
       >
         <View style={styles.listContainer}>
           {wordLists.map((list, index) => {
-            const progress = list.learnedCount ? (list.learnedCount / (list.wordCount)) * 100 : 0;
+            const stats = knownUnknownMap[list.id];
+const markedCount = (stats?.biliyorum ?? 0) + (stats?.bilmiyorum ?? 0);
+const progress = list.wordCount > 0 ? (markedCount / list.wordCount) * 100 : 0;
             return (
               <Animated.View
                 key={list.id}
@@ -144,19 +163,16 @@ export default function LearnPage() {
                           </Text>
                         </View>
                       </View>
-                      
+                      {/* Biliyorum/Bilmiyorum istatistiği */}
                       <View style={styles.bottomRow}>
                         <View style={styles.progressInfo}>
-                          <MaterialCommunityIcons 
-                            name="star" 
-                            size={14} 
-                            color="rgba(255, 255, 255, 0.9)" 
-                          />
-                          <Text style={styles.progressText}>
-                            {t('learnIndex.wordCountProgress', { learned: list.learnedCount, total: list.wordCount })}
-                          </Text>
+                          
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4 }}>
+  <Text style={{ fontSize: 14 }}>🟢 {stats?.biliyorum ?? 0}</Text>
+  <Text style={{ fontSize: 14 }}>🔴 {stats?.bilmiyorum ?? 0}</Text>
+  <Text style={{ fontSize: 14 }}>⚪️ {(list.wordCount - (stats?.biliyorum ?? 0) - (stats?.bilmiyorum ?? 0))}</Text>
+</View>
                         </View>
-                        
                         <View style={styles.statusContainer}>
                           {progress > 0 ? (
                             <Text style={styles.statusText}>
@@ -167,7 +183,6 @@ export default function LearnPage() {
                           )}
                         </View>
                       </View>
-                      
                       <View style={styles.progressBarContainer}>
                         <View 
                           style={[
@@ -268,14 +283,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: MARGIN.xs,
   },
+  badgeRow: {
+    flexDirection: 'row',
+    marginTop: 4,
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 18,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
+  },
+  badgeNumber: {
+    color: '#222',
+    fontSize: 15,
+    fontWeight: '700',
+    marginLeft: 6,
+  },
   progressInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-  },
-  progressText: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.9)',
   },
   statusContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
