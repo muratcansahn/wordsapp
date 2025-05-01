@@ -222,6 +222,28 @@
     "orangeFish": "Oranger Fisch",
     "blueFish": "Blauer Fisch"
   },
+  "writing": {
+    "title": "Schreibübung",
+    "loadingWord": "Wort wird geladen...",
+    "score": "Punkte: {{score}}",
+    "writeWord": "Schreibe das Wort:",
+    "hint": "Hinweis: {{translation}}",
+    "revealLetter": "Buchstabe anzeigen (-15 Punkte)",
+    "skipWord": "Wort überspringen",
+    "congratulations": "Glückwunsch!",
+    "correctWord": "Du hast das Wort richtig geschrieben!",
+    "nextWord": "Nächstes Wort",
+    "sorry": "Entschuldigung!",
+    "tooManyAttempts": "Zu viele Versuche.",
+    "gameOver": "Spiel beendet",
+    "totalScore": "Gesamtpunktzahl: {{score}}",
+    "restart": "Neu starten",
+    "goHome": "Zur Startseite",
+    "translation": "Übersetzung:",
+    "wordLength": "Dieses Wort hat {{length}} Buchstaben",
+    "word": "Wort:",
+    "example": "Beispiel: \"{{example}}\""
+  },
   "flashcards": {
     "noCards": "Keine Karten zum Anzeigen.",
     "know": "Ich weiß es",

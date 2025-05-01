@@ -253,7 +253,6 @@
     "yourScore": "Skorunuz: {{score}}",
     "allMatched": "Tüm kelimeleri başarıyla eşleştirdiniz.",
     "newGame": "Yeni Oyun",
-    "score": "Skor: {{score}}",
     "english": "İngilizce",
     "turkish": "Türkçe",
     "matchedWords": "Eşleşen Kelimeler",
@@ -302,6 +301,27 @@
         "description": "Kelimeleri anlamlarıyla eşleştirin"
       }
     }
+  },
+  "writing": {
+    "title": "Kelime Yazma",
+    "loadingWord": "Kelime yükleniyor...",
+    "hint": "İngilizce kelime",
+    "wordLength": "{{length}} harf",
+    "revealLetter": "Harf aç",
+    "word": "Kelime",
+    "translation": "Çeviri",
+    "englishWord": "İngilizce",
+    "correctWord": "Doğru çeviri",
+    "example": "Örnek: {{example}}",
+    "nextWord": "Sonraki kelime",
+    "restart": "Yeniden başlat",
+    "gameOver": "Oyun Bitti",
+    "totalScore": "Toplam puan: {{score}}",
+    "congratulations": "Tebrikler!",
+    "youWon": "Kazandınız!",
+    "youLost": "Kaybettiniz!",
+    "remainingAttempts": "Kalan hak: {{attempts}}",
+    "attemptLost": "Bir hak kaybettiniz!"
   }
 
 }

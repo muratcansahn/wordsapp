@@ -240,6 +240,28 @@
     "knownWords": "palabra conocida",
     "unknownWords": "palabra desconocida"
   },
+  "writing": {
+    "title": "Ejercicio de Escritura",
+    "loadingWord": "Cargando palabra...",
+    "score": "Puntuación: {{score}}",
+    "writeWord": "Escribe la palabra:",
+    "hint": "Pista: {{translation}}",
+    "revealLetter": "Revelar letra (-15 puntos)",
+    "skipWord": "Saltar palabra",
+    "congratulations": "¡Felicidades!",
+    "correctWord": "¡Has escrito la palabra correctamente!",
+    "nextWord": "Siguiente palabra",
+    "sorry": "¡Lo siento!",
+    "tooManyAttempts": "Demasiados intentos.",
+    "gameOver": "Juego terminado",
+    "totalScore": "Puntuación total: {{score}}",
+    "restart": "Reiniciar",
+    "goHome": "Ir al inicio",
+    "translation": "Traducción:",
+    "wordLength": "Esta palabra tiene {{length}} letras",
+    "word": "Palabra:",
+    "example": "Ejemplo: \"{{example}}\""
+  },
   "wordMatching": {
     "title": "Word Matching",
     "wordsLoadError": "Hubo un problema al cargar las palabras.",

@@ -283,6 +283,25 @@
     "completed": "Completed",
     "notStarted": "Not Started"
   },
+  "writing": {
+    "title": "Word Writing",
+    "loadingWord": "Loading word...",
+    "hint": "English word",
+    "wordLength": "{{length}} letters",
+    "revealLetter": "Reveal letter",
+    "word": "Word",
+    "translation": "Translation",
+    "englishWord": "English",
+    "correctWord": "Correct translation",
+    "example": "Example: {{example}}",
+    "nextWord": "Next word",
+    "restart": "Restart",
+    "gameOver": "Game Over",
+    "totalScore": "Total score: {{score}}",
+    "congratulations": "Congratulations!",
+    "youWon": "You won!",
+    "youLost": "You lost!"
+  },
   "dailyActivities": {
     "countdownHours": "in {{hours}}h {{minutes}}m",
     "countdownMinutes": "in {{minutes}}m",
