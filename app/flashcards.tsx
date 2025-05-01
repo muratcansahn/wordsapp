@@ -9,7 +9,9 @@ import {
   ScrollView,
   Animated as RNAnimated,
   PanResponder,
-  PanResponderGestureState
+  PanResponderGestureState,
+  Image,
+  SafeAreaView
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -364,7 +366,7 @@ export default function FlashcardsScreen() {
             }}
             activeOpacity={0.85}
           >
-            <Text style={styles.backButtonText}>Ana Sayfaya Dön</Text>
+            <Text style={styles.backButtonText}>{t('flashcards.backToHome')}</Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -387,7 +389,7 @@ export default function FlashcardsScreen() {
           <Icon name="check-circle" size={80} color="#4CAF50" />
           <Text style={styles.noMoreCards}>{t('flashcards.allCardsCompleted')}</Text>
           <Text style={styles.completionStats}>
-            {knownWordCount} bilinen, {unknownWordCount} bilinmeyen kelime
+            {knownWordCount} {t('flashcards.known')}, {unknownWordCount} {t('flashcards.unknown')}
           </Text>
           <TouchableOpacity
             style={styles.backButton}
@@ -395,7 +397,7 @@ export default function FlashcardsScreen() {
               router.replace('/');
             }}
           >
-            <Text style={styles.backButtonText}>Ana Sayfaya Dön</Text>
+            <Text style={styles.backButtonText}>{t('flashcards.backToHome')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -404,7 +406,13 @@ export default function FlashcardsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <Image
+        source={require('@/assets/images/game-background.png')}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      />
+      <SafeAreaView style={styles.contentContainer}>
+        <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>{selectedList.title}</Text>
           <Text style={styles.headerSubtitle}>{selectedList.subtitle}</Text>
@@ -425,18 +433,18 @@ export default function FlashcardsScreen() {
 
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
-          <View style={[styles.statIconContainer, { backgroundColor: 'rgba(76, 175, 80, 0.1)' }]}>
-            <Icon name="check-circle" size={24} color="#4CAF50" />
+          <View style={[styles.statIconContainer, { backgroundColor: '#4CD964' }]}>
+            <Icon name="check" size={24} color="#FFFFFF" />
           </View>
           <View style={styles.statTextContainer}>
             <Text style={styles.statValue}>{knownWordCount}</Text>
             <Text style={styles.statLabel}>{t('flashcards.known')}</Text>
           </View>
         </View>
-        <View style={[styles.statDivider, { backgroundColor: '#eee' }]} />
+        <View style={[styles.statDivider, { backgroundColor: '#FFFFFF', opacity: 0.3 }]} />
         <View style={styles.statItem}>
-          <View style={[styles.statIconContainer, { backgroundColor: 'rgba(244, 67, 54, 0.1)' }]}>
-            <Icon name="close-circle" size={24} color="#F44336" />
+          <View style={[styles.statIconContainer, { backgroundColor: '#FF3B30' }]}>
+            <Icon name="close" size={24} color="#FFFFFF" />
           </View>
           <View style={styles.statTextContainer}>
             <Text style={styles.statValue}>{unknownWordCount}</Text>
@@ -446,26 +454,13 @@ export default function FlashcardsScreen() {
       </View>
 
       <View style={styles.cardControlsContainer}>
-        <Text style={styles.counterText}>{t('flashcards.counter', { current: currentIndex + 1, total: selectedList.cards.length })}</Text>
+        <Text style={styles.counterText}>{currentIndex + 1} / {selectedList.cards.length}</Text>
         <TouchableOpacity 
           style={styles.controlButton}
           onPress={() => setShowTranslation(!showTranslation)}
         >
-          <Icon name={showTranslation ? 'eye-off' : 'eye'} size={22} color="#6366F1" />
-          <Text style={styles.controlButtonText}>{showTranslation ? t('flashcards.hide') : t('flashcards.show')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.controlButton}
-          onPress={() => {
-            const card = selectedList.cards[currentIndex];
-            Share.share({
-              message: `${card.word} - ${card.translation}\n${card.example}`,
-              title: 'Kelime Kartı Paylaş'
-            });
-          }}
-        >
-          <Icon name="share-variant" size={22} color="#6366F1" />
-          <Text style={styles.controlButtonText}>{t('flashcards.share')}</Text>
+          <Icon name={showTranslation ? 'eye-off' : 'eye'} size={22} color="#FFFFFF" />
+          <Text style={styles.controlButtonText}>{t('flashcards.show')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -489,6 +484,7 @@ export default function FlashcardsScreen() {
           <Text style={styles.actionButtonText}>{t('flashcards.know')}</Text>
         </TouchableOpacity>
       </View>
+      </SafeAreaView>
     </View>
   );
 }
@@ -496,13 +492,29 @@ export default function FlashcardsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    paddingTop: PADDING.xxxl,
-
+    backgroundColor: 'transparent',
   },
   centerContent: {
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  contentContainer: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    position: 'relative',
+    zIndex: 1,
+    paddingTop: PADDING.xxxl,
   },
   header: {
     flexDirection: 'row',
@@ -510,32 +522,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: PADDING.md,
     paddingBottom: PADDING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    marginTop: 10,
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#1F2937',
+    color: '#FFFFFF',
     marginBottom: MARGIN.xs,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: {width: 1, height: 1},
+    textShadowRadius: 3,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#F0F0F0',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: {width: 1, height: 1},
+    textShadowRadius: 3,
   },
-  levelBadge: {
-    paddingHorizontal: PADDING.md,
-    paddingVertical: PADDING.xs,
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: '#F3F4F6',
-    minWidth: 42,
-    alignItems: 'center',
-  },
-  levelText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#4B5563',
-  },
+
   pointContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -563,73 +568,102 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     paddingVertical: PADDING.md,
-    paddingHorizontal: PADDING.md,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderTopWidth: 1,
-    borderColor: '#F3F4F6',
+    paddingHorizontal: PADDING.lg,
+    backgroundColor: 'rgba(100, 180, 255, 0.8)',
+    borderRadius: 30,
+    marginTop: 15,
+    marginHorizontal: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   statItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+    paddingVertical: 5,
   },
   statIconContainer: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: MARGIN.md,
+    marginRight: MARGIN.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   statTextContainer: {
     justifyContent: 'center',
+    alignItems: 'center',
   },
   statValue: {
-    fontSize: 19,
+    fontSize: 30,
     fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: MARGIN.xxs,
+    color: '#FFFFFF',
   },
   statLabel: {
-    fontSize: 13,
-    color: '#6B7280',
+    fontSize: 16,
+    color: '#FFFFFF',
     fontWeight: '500',
   },
   statDivider: {
     width: 1,
-    height: 40,
-    marginHorizontal: MARGIN.md,
+    height: '70%',
+    marginHorizontal: MARGIN.lg,
+    opacity: 0.2,
   },
   cardControlsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: PADDING.md,
+    paddingHorizontal: PADDING.lg,
     paddingVertical: PADDING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderRadius: 30,
+    marginTop: 15,
+    marginHorizontal: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   controlButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: PADDING.sm,
-    paddingVertical: PADDING.xs,
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    paddingHorizontal: PADDING.md,
+    paddingVertical: PADDING.sm,
+    borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: 'rgba(150, 170, 200, 0.8)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   controlButtonText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#6366F1',
+    color: '#FFFFFF',
     marginLeft: MARGIN.xs,
   },
   counterText: {
     fontSize: 16,
     color: '#4B5563',
-    fontWeight: '500',
+    fontWeight: '600',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: PADDING.md,
+    paddingVertical: PADDING.xs,
+    borderRadius: BORDER_RADIUS.lg,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   cardWrapper: {
     flex: 1,
@@ -664,7 +698,7 @@ const styles = StyleSheet.create({
     padding: PADDING.lg,
   },
   wordText: {
-    fontSize: 36,
+    fontSize: 48,
     fontWeight: '700',
     color: '#FFFFFF',
     textAlign: 'center',
@@ -695,21 +729,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: PADDING.md,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
+    marginBottom: 20,
+    paddingHorizontal: 20,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: PADDING.lg,
     paddingVertical: PADDING.md,
-    borderRadius: BORDER_RADIUS.lg,
+    borderRadius: 25,
     flex: 0.48,
     justifyContent: 'center',
-    elevation: 2,
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   actionButtonText: {
     color: '#FFFFFF',
