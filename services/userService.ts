@@ -155,3 +155,72 @@ export const incrementUserPointWithRedux = async (
   }
   return success;
 };
+
+/**
+ * Kullanıcının point değerini belirli bir miktar artırır
+ * @param userId Kullanıcı ID'si
+ * @param amount Artırılacak miktar (varsayılan: 1)
+ * @returns Yeni puan değeri ve işlemin başarılı olup olmadığını içeren nesne
+ */
+export const incrementUserPointByAmount = async (
+  userId: string,
+  amount: number = 1
+): Promise<{ success: boolean; newPoint: number }> => {
+  if (!userId) return { success: false, newPoint: 0 };
+  
+  try {
+    // Önce mevcut point değerini al
+    const { data: userData, error: fetchError } = await supabase
+      .from('Users')
+      .select('point')
+      .eq('id', userId)
+      .single();
+    
+    if (fetchError) {
+      console.error('Point değeri alınırken hata:', fetchError);
+      return { success: false, newPoint: 0 };
+    }
+    
+    // Mevcut point değerini belirtilen miktar kadar artır
+    const currentPoint = userData?.point || 0;
+    const newPoint = currentPoint + amount;
+    
+    // Point değerini güncelle
+    const { error: updateError } = await supabase
+      .from('Users')
+      .update({ point: newPoint })
+      .eq('id', userId);
+    
+    if (updateError) {
+      console.error('Point güncellenirken hata:', updateError);
+      return { success: false, newPoint: currentPoint };
+    }
+    
+    return { success: true, newPoint };
+  } catch (error) {
+    console.error('Point artırılırken hata:', error);
+    return { success: false, newPoint: 0 };
+  }
+};
+
+/**
+ * Kullanıcının point değerini belirli bir miktar artırır ve Redux store'u günceller
+ * @param userId Kullanıcı ID'si
+ * @param dispatch Redux dispatch fonksiyonu
+ * @param amount Artırılacak miktar (varsayılan: 1)
+ * @returns Yeni puan değeri ve işlemin başarılı olup olmadığını içeren nesne
+ */
+export const incrementUserPointByAmountWithRedux = async (
+  userId: string,
+  dispatch: any,
+  amount: number = 1
+): Promise<{ success: boolean; newPoint: number }> => {
+  const result = await incrementUserPointByAmount(userId, amount);
+  if (result.success) {
+    // Redux store'u güncelle - burada her 1 puan için bir kez dispatch çağrılır
+    for (let i = 0; i < amount; i++) {
+      dispatch(incrementPoint());
+    }
+  }
+  return result;
+};

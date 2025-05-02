@@ -257,7 +257,8 @@
     "english": "English",
     "turkish": "Turkish",
     "matchedWords": "Matched Words",
-    "language": "Turkish"
+    "language": "Turkish",
+    "earnedPoints": "You earned"
   },
   "studyMode": {
     "title": "How would you like to learn?",

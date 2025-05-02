@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import Loader from '@/components/common/loader/native-loader';
 import { useRouter } from 'expo-router';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { ThemedView } from '@/components/common/view';
 import { ThemedText } from '@/components/common/typography';
@@ -26,6 +26,9 @@ import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { getRandomWordsWithTranslations } from '@/services/wordService';
+import { incrementUserPointByAmountWithRedux } from '@/services/userService';
+import { Image } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // Kelime eşleştirme oyunu için arayüz
 interface MatchingWord {
@@ -43,6 +46,8 @@ export default function WordMatchingScreen() {
   const router = useRouter();
   const { mode } = useTheme();
   const { t, i18n } = useTranslation();
+  const dispatch = useDispatch();
+  const userState = useSelector((state: RootState) => state.user);
   
   // Durum çubuğu yüksekliği
   
@@ -52,10 +57,12 @@ export default function WordMatchingScreen() {
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [selectedTranslation, setSelectedTranslation] = useState<string | null>(null);
   const [wrongMatch, setWrongMatch] = useState<boolean>(false);
-  const [score, setScore] = useState(0);
   const [totalMatches, setTotalMatches] = useState(0);
   const [gameCompleted, setGameCompleted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPointModal, setShowPointModal] = useState(false);
+  const [earnedPoints, setEarnedPoints] = useState(0);
+  const [newTotalPoints, setNewTotalPoints] = useState(0);
   
   // Animasyon değerleri
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -120,7 +127,6 @@ export default function WordMatchingScreen() {
       setShuffledTranslations(shuffled);
       setSelectedWord(null);
       setSelectedTranslation(null);
-      setScore(0);
       setTotalMatches(0);
       setGameCompleted(false);
       setMatchedPairs([]);
@@ -214,7 +220,6 @@ export default function WordMatchingScreen() {
       );
       
       setMatchingWords(updatedWords);
-      setScore(prev => prev + 10);
       setTotalMatches(prev => prev + 1);
       
       // Eşleşen çifti kaydet
@@ -251,6 +256,25 @@ export default function WordMatchingScreen() {
             useNativeDriver: true
           })
         ]).start();
+        
+        // Oyun tamamlandığında puanı artır (5 puan)
+        const pointsToAdd = 5;
+        setEarnedPoints(pointsToAdd);
+        
+        // Kullanıcı ID'si varsa puanı artır
+        if (userState.id) {
+          incrementUserPointByAmountWithRedux(userState.id, dispatch, pointsToAdd)
+            .then(result => {
+              if (result.success) {
+                setNewTotalPoints(result.newPoint);
+                // Puanın artırıldığını gösteren modalı göster
+                setShowPointModal(true);
+              }
+            })
+            .catch(error => {
+              console.error('Puan artırma hatası:', error);
+            });
+        }
       }
       
       // Seçimleri sıfırla ama kelimelerin seçili durumunu korumak için state'i güncelleme
@@ -278,48 +302,88 @@ export default function WordMatchingScreen() {
     // Yanlış eşleşme durumunda ise setTimeout içinde sıfırlama yapılıyor
   };
   
-  if (gameCompleted) {
-    return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#f6fafd', justifyContent: 'center', alignItems: 'center' }}>
-        <Animated.View
-          style={[
-            styles.completionContainer,
-            { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }
-          ]}
-        >
-          <View style={styles.completionCard}>
-            <View style={styles.completionIconCircle}>
-              <Ionicons name="trophy" size={60} color="#4CAF50" />
-            </View>
-            <Text style={styles.completionTitle}>{t('wordMatching.congratulations')}</Text>
-            <Text style={styles.completionScore}>{t('wordMatching.yourScore', { score })}</Text>
-            <Text style={styles.completionMessage}>{t('wordMatching.allMatched')}</Text>
-            <TouchableOpacity style={styles.newGameButton} onPress={() => router.replace('/') }>
-              <Text style={styles.newGameButtonText}>{t('common.goBack')}</Text>
-            </TouchableOpacity>
+  // Profesyonel tamamlanma ekranı fonksiyonu
+  const CompletionView = () => (
+    <View style={[styles.container, {backgroundColor: 'transparent'}]}>
+      <Image 
+        source={require('../assets/images/game-background.png')} 
+        style={styles.backgroundImage} 
+        resizeMode="cover"
+      />
+      <LinearGradient
+        colors={["#e0ffe8", "#f6fafd"]}
+        style={styles.completionGradient}
+      >
+        <View style={styles.completionCard}>
+          <View style={styles.completionIconCircle}>
+            <Ionicons name="trophy" size={64} color="#4CAF50" />
           </View>
-        </Animated.View>
-      </SafeAreaView>
-    );
+          <Text style={styles.completionTitle}>{t('wordMatching.congratulations')}</Text>
+          <Text style={styles.completionMessage}>{t('wordMatching.allMatched')}</Text>
+          
+          {/* Puan göstergesi */}
+          <View style={styles.pointContainerCompletion}>
+            <View style={styles.pointIconWrapper}>
+              <Ionicons
+                name="water-outline"
+                size={ICON_SIZE.sm}
+                color="#FFFFFF"
+              />
+            </View>
+            <Text style={styles.pointText}>+{earnedPoints}</Text>
+          </View>
+          
+          <Text style={styles.rewardMessage}>{t('wordMatching.earnedPoints', 'Kazandınız')}</Text>
+          
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => {
+              router.replace('/');
+            }}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.backButtonText}>{t('common.goBack')}</Text>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
+    </View>
+  );
+
+  if (gameCompleted) {
+    return <CompletionView />;
   }
 
   return (
     <ThemedView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={ICON_SIZE.sm} color={Colors[mode].text} />
+      <Image 
+        source={require('../assets/images/game-background.png')} 
+        style={styles.backgroundImage} 
+        resizeMode="cover"
+      />
+      <View style={styles.headerContainer}>
+        <TouchableOpacity 
+          style={styles.headerBackButton} 
+          onPress={() => router.replace('/')}
+          activeOpacity={0.7}
+        >
+          <Icon name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
-        <ThemedText style={styles.title}>{t('wordMatching.title')}</ThemedText>
-        <View style={styles.placeholder} />
+        
+        <View style={styles.titleContainerCenter}>
+          <Text style={styles.title}>{t('wordMatching.title', 'KELİME EŞLEŞTİRME')}</Text>
+        </View>
       </View>
       <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        {isLoading ? (
-          <View style={[styles.container, styles.centerContent]}>
-          <Loader size="large" />
-          <Text style={styles.loadingText}>{t('flashcards.loading')}</Text>
-        </View>
-        ) : (
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        contentContainerStyle={styles.content}
+      >
+          {isLoading ? (
+            <View style={[styles.container, styles.centerContent]}>
+              <Loader size="large" />
+              <Text style={styles.loadingText}>{t('flashcards.loading')}</Text>
+            </View>
+          ) : (
             
             <View style={styles.gameContainer}>
               <View style={styles.matchingLayout}>
@@ -376,7 +440,14 @@ export default function WordMatchingScreen() {
                           }}
                         >
                           <LinearGradient
-                            colors={isSelected ? (wrongMatch ? ['#ff6b6b', '#ff8787'] : ['#7cc0fb', '#92e6fb']) : ['transparent', 'transparent']}
+                            colors={isSelected ? 
+                              (wrongMatch ? 
+                                ['#ff9aa2', '#ffb7b2', '#ffdac1'] : 
+                                ['#b5ead7', '#c7ceea', '#e2f0cb', '#ffdac1']) : 
+                              ['transparent', 'transparent']
+                            }
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
                             style={styles.cardGradientOverlay}
                           />
                           <ThemedText 
@@ -385,7 +456,7 @@ export default function WordMatchingScreen() {
                               isSelected && styles.selectedWordText
                             ]}
                           >
-                            {word.text}
+                            {word.text.charAt(0).toUpperCase() + word.text.slice(1)}
                           </ThemedText>
                         </TouchableOpacity>
                       );
@@ -421,7 +492,14 @@ export default function WordMatchingScreen() {
                           }}
                         >
                           <LinearGradient
-                            colors={isSelected ? (wrongMatch ? ['#ff6b6b', '#ff8787'] : ['#7cc0fb', '#92e6fb']) : ['transparent', 'transparent']}
+                            colors={isSelected ? 
+                              (wrongMatch ? 
+                                ['#ff9aa2', '#ffb7b2', '#ffdac1'] : 
+                                ['#b5ead7', '#c7ceea', '#e2f0cb', '#ffdac1']) : 
+                              ['transparent', 'transparent']
+                            }
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
                             style={styles.cardGradientOverlay}
                           />
                           <ThemedText 
@@ -473,18 +551,46 @@ export default function WordMatchingScreen() {
             </View>
             
           )}
-          
-  
-</ScrollView>
-</ThemedView>
+        </ScrollView>
+    </ThemedView>
     );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f6f8fa',
-    paddingTop: Platform.OS === 'ios' ? PADDING.xl : PADDING.lg + (Platform.OS === 'android' ? RNStatusBar.currentHeight || 0 : 0),
+    backgroundColor: 'transparent',
+  },
+
+  completionGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 0,
+  },
+
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  contentContainer: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    position: 'relative',
+    zIndex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: PADDING.xl * 4,
+    backgroundColor: 'transparent',
+    paddingHorizontal: PADDING.lg,
   },
   header: {
     flexDirection: 'row',
@@ -503,9 +609,31 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   backButton: {
-    padding: PADDING.sm,
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: '#eaf1fb',
+    backgroundColor: '#4CAF50',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  headerBackButton: {
+    padding: 10,
+    borderRadius: 25,
+    backgroundColor: '#00A3FF',
+    marginLeft: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  backButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   title: {
     fontSize: FONT_SIZE.xl,
@@ -531,41 +659,7 @@ const styles = StyleSheet.create({
     color: '#4facfe',
     fontWeight: '500',
   },
-  scoreContainer: {
-    marginBottom: MARGIN.lg,
-    alignItems: 'center',
-  },
-  scoreGradient: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    borderRadius: 22,
-    padding: PADDING.md,
-    elevation: 2,
-    shadowColor: '#7cc0fb',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    marginBottom: 8,
-  },
-  scoreItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 8,
-  },
-  scoreText: {
-    fontSize: FONT_SIZE.lg,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginLeft: 8,
-    letterSpacing: 0.5,
-  },
-  matchesText: {
-    fontSize: FONT_SIZE.lg,
-    color: '#FFFFFF',
-    marginLeft: 8,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
-  },
+
   gameContainer: {
     marginBottom: MARGIN.lg,
     marginTop: MARGIN.md,
@@ -575,10 +669,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: FONT_SIZE.lg,
     fontWeight: 'bold',
-    marginBottom: MARGIN.md,
+    marginBottom: MARGIN.xl,
     textAlign: 'center',
-    color: '#4361ee',
+    color: '#FFFFFF',
     letterSpacing: 0.2,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: {width: 1, height: 1},
+    textShadowRadius: 3,
   },
   matchingLayout: {
     flexDirection: 'row',
@@ -586,6 +683,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     width: '100%',
     gap: 8,
+    marginTop: MARGIN.md,
   },
   wordsColumn: {
     width: '44%',
@@ -617,9 +715,9 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#e3e8ee',
-    marginHorizontal: 2,
+    borderColor: '#F7A943',
   },
+
   translationCardVertical: {
     padding: PADDING.lg,
     borderRadius: 16,
@@ -636,7 +734,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#e3e8ee',
+    borderColor: '#F7A943',
     marginHorizontal: 2,
   },
   cardGradientOverlay: {
@@ -645,13 +743,20 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: 16,
+    borderRadius: 14, // Kartın iç kısmına tam oturması için border radius değerini azalttım
   },
   selectedCard: {
-    borderWidth: 2,
-    borderColor: '#4361ee',
     backgroundColor: '#eaf1fb',
+    shadowColor: '#4361ee',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 6,
+    // Seçili kart için özel border
+    borderColor: '#4361ee',
+    borderWidth: 2,
   },
+
   selectedWordText: {
     color: '#4361ee',
     fontWeight: 'bold',
@@ -783,24 +888,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f6fafd',
-    paddingHorizontal: PADDING.md,
+    padding: PADDING.lg,
   },
   completionCard: {
     backgroundColor: '#fff',
     borderRadius: 24,
-    paddingVertical: 48,
-    paddingHorizontal: 36,
+    paddingVertical: 36,
+    paddingHorizontal: 28,
     alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.10,
     shadowRadius: 16,
     elevation: 8,
-    minWidth: 320,
-    maxWidth: '90%',
   },
   completionIconCircle: {
     backgroundColor: '#e8f5e9',
@@ -817,36 +917,75 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   completionTitle: {
-    fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
-    color: '#22223b',
-    marginTop: 8,
-    marginBottom: 12,
-    letterSpacing: 0.2,
-    textAlign: 'center',
-  },
-  completionScore: {
-    fontSize: FONT_SIZE.lg,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#4CAF50',
-    marginTop: 4,
-    marginBottom: 12,
-    letterSpacing: 0.15,
+    color: '#333',
+    marginBottom: 8,
     textAlign: 'center',
   },
   completionMessage: {
-    fontSize: FONT_SIZE.md,
-    color: '#6B7280',
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 16,
     textAlign: 'center',
-    marginTop: 2,
-    marginBottom: 24,
-    fontWeight: '500',
-    letterSpacing: 0.1,
   },
+  pointContainerCompletion: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4a85e5',
+    borderRadius: 25,
+    padding: 8,
+    marginTop: 10,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  rewardMessage: {
+    fontSize: 16,
+    color: '#4CAF50',
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  pointIconWrapper: {
+    backgroundColor: '#3a75d5',
+    borderRadius: 20,
+    padding: 5,
+    marginRight: 8,
+  },
+  pointText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginRight: 8,
+  },
+
   centerContent: {
     justifyContent: 'center',
     alignItems: 'center',
   },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal:15,
+    marginBottom: 20,
+    marginTop: 40,
+    
+  },
+  titleContainerCenter: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    borderWidth: 3,
+    borderColor: '#F7A943',
+    marginHorizontal: 20,
+  },
 });
-
-

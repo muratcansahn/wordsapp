@@ -256,7 +256,8 @@
     "english": "İngilizce",
     "turkish": "Türkçe",
     "matchedWords": "Eşleşen Kelimeler",
-    "language": "Türkçe"
+    "language": "Türkçe",
+    "earnedPoints": "Kazandınız"
   },
   "studyMode": {
     "title": "Nasıl öğrenmek istersiniz?",
