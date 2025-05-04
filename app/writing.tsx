@@ -6,6 +6,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Animated } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { router } from 'expo-router';
+import { ICON_SIZE } from '@/constants/AppConstants';
+import { Ionicons } from '@expo/vector-icons';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '@/store';
+import { updateUserStats, incrementWordStatusCounter } from '@/store/userSlice';
+
 
 interface FlashCard {
   id: string;
@@ -28,13 +35,19 @@ const HangmanGame = () => {
   const [currentWord, setCurrentWord] = useState<FlashCard | null>(null);
   const [guessedLetters, setGuessedLetters] = useState<Set<string>>(new Set());
   const [score, setScore] = useState(0);
-  const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost' | 'ended'>('playing');
+  const [dynamicScoreValue, setDynamicScoreValue] = useState(0); // Dinamik skor değerini tutan state
+  const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost'>('playing');
   const [loading, setLoading] = useState(true);
   const [scoreAnimation] = useState(new Animated.Value(0));
   const [fadeAnim] = useState(new Animated.Value(0));
   const [remainingAttempts, setRemainingAttempts] = useState(5); // Kalan hak sayısı
   const [attemptAnimation] = useState(new Animated.Value(0)); // Hak azalma animasyonu için
   const { t, i18n } = useTranslation();
+  
+  // Redux'tan kullanıcı bilgilerini al
+  const userState = useSelector((state: RootState) => state.user);
+  const { id: userId, point: currentPoint = 0 } = userState;
+  const dispatch = useDispatch();
 
   const selectRandomWord = async () => {
     try {
@@ -56,7 +69,7 @@ const HangmanGame = () => {
           translation => (
             translation.language_code === i18n.language
           )
-        )[0] || randomWord.WordTranslations[0]; // Eğer filtreleme sonucu boşsa ilk çeviriyi kullan
+        )[0]
         
         const newCard: FlashCard = {
           id: randomWord.id.toString(),
@@ -68,10 +81,8 @@ const HangmanGame = () => {
         setCurrentWord(newCard);
         console.log('Yeni kelime:', newCard);
       } 
-      
       setGuessedLetters(new Set());
       setGameStatus('playing');
-      
       // Yeni kelime yüklendiğinde fade-in efekti
       setTimeout(() => {
         Animated.timing(fadeAnim, {
@@ -185,26 +196,6 @@ const HangmanGame = () => {
     checkGameStatus(newGuessedLetters);
   };
 
-  // Rastgele bir harf açma fonksiyonu
-  const revealRandomLetter = () => {
-    if (!currentWord || gameStatus !== 'playing') return;
-    
-    // Henüz tahmin edilmemiş harfleri bul
-    const unrevealed = currentWord.translation.toLowerCase().split('')
-      .filter(letter => !guessedLetters.has(letter.toLowerCase()));
-    
-    // Eğer tüm harfler zaten açıksa işlem yapma
-    if (unrevealed.length === 0) return;
-    
-    // Rastgele bir harf seç
-    const randomLetter = unrevealed[Math.floor(Math.random() * unrevealed.length)];
-    
-    // Puanı düş ve haptic feedback
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    setScore(prev => Math.max(0, prev - 15));
-    guessLetter(randomLetter);
-  };
-
   const checkGameStatus = (letters: Set<string>) => {
     if (!currentWord) return;
     
@@ -214,7 +205,17 @@ const HangmanGame = () => {
     if (isComplete) {
       // Kelimeyi bildiğinde bonus puan ekle ve haptic feedback
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setScore(prev => prev + 50);
+     
+  // Harf sayısı ve yanlış tahmin sayısına göre puan hesapla
+  const totalLetters = currentWord.translation.length;
+  const totalGuesses = guessedLetters.size;
+  const wrongGuesses = Array.from(guessedLetters).filter(
+    letter => !currentWord.translation.toLowerCase().includes(letter)
+  ).length;
+  const dynamicScore = Math.max(1, totalLetters - wrongGuesses); // Minimum 1 puan
+  setDynamicScoreValue(dynamicScore); // Dinamik skoru state'e kaydediyoruz
+
+  setScore(prev => prev + dynamicScore);
       
       // Önce fade-out animasyonu
       Animated.timing(fadeAnim, {
@@ -223,6 +224,13 @@ const HangmanGame = () => {
         useNativeDriver: true
       }).start(() => {
         setGameStatus('won');
+        
+        if (userId) {
+          dispatch(updateUserStats({
+            point: currentPoint + dynamicScore,
+          }));
+          dispatch(incrementWordStatusCounter());
+        }
         
         // Sonra fade-in animasyonu
         setTimeout(() => {
@@ -257,28 +265,71 @@ const HangmanGame = () => {
     }
   };
 
-  const endGame = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+  const CompletionView = () => {
+    // Win ve loss durumlarına göre farklı renkler ve içerik
+    const isWin = gameStatus === 'won';
+    const gradientColors = isWin ? ["#e0ffe8", "#f6fafd"] as const : ["#ffe0e0", "#fdf6fa"] as const;
+    const iconName = isWin ? "trophy" : "close-circle";
+    const iconColor = isWin ? "#4CAF50" : "#E53935";
+    const titleText = isWin ? t('wordMatching.congratulations') : "";
+    const messageText = isWin ? t('wordMatching.allMatched') : t('common.betterLuckNextTime');
+    const pointsValue = isWin ? dynamicScoreValue : 0;
+    const rewardText = isWin ? t('wordMatching.earnedPoints') : '';
     
-    // Önce fade-out animasyonu
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true
-    }).start(() => {
-      setGameStatus('ended');
-      
-      // Sonra fade-in animasyonu
-      setTimeout(() => {
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true
-        }).start();
-      }, 100);
-    });
-  };
+    return (
+      <View style={[styles.container, {backgroundColor: 'transparent'}]}>
+        <Image 
+          source={require('../assets/images/game-background.png')} 
+          style={styles.backgroundImage} 
+          resizeMode="cover"
+        />
+        <LinearGradient
+          colors={gradientColors}
+          style={styles.completionGradient}
+        >
+          <View style={styles.completionCard}>
+            <View style={[styles.completionIconCircle, !isWin && {borderColor: '#E53935'}]}>
+              <Ionicons name={iconName} size={64} color={iconColor} />
+            </View>
+            {isWin && <Text style={styles.completionTitle}>{titleText}</Text>}
+            <Text style={styles.completionMessage}>{messageText}</Text>
+            
+            {isWin ? (
+              <>
+                {/* Puan göstergesi - Kazanma durumu */}
+                <View style={styles.pointContainerCompletion}>
+                  <View style={styles.pointIconWrapper}>
+                    <Ionicons
+                      name="water-outline"
+                      size={ICON_SIZE.sm}
+                      color="#FFFFFF"
+                    />
+                  </View>
+                  <Text style={styles.pointText}>+{pointsValue}</Text>
+                </View>
+                
+                <Text style={styles.rewardMessage}>{rewardText}</Text>
+              </>
+            ) : null 
+            }
 
+          
+            
+            <TouchableOpacity
+              style={[styles.backButton, !isWin && {backgroundColor: '#E53935'}]}
+              onPress={() => {
+                router.replace('/');
+              }}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.backButtonText}>{t('common.goBack')}</Text>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
+      </View>
+    );
+  };
+  if (gameStatus === "won" || gameStatus === "lost") return CompletionView();
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#4FB4E2" translucent={true} />
@@ -294,56 +345,18 @@ const HangmanGame = () => {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.headerContainer}>
-            <TouchableOpacity style={styles.backButton} onPress={endGame}>
+            <TouchableOpacity style={styles.headerBackButton} onPress={() => {
+              router.replace('/');
+            }}>
               <Icon name="arrow-back" size={24} color="#FFF" />
             </TouchableOpacity>
             
             <View style={styles.titleContainerCenter}>
-              <Text style={styles.title}>KELİME YAZMA</Text>
+              <Text style={styles.title}>{t('writing.title')}</Text>
             </View>
           </View>
 
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#4361EE" />
-              <Text style={styles.loadingText}>{t('writing.loadingWord')}</Text>
-            </View>
-          ) : gameStatus === 'ended' ? (
-            <Animated.View 
-              style={[styles.gameEndContainer, { opacity: fadeAnim }]}
-            >
-              <LinearGradient
-                colors={['#4361EE', '#3a56d4']}
-                style={styles.gameEndBadge}
-              >
-                <Icon name="emoji-events" size={48} color="#FFF" />
-              </LinearGradient>
-              <Animated.Text 
-                style={styles.gameEndTitle}
-              >
-                {t('writing.gameOver')}
-              </Animated.Text>
-              <Animated.Text 
-                style={styles.gameEndScore}
-              >
-                {t('writing.totalScore', { score })}
-              </Animated.Text>
-              <View style={styles.gameEndButtonsContainer}>
-                <TouchableOpacity
-                  style={[styles.gameEndButton, styles.restartButton]}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    setScore(0);
-                    selectRandomWord();
-                  }}
-                >
-                  <Icon name="replay" size={20} color="#fff" />
-                  <Text style={styles.buttonText}>{t('writing.restart')}</Text>
-                </TouchableOpacity>
-              </View>
-            </Animated.View>
-          ) : currentWord && (
+          { currentWord && (
             <Animated.View 
               style={[
                 styles.gameContainer,
@@ -351,7 +364,7 @@ const HangmanGame = () => {
               ]}
             >
               <View style={styles.hintContainer}>
-                <Text style={styles.hintLabel}>İngilizce kelime:</Text>
+                <Text style={styles.hintLabel}>{t('writing.englishWordLabel')}</Text>
                 <Text style={styles.hintText}>{currentWord.word}</Text>
               </View>
               
@@ -418,7 +431,7 @@ const HangmanGame = () => {
                             Haptics.selectionAsync();
                             guessLetter(letter);
                           }}
-                          disabled={guessedLetters.has(letter) || gameStatus !== 'playing'}
+                          disabled={guessedLetters.has(letter)}
                         >
                           <Text style={[
                             styles.letterText,
@@ -454,68 +467,6 @@ const HangmanGame = () => {
                   </Animated.View>
                 )}
               </View>
-
-              {gameStatus !== 'playing' && (
-                <Animated.View 
-                style={[styles.gameOverContainer, { opacity: fadeAnim }]}
-              >
-                  {gameStatus === 'won' && (
-                    <LinearGradient
-                      colors={['#e0f7e0', '#c8e6c9']}
-                      style={[
-                        styles.resultBadge,
-                        styles.wonBadge
-                      ]}
-                    >
-                      <Icon
-                        name="emoji-events"
-                        size={32}
-                        color="#4CAF50"
-                      />
-                      <Text style={[
-                        styles.gameOverText,
-                        { color: '#4CAF50' }
-                      ]}>
-                        {t('writing.congratulations')}
-                      </Text>
-                    </LinearGradient>
-                  )}
-                  
-                  <Animated.View 
-                    style={styles.wordRevealContainer}
-                  >
-                    {gameStatus === 'lost' ? (
-                      <View style={styles.lostContainer}>
-                        <Icon name="favorite" size={36} color="#FF5252" />
-                        <Text style={styles.lostText}>Kaybettiniz!</Text>
-                      </View>
-                    ) : (
-                      <Text style={styles.wordRevealLabel}>{t('writing.youWon')}</Text>
-                    )}
-                    <Text style={styles.correctWordLabel}>{t('writing.correctWord')}:</Text>
-                    <Text style={styles.wordRevealText}>{currentWord.translation}</Text>
-                    <Text style={styles.wordRevealLabel}>{t('writing.englishWord')}:</Text>
-                    <Text style={styles.translationText}>{currentWord.word}</Text>
-                    {currentWord.example && (
-                      <Text style={styles.exampleText}>{t('writing.example', { example: currentWord.example })}</Text>
-                    )}
-                  </Animated.View>
-
-                  <Animated.View>
-                    <TouchableOpacity
-                      style={styles.newGameButton}
-                      activeOpacity={0.8}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                        selectRandomWord();
-                      }}
-                    >
-                      <Icon name="play-arrow" size={20} color="#fff" style={{marginRight: 5}} />
-                      <Text style={[styles.buttonText, {fontSize: 16, fontWeight: 'bold', color: '#fff', textShadowColor: 'rgba(0,0,0,0.15)', textShadowOffset: {width: 0.5, height: 0.5}, textShadowRadius: 0.5}]}>Sonraki kelime</Text>
-                    </TouchableOpacity>
-                  </Animated.View>
-                </Animated.View>
-              )}
             </Animated.View>
           )}
         </ScrollView>
@@ -568,12 +519,18 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    width: 160,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#4361EE',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   titleContainerCenter: {
     flex: 1,
@@ -1068,6 +1025,102 @@ const styles = StyleSheet.create({
     marginTop: 15,
     borderWidth: 0,
     width: 200,
+  },
+  completionGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 0,
+  },
+  completionCard: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    paddingVertical: 36,
+    paddingHorizontal: 28,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.10,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  completionIconCircle: {
+    backgroundColor: '#e8f5e9',
+    borderRadius: 50,
+    width: 90,
+    height: 90,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 18,
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  completionTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  completionMessage: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  pointContainerCompletion: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4a85e5',
+    borderRadius: 25,
+    padding: 8,
+    marginTop: 10,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  rewardMessage: {
+    fontSize: 16,
+    color: '#4CAF50',
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  pointIconWrapper: {
+    backgroundColor: '#3a75d5',
+    borderRadius: 20,
+    padding: 5,
+    marginRight: 8,
+  },
+  pointText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginRight: 8,
+  },
+  backButtonText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    paddingHorizontal: 5,
+  },
+  headerBackButton: {
+    padding: 10,
+    borderRadius: 25,
+    backgroundColor: '#00A3FF',
+    marginLeft: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
 });
 

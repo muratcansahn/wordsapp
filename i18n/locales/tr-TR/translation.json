@@ -1,7 +1,10 @@
 {
   "appName": "Ship Mobile Fast",
   "common": {
-    "goBack": "Geri Dön"
+    "goBack": "Geri Dön",
+    "tryAgain": "Tekrar Dene",
+    "betterLuckNextTime": "Bir dahaki sefere daha iyi şanslar",
+    "oopsYouLost": "Eyvah! Kaybettin"
   },
   "language": "Dil",
   "success": "Başarılı",

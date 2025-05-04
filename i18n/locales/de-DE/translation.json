@@ -1,7 +1,10 @@
 {
   "appName": "Ship Mobile Fast",
   "common": {
-    "goBack": "Zurück"
+    "goBack": "Zurück",
+    "tryAgain": "Versuche es erneut",
+    "betterLuckNextTime": "Viel Glück beim nächsten Mal",
+    "oopsYouLost": "Hoppla! Du hast verloren"
   },
   "language": "Sprache",
   "success": "Erfolgreich",
@@ -242,7 +245,13 @@
     "translation": "Übersetzung:",
     "wordLength": "Dieses Wort hat {{length}} Buchstaben",
     "word": "Wort:",
-    "example": "Beispiel: \"{{example}}\""
+    "example": "Beispiel: \"{{example}}\"",
+    "englishWordLabel": "Englisches Wort:",
+    "youWon": "Du hast gewonnen!",
+    "youLost": "Du hast verloren!",
+    "remainingAttempts": "Verbleibende Versuche: {{attempts}}",
+    "attemptLost": "Du hast einen Versuch verloren!",
+    "englishWord": "Englisch"
   },
   "flashcards": {
     "noCards": "Keine Karten zum Anzeigen.",

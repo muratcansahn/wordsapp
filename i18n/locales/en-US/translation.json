@@ -303,6 +303,7 @@
     "word": "Word",
     "translation": "Translation",
     "englishWord": "English",
+    "englishWordLabel": "English word:",
     "correctWord": "Correct translation",
     "example": "Example: {{example}}",
     "nextWord": "Next word",
@@ -311,7 +312,9 @@
     "totalScore": "Total score: {{score}}",
     "congratulations": "Congratulations!",
     "youWon": "You won!",
-    "youLost": "You lost!"
+    "youLost": "You lost!",
+    "remainingAttempts": "Remaining attempts: {{attempts}}",
+    "attemptLost": "You lost an attempt!"
   },
   "dailyActivities": {
     "countdownHours": "in {{hours}}h {{minutes}}m",
