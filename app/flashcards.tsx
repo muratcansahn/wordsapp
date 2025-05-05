@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Audio } from 'expo-av';
 import { 
   View, 
   Text, 
@@ -62,10 +63,51 @@ export default function FlashcardsScreen() {
   const pointScale = useSharedValue(1);
   const pointOpacity = useSharedValue(1);
 
+  // Ses state'leri
+  const [knownSound, setKnownSound] = useState<Audio.Sound | null>(null);
+  const [unknownSound, setUnknownSound] = useState<Audio.Sound | null>(null);
+  const [successSound, setSuccessSound] = useState<Audio.Sound | null>(null);
+
   const pointAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pointScale.value }],
     opacity: pointOpacity.value,
   }));
+
+  // Sesleri yükleme ve boşaltma useEffect'i
+  useEffect(() => {
+    const loadSounds = async () => {
+      try {
+        const { sound: known } = await Audio.Sound.createAsync(
+          require('@/assets/audio/known.mp3')
+        );
+        setKnownSound(known);
+
+        const { sound: unknown } = await Audio.Sound.createAsync(
+          require('@/assets/audio/unknown.mp3')
+        );
+        setUnknownSound(unknown);
+
+        const { sound: success } = await Audio.Sound.createAsync(
+           require('@/assets/audio/success-end.mp3') // Başarı sesini yükle
+        );
+        setSuccessSound(success);
+
+        console.log('Flashcard sesleri yüklendi');
+      } catch (error) {
+        console.error('Flashcard ses yükleme hatası:', error);
+      }
+    };
+
+    loadSounds();
+
+    // Cleanup function
+    return () => {
+      knownSound?.unloadAsync();
+      unknownSound?.unloadAsync();
+      successSound?.unloadAsync();
+      console.log('Flashcard sesleri boşaltıldı');
+    };
+  }, []); // Boş bağımlılık dizisi ile sadece mount/unmount'ta çalışır
 
   const animatePoint = () => {
     pointScale.value = withSequence(
@@ -99,6 +141,7 @@ export default function FlashcardsScreen() {
               setKnownWordCount(known);
               setUnknownWordCount(unknown);
               setAllWordsMarked(true);
+              playSound('success'); // <-- BAŞARI SESİNİ ÇAL
               
               setSelectedList({
                 ...wordList,
@@ -168,6 +211,33 @@ export default function FlashcardsScreen() {
     }).start(() => onSwipeComplete(direction));
   };
 
+  // Ses dosyası çalma fonksiyonu (Güncellenmiş)
+  const playSound = async (soundType: 'known' | 'unknown' | 'success') => {
+    try {
+      console.log(`playSound called with type: ${soundType}`);
+      let soundObject: Audio.Sound | null = null;
+
+      if (soundType === 'known') {
+        soundObject = knownSound;
+      } else if (soundType === 'unknown') {
+        soundObject = unknownSound;
+      } else if (soundType === 'success') {
+        soundObject = successSound;
+      }
+
+      if (soundObject) {
+        console.log(`Attempting to play ${soundType} sound object.`);
+        await soundObject.setPositionAsync(0); // Başa sar
+        await soundObject.playAsync();
+        console.log(`${soundType} sesi çalındı`);
+      } else {
+        console.log(`${soundType} ses nesnesi bulunamadı veya yüklenmedi.`);
+      }
+    } catch (error) {
+      console.error(`Ses çalma hatası (${soundType}):`, error);
+    }
+  };
+
   const onSwipeComplete = async (direction: 'right' | 'left') => {
     const item = selectedList?.cards[currentIndex];
     
@@ -184,6 +254,9 @@ export default function FlashcardsScreen() {
       if (item.status === 2) {
         setUnknownWordCount(prevCount => Math.max(0, prevCount - 1));
       }
+      
+      // Bilinen kelime sesini çal
+      playSound('known');
     } else {
       newStatus = 2; // Bilinmeyen
       
@@ -194,6 +267,9 @@ export default function FlashcardsScreen() {
       if (item.status === 1) {
         setKnownWordCount(prevCount => Math.max(0, prevCount - 1));
       }
+      
+      // Bilinmeyen kelime sesini çal
+      playSound('unknown');
     }
     
     // Kullanıcı giriş yapmışsa kelime durumunu güncelle

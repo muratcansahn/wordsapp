@@ -29,6 +29,10 @@ import { getRandomWordsWithTranslations } from '@/services/wordService';
 import { incrementUserPointByAmountWithRedux } from '@/services/userService';
 import { Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { Audio } from 'expo-av';
+
+// Arka plan resmini import et
+import gameBackgroundImage from '../assets/images/game-background.png';
 
 // Kelime eşleştirme oyunu için arayüz
 interface MatchingWord {
@@ -63,6 +67,7 @@ export default function WordMatchingScreen() {
   const [showPointModal, setShowPointModal] = useState(false);
   const [earnedPoints, setEarnedPoints] = useState(0);
   const [newTotalPoints, setNewTotalPoints] = useState(0);
+  const [sound, setSound] = useState<Audio.Sound | null>(null); // Ses nesnesi için state
   
   // Animasyon değerleri
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -80,6 +85,47 @@ export default function WordMatchingScreen() {
     // Sayfa yüklendiğinde otomatik olarak oyunu başlat
     startNewGame();
   }, []);
+  
+  // Oyun tamamlandığında sesi çalmak için useEffect
+  useEffect(() => {
+    let soundObject: Audio.Sound | null = null;
+    let isMounted = true;
+
+    const playSuccessSound = async () => {
+      if (gameCompleted) {
+        try {
+          console.log('Game completed, attempting to load sound...');
+          const { sound } = await Audio.Sound.createAsync(
+             require('../assets/audio/success-end.mp3')
+          );
+          soundObject = sound;
+          console.log('Sound loaded by parent');
+          if (isMounted) {
+             setSound(soundObject); // State'i güncelle (opsiyonel, sadece cleanup için)
+             console.log('Playing sound from parent...');
+             await soundObject.playAsync();
+             console.log('Sound finished playing or was stopped by parent');
+          } else {
+              console.log('Parent unmounted before sound could be played, unloading sound.');
+              await soundObject.unloadAsync();
+          }
+        } catch (error) {
+          console.error('Error playing success sound in parent:', error);
+        }
+      }
+    };
+
+    playSuccessSound();
+
+    // Cleanup fonksiyonu
+    return () => {
+      isMounted = false;
+      if (soundObject) {
+        console.log('Unloading Sound in parent cleanup');
+        soundObject.unloadAsync();
+      }
+    };
+  }, [gameCompleted]); // gameCompleted değiştiğinde çalışır
   
   // Yeni oyun başlat
   const startNewGame = async () => {
@@ -303,51 +349,53 @@ export default function WordMatchingScreen() {
   };
   
   // Profesyonel tamamlanma ekranı fonksiyonu
-  const CompletionView = () => (
-    <View style={[styles.container, {backgroundColor: 'transparent'}]}>
-      <Image 
-        source={require('../assets/images/game-background.png')} 
-        style={styles.backgroundImage} 
-        resizeMode="cover"
-      />
-      <LinearGradient
-        colors={["#e0ffe8", "#f6fafd"]}
-        style={styles.completionGradient}
-      >
-        <View style={styles.completionCard}>
-          <View style={styles.completionIconCircle}>
-            <Ionicons name="trophy" size={64} color="#4CAF50" />
-          </View>
-          <Text style={styles.completionTitle}>{t('wordMatching.congratulations')}</Text>
-          <Text style={styles.completionMessage}>{t('wordMatching.allMatched')}</Text>
-          
-          {/* Puan göstergesi */}
-          <View style={styles.pointContainerCompletion}>
-            <View style={styles.pointIconWrapper}>
-              <Ionicons
-                name="water-outline"
-                size={ICON_SIZE.sm}
-                color="#FFFFFF"
-              />
+  const CompletionView = () => {
+    return (
+      <View style={[styles.container, {backgroundColor: 'transparent'}]}>
+        <Image 
+          source={gameBackgroundImage} // Import edilen değişkeni kullan
+          style={styles.backgroundImage} 
+          resizeMode="cover"
+        />
+        <LinearGradient
+          colors={["#e0ffe8", "#f6fafd"]}
+          style={styles.completionGradient}
+        >
+          <View style={styles.completionCard}>
+            <View style={styles.completionIconCircle}>
+              <Ionicons name="trophy" size={64} color="#4CAF50" />
             </View>
-            <Text style={styles.pointText}>+{earnedPoints}</Text>
+            <Text style={styles.completionTitle}>{t('wordMatching.congratulations')}</Text>
+            <Text style={styles.completionMessage}>{t('wordMatching.allMatched')}</Text>
+            
+            {/* Puan göstergesi */}
+            <View style={styles.pointContainerCompletion}>
+              <View style={styles.pointIconWrapper}>
+                <Ionicons
+                  name="water-outline"
+                  size={ICON_SIZE.sm}
+                  color="#FFFFFF"
+                />
+              </View>
+              <Text style={styles.pointText}>+{earnedPoints}</Text>
+            </View>
+            
+            <Text style={styles.rewardMessage}>{t('wordMatching.earnedPoints', 'Kazandınız')}</Text>
+            
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => {
+                router.replace('/');
+              }}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.backButtonText}>{t('common.goBack')}</Text>
+            </TouchableOpacity>
           </View>
-          
-          <Text style={styles.rewardMessage}>{t('wordMatching.earnedPoints', 'Kazandınız')}</Text>
-          
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => {
-              router.replace('/');
-            }}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.backButtonText}>{t('common.goBack')}</Text>
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
-    </View>
-  );
+        </LinearGradient>
+      </View>
+    );
+  };
 
   if (gameCompleted) {
     return <CompletionView />;
@@ -356,7 +404,7 @@ export default function WordMatchingScreen() {
   return (
     <ThemedView style={styles.container}>
       <Image 
-        source={require('../assets/images/game-background.png')} 
+        source={gameBackgroundImage} // Import edilen değişkeni kullan
         style={styles.backgroundImage} 
         resizeMode="cover"
       />

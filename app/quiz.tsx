@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Audio } from 'expo-av';
 import { addSkippedWordListId } from '@/services/gameRequestServices';
 import { useTranslation } from 'react-i18next';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, SafeAreaView, ActivityIndicator, Image, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
@@ -165,12 +166,36 @@ export default function QuizPage() {
   
   const currentQuestion = questions[currentQuestionIndex];
   
+  // Ses dosyalarını çalmak için fonksiyon
+  const playSound = async (isCorrect: boolean) => {
+    try {
+      const soundFile = isCorrect 
+        ? require('@/assets/audio/known.mp3') 
+        : require('@/assets/audio/unknown.mp3');
+      
+      const { sound } = await Audio.Sound.createAsync(soundFile);
+      await sound.playAsync();
+      
+      // Ses çalındıktan sonra bellekten temizle
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded && status.isPlaying === false && status.positionMillis > 0) {
+          sound.unloadAsync();
+        }
+      });
+    } catch (error) {
+      console.error('Ses çalma hatası:', error);
+    }
+  };
+
   const handleAnswerSelect = async (answer: string) => {
     if (selectedAnswer !== null) return; // Prevent multiple selections
     
     setSelectedAnswer(answer);
     const correct = answer === currentQuestion.correctAnswer;
     setIsCorrect(correct);
+    
+    // Cevaba göre uygun ses dosyasını çal
+    await playSound(correct);
     
     if (correct) {
       setScore(prev => prev + 1);
@@ -184,12 +209,25 @@ export default function QuizPage() {
     }
     
     // Move to next question after delay
-    setTimeout(() => {
+    setTimeout(async () => {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(prev => prev + 1);
         setSelectedAnswer(null);
         setIsCorrect(null);
       } else {
+        // Tüm sorular bitti, başarı sesini çal
+        try {
+          const { sound } = await Audio.Sound.createAsync(require('@/assets/audio/success-end.mp3'));
+          await sound.playAsync();
+          sound.setOnPlaybackStatusUpdate((status) => {
+            if (status.isLoaded && status.isPlaying === false && status.positionMillis > 0) {
+              sound.unloadAsync();
+            }
+          });
+        } catch (error) {
+          console.error('Başarı sesi çalma hatası:', error);
+        }
+        
         setShowResult(true);
       }
     }, 1500);

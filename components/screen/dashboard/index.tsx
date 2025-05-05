@@ -8,8 +8,8 @@ import {
   Animated, 
   Easing,
   Dimensions,
-
 } from 'react-native';
+import { Audio } from 'expo-av';
 import { useSelector, useDispatch } from 'react-redux';
 import { ThemedText } from '@/components/common/typography';
 import { ThemedView } from '@/components/common/view';
@@ -508,6 +508,7 @@ export default function DashboardScreen() {
     color: string;
     clickable: boolean;
   }>>([]);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
   
   // UserWordStatuses tablosundan kelime durumunu çek
   useEffect(() => {
@@ -539,6 +540,28 @@ export default function DashboardScreen() {
   const [fishData, setFishData] = useState<FishDataType>([]);
   const foodAnimation = useRef(new Animated.Value(0)).current;
   const mouthAnimation = useRef(new Animated.Value(0)).current;
+
+  async function playSound() {
+    console.log('Loading Sound');
+    try {
+      // Ensure the path is correct relative to your project structure
+      const { sound } = await Audio.Sound.createAsync( require('@/assets/audio/eat.mp3') ); 
+      setSound(sound);
+      console.log('Playing Sound');
+      await sound.playAsync(); 
+    } catch (error) {
+      console.error('Failed to load or play sound', error);
+    }
+  }
+
+  useEffect(() => {
+    return sound
+      ? () => {
+          console.log('Unloading Sound');
+          sound.unloadAsync(); 
+        }
+      : undefined;
+  }, [sound]);
 
   useEffect(() => {
     const fetchUserFishes = async () => {
@@ -593,6 +616,7 @@ export default function DashboardScreen() {
     ]).start(() => {
       // Ağız açma animasyonu bittikten sonra
       setFeedingSuccess(true);
+      playSound(); // Ses çalma buraya taşındı
       // 1.5 saniye sonra popup'ı kapat
       setTimeout(() => {
         setFeedingPopupVisible(false);

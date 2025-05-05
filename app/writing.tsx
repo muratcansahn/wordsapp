@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Audio } from 'expo-av';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, ScrollView, Dimensions, StatusBar, Platform, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { getRandomWord } from '@/services/wordService';
@@ -168,92 +169,117 @@ const HangmanGame = () => {
           }).start();
         });
         
-        // Kalan hak 0 olunca oyunu direkt bitir
-        if (newValue === 0) {
-          // Önce fade-out animasyonu
-          Animated.timing(fadeAnim, {
-            toValue: 0.3,
-            duration: 200,
-            useNativeDriver: true
-          }).start(() => {
-            setGameStatus('lost');
-            
-            // Sonra fade-in animasyonu
-            setTimeout(() => {
-              Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 500,
-                useNativeDriver: true
-              }).start();
-            }, 100);
-          });
-        }
-        
         return newValue;
       });
     }
-
-    checkGameStatus(newGuessedLetters);
   };
 
-  const checkGameStatus = (letters: Set<string>) => {
-    if (!currentWord) return;
-    
-    const translationLetters = new Set(currentWord.translation.toLowerCase().split(''));
-    const isComplete = Array.from(translationLetters).every(letter => letters.has(letter));
-    
-    if (isComplete) {
-      // Kelimeyi bildiğinde bonus puan ekle ve haptic feedback
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-     
-  // Harf sayısı ve yanlış tahmin sayısına göre puan hesapla
-  const totalLetters = currentWord.translation.length;
-  const totalGuesses = guessedLetters.size;
-  const wrongGuesses = Array.from(guessedLetters).filter(
-    letter => !currentWord.translation.toLowerCase().includes(letter)
-  ).length;
-  const dynamicScore = Math.max(1, totalLetters - wrongGuesses); // Minimum 1 puan
-  setDynamicScoreValue(dynamicScore); // Dinamik skoru state'e kaydediyoruz
+  // Ses dosyalarını önceden yükle
+  const [winSound, setWinSound] = useState<Audio.Sound | null>(null);
+  const [loseSound, setLoseSound] = useState<Audio.Sound | null>(null);
 
-  setScore(prev => prev + dynamicScore);
-      
-      // Önce fade-out animasyonu
+  // Component mount olduğunda sesleri yükle
+  useEffect(() => {
+    const loadSounds = async () => {
+      try {
+        const { sound: successSound } = await Audio.Sound.createAsync(
+          require('@/assets/audio/success-end.mp3')
+        );
+        setWinSound(successSound);
+
+        const { sound: failSound } = await Audio.Sound.createAsync(
+          require('@/assets/audio/fail-end.mp3')
+        );
+        setLoseSound(failSound);
+
+        console.log('Sesler başarıyla yüklendi');
+      } catch (error) {
+        console.error('Ses yükleme hatası:', error);
+      }
+    };
+
+    loadSounds();
+
+    // Component unmount olduğunda sesleri boşalt
+    return () => {
+      if (winSound) {
+        winSound.unloadAsync();
+      }
+      if (loseSound) {
+        loseSound.unloadAsync();
+      }
+    };
+  }, []);
+
+  // Ses dosyalarını çalmak için fonksiyon
+  const playSound = async (soundType: 'win' | 'lose') => {
+    try {
+      console.log(`playSound called with type: ${soundType}`); // Log the type requested
+      if (soundType === 'win') {
+        if (winSound) {
+          console.log('Attempting to play WIN sound object.'); // Log which object
+          await winSound.setPositionAsync(0);
+          await winSound.playAsync();
+          console.log('Kazanma sesi çalındı');
+        } else {
+          console.log('WIN sound object is null.'); // Log if null
+        }
+      } else if (soundType === 'lose') {
+        if (loseSound) {
+          console.log('Attempting to play LOSE sound object.'); // Log which object
+          await loseSound.setPositionAsync(0);
+          await loseSound.playAsync();
+          console.log('Kaybetme sesi çalındı');
+        } else {
+          console.log('LOSE sound object is null.'); // Log if null
+        }
+      } else {
+        // This case should not happen with the current types, but good for safety
+        console.log(`Invalid soundType received: ${soundType}`);
+      }
+    } catch (error) {
+      console.error(`Ses çalma hatası (${soundType}):`, error); // Add type to error log
+    }
+  };
+
+  useEffect(() => {
+    if (!currentWord || gameStatus !== 'playing') return; // Sadece oyun devam ediyorsa ve kelime varsa kontrol et
+
+    const translationLetters = new Set(currentWord.translation.toLowerCase().split(''));
+    const isComplete = Array.from(translationLetters).every(letter =>
+      guessedLetters.has(letter)
+    );
+
+    // Kazanma durumu kontrolü
+    if (isComplete) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      // Dinamik skor hesapla
+      const totalLetters = currentWord.translation.length;
+      const wrongGuesses = Array.from(guessedLetters).filter(
+        letter => !currentWord.translation.toLowerCase().includes(letter)
+      ).length;
+      const dynamicScore = Math.max(1, totalLetters - wrongGuesses); // Minimum 1 puan
+      setDynamicScoreValue(dynamicScore);
+      setScore(prev => prev + dynamicScore);
+
+      // Fade-out animasyonu
       Animated.timing(fadeAnim, {
         toValue: 0.3,
         duration: 200,
         useNativeDriver: true
       }).start(() => {
         setGameStatus('won');
-        
+        playSound('win'); // Durum set edildikten sonra sesi çal
+
         if (userId) {
           dispatch(updateUserStats({
-            point: currentPoint + dynamicScore,
+            point: (userState.point || 0) + dynamicScore, // Ensure currentPoint has a fallback
           }));
           dispatch(incrementWordStatusCounter());
         }
-        
-        // Sonra fade-in animasyonu
-        setTimeout(() => {
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 500,
-            useNativeDriver: true
-          }).start();
-        }, 100);
-      });
-    } else if (remainingAttempts <= 0 || letters.size > translationLetters.size + 5) {
-      // Kalan hak kalmadığında veya çok fazla yanlış tahmin yapıldığında oyunu kaybet
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      
-      // Önce fade-out animasyonu
-      Animated.timing(fadeAnim, {
-        toValue: 0.3,
-        duration: 200,
-        useNativeDriver: true
-      }).start(() => {
-        setGameStatus('lost');
-        
-        // Sonra fade-in animasyonu
+
+        // Fade-in animasyonu
         setTimeout(() => {
           Animated.timing(fadeAnim, {
             toValue: 1,
@@ -263,7 +289,33 @@ const HangmanGame = () => {
         }, 100);
       });
     }
-  };
+    // Kaybetme durumu kontrolü (remainingAttempts güncellendiğinde çalışır)
+    else if (remainingAttempts <= 0) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      console.log('Oyun kaybedildi (useEffect), ses çalınacak'); // useEffect içindeki log
+
+      playSound('lose').catch(err => console.error('Kaybetme sesi çalma hatası:', err));
+
+      // Fade-out animasyonu
+      Animated.timing(fadeAnim, {
+        toValue: 0.3,
+        duration: 200,
+        useNativeDriver: true
+      }).start(() => {
+        setGameStatus('lost'); // Durum set edildikten sonra sesi çal
+
+        // Fade-in animasyonu
+        setTimeout(() => {
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true
+          }).start();
+        }, 100);
+      });
+    }
+  // Bağımlılıkları ekle: guessedLetters, remainingAttempts, currentWord, gameStatus, userId, userState.point, dispatch, playSound, fadeAnim
+  }, [guessedLetters, remainingAttempts, currentWord, gameStatus, userId, userState.point, dispatch, playSound, fadeAnim, dynamicScoreValue]);
 
   const CompletionView = () => {
     // Win ve loss durumlarına göre farklı renkler ve içerik
@@ -283,6 +335,7 @@ const HangmanGame = () => {
           style={styles.backgroundImage} 
           resizeMode="cover"
         />
+   
         <LinearGradient
           colors={gradientColors}
           style={styles.completionGradient}
