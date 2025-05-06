@@ -1,14 +1,15 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, StyleProp, ViewStyle, TextStyle, StatusBar, Image } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BORDER_RADIUS, PADDING, MARGIN } from '@/constants/AppConstants';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp, interpolate, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useEffect ,useState} from 'react';
 import { useTranslation } from 'react-i18next';
 import { getWordLists } from '@/services/wordListService';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { fetchKnownUnknownCounts } from '@/services/userService';
 import { useAuth } from '@/context/SupabaseProvider';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
 
 
 type MaterialIconName = 'book-open-page-variant' | 'briefcase' | 'airplane' | 'check-circle' | 'chevron-right' | 'star';
@@ -18,6 +19,7 @@ interface ApiWordList {
   name: string;
   description: string;
   image: string;
+  total_words: number;
 }
 
 interface WordList extends ApiWordList {
@@ -43,31 +45,42 @@ export default function LearnPage() {
   const [wordLists, setWordLists] = useState<WordList[]>([]);
   const [knownUnknownMap, setKnownUnknownMap] = useState<Record<number, { biliyorum: number; bilmiyorum: number }>>({});
   const { user } = useAuth();
+  const wordStatusUpdateCounter = useSelector((state: RootState) => state.user.wordStatusUpdateCounter);
 
   useEffect(() => {
     const fetchWordList = async () => {
+      setLoading(true);
       try {
         const lists: ApiWordList[] = await getWordLists();
-        const formattedLists: WordList[] = lists.map((list) => ({
+
+        let formattedLists: WordList[] = lists.map((list): WordList => ({
           ...list,
-          wordCount: 100,
+          wordCount: list.total_words,
           learnedCount: 0,
-          gradient: defaultGradients[list.id] || defaultGradients[1]
-        })) as WordList[];
+          gradient: defaultGradients[list.id] || defaultGradients[1],
+          icon: 'book-open-page-variant' as MaterialIconName
+        }));
+
+        if (user?.id) {
+          const statsPromises = formattedLists.map(list =>
+            fetchKnownUnknownCounts(user.id, list.id).then(stats => ({ listId: list.id, stats }))
+          );
+          const statsResults = await Promise.all(statsPromises);
+          const statsMap: Record<number, { biliyorum: number; bilmiyorum: number }> = {};
+          statsResults.forEach(result => {
+            statsMap[result.listId] = result.stats;
+          });
+
+          formattedLists = formattedLists.map(list => ({
+            ...list,
+            learnedCount: statsMap[list.id]?.biliyorum || 0
+          }));
+
+          setKnownUnknownMap(statsMap);
+        }
 
         setWordLists(formattedLists);
 
-        // Her liste için biliyorum/bilmiyorum istatistiklerini çek
-        if (user?.id) {
-          const results: Record<number, { biliyorum: number; bilmiyorum: number }> = {};
-          await Promise.all(
-            formattedLists.map(async (list) => {
-              const stats = await fetchKnownUnknownCounts(user.id, list.id);
-              results[list.id] = stats;
-            })
-          );
-          setKnownUnknownMap(results);
-        }
       } catch (error) {
         console.error('Error fetching word list:', error);
       } finally {
@@ -75,7 +88,7 @@ export default function LearnPage() {
       }
     };
     fetchWordList();
-  }, [user]);
+  }, [user, wordStatusUpdateCounter]); // wordStatusUpdateCounter'ı dependency array'e ekledik
 
   const handleListSelect = (listId: number) => {
     console.log("listId", listId);
@@ -128,8 +141,8 @@ export default function LearnPage() {
         <View style={styles.listContainer}>
           {wordLists.map((list, index) => {
             const stats = knownUnknownMap[list.id];
-const markedCount = (stats?.biliyorum ?? 0) + (stats?.bilmiyorum ?? 0);
-const progress = list.wordCount > 0 ? (markedCount / list.wordCount) * 100 : 0;
+            const markedCount = (stats?.biliyorum ?? 0) + (stats?.bilmiyorum ?? 0);
+            const progress = list.wordCount > 0 ? (markedCount / list.wordCount) * 100 : 0;
             return (
               <Animated.View
                 key={list.id}
@@ -166,12 +179,40 @@ const progress = list.wordCount > 0 ? (markedCount / list.wordCount) * 100 : 0;
                       {/* Biliyorum/Bilmiyorum istatistiği */}
                       <View style={styles.bottomRow}>
                         <View style={styles.progressInfo}>
-                          
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4 }}>
-  <Text style={{ fontSize: 14 }}>🟢 {stats?.biliyorum ?? 0}</Text>
-  <Text style={{ fontSize: 14 }}>🔴 {stats?.bilmiyorum ?? 0}</Text>
-  <Text style={{ fontSize: 14 }}>⚪️ {(list.wordCount - (stats?.biliyorum ?? 0) - (stats?.bilmiyorum ?? 0))}</Text>
-</View>
+                          <View style={{ 
+                            flexDirection: 'row', 
+                            alignItems: 'center', 
+                            justifyContent: 'space-evenly', 
+                            marginTop: 4,
+                            marginBottom:4,
+                            backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                            padding: 2,
+                            borderRadius: 25,
+                            shadowColor: '#000',
+                            // shadowOffset: { width: 0, height: 1 },
+                            // shadowOpacity: 0.2,
+                            // shadowRadius: 3,
+                            // elevation: 2
+                          }}>
+                            <Text style={{ 
+                              fontSize: 12, 
+                              color: '#4CAF50', 
+                              fontWeight: 'bold',
+                              marginHorizontal: 10
+                            }}>{stats?.biliyorum ?? 0}</Text>
+                            <Text style={{ 
+                              fontSize: 12, 
+                              color: '#F44336', 
+                              fontWeight: 'bold',
+                              marginHorizontal: 10
+                            }}>{stats?.bilmiyorum ?? 0}</Text>
+                            <Text style={{ 
+                              fontSize: 12, 
+                              color: '#9E9E9E', 
+                              fontWeight: 'bold',
+                              marginHorizontal: 10
+                            }}>{(list.wordCount - (stats?.biliyorum ?? 0) - (stats?.bilmiyorum ?? 0))}</Text>
+                          </View>
                         </View>
                         <View style={styles.statusContainer}>
                           {progress > 0 ? (
