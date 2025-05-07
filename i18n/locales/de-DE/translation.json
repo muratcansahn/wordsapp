@@ -234,6 +234,8 @@
     "loadingWord": "Wort wird geladen...",
     "score": "Punkte: {{score}}",
     "writeWord": "Schreibe das Wort:",
+    "infoTitle": "Wort-Ratespiel",
+    "infoDescription": "Die maximale Punktzahl, die du erreichen kannst, entspricht der Anzahl der Buchstaben im Wort. Für jeden falsch geratenen Buchstaben wird ein Punkt abgezogen. Versuche, das Wort fehlerfrei zu erraten, um mehr Punkte zu erhalten. Viel Glück!",
     "hint": "Hinweis: {{translation}}",
     "revealLetter": "Buchstabe anzeigen (-15 Punkte)",
     "skipWord": "Wort überspringen",
@@ -273,7 +275,9 @@
     "share": "Teilen",
     "backToHome": "Zurück zur Startseite",
     "knownWords": "bekanntes Wort",
-    "unknownWords": "unbekanntes Wort"
+    "unknownWords": "unbekanntes Wort",
+    "infoTitle": "Lernkarten",
+    "infoDescription": "Lernkarten sind eine effektive Methode, um Wörter zu lernen. Wische nach rechts für Wörter, die du kennst, nach links für Wörter, die du nicht kennst. Wörter, die du kennst, bringen dir Punkte und werden zu deiner Liste der bekannten Wörter hinzugefügt. Wörter, die du nicht kennst, werden zu deiner Liste der unbekannten Wörter hinzugefügt."
   },
   "wordMatching": {
     "title": "Word Matching",
@@ -289,7 +293,9 @@
     "turkish": "Türkisch",
     "matchedWords": "Zugeordnete Wörter",
     "language": "Deutsch",
-    "earnedPoints": "Du hast gewonnen"
+    "earnedPoints": "Du hast gewonnen",
+    "infoTitle": "Wort-Matching-Spiel",
+    "infoDescription": "In diesem Spiel musst du nur Wörter mit ihren Bedeutungen verbinden. Um Punkte zu erhalten, musst du das Spiel nur abschließen. Viel Glück!"
   },
   "studyMode": {
     "title": "Wie möchten Sie lernen?",
@@ -318,7 +324,9 @@
       "retry": "Erneut versuchen",
       "correct": "Richtig!",
       "incorrect": "Falsch! Richtige Antwort: {{answer}}",
-      "back": "Zurück"
+      "back": "Zurück",
+      "infoTitle": "Quiz-Spiel",
+      "infoDescription": "Wörter, die du kennst, bringen dir Punkte ein. Dieses Modul beeinflusst nicht deine Listen mit bekannten/unbekannten Wörtern. Du kannst die gleiche Liste unbegrenzt oft spielen. Aber du bekommst nur bei deinem ersten Spiel Punkte. Viel Glück!"
 
   },
   "learnIndex": {

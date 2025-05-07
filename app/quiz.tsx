@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Audio } from 'expo-av';
 import { addSkippedWordListId } from '@/services/gameRequestServices';
 import { useTranslation } from 'react-i18next';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, SafeAreaView, ActivityIndicator, Image, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, SafeAreaView, ActivityIndicator, Image, KeyboardAvoidingView, ScrollView, Platform, Modal } from 'react-native';
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -38,7 +39,7 @@ interface QuizQuestion {
 }
 
 export default function QuizPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { listId } = useLocalSearchParams();
   const router = useRouter();
   const { mode } = useTheme();
@@ -52,6 +53,8 @@ export default function QuizPage() {
   const [showResult, setShowResult] = useState(false);
   const userPoint = useSelector((state: RootState) => state.user.point);
   const [wordList, setWordList] = useState<WordListWithItems | null>(null);
+  const [showInfoModal, setShowInfoModal] = useState(false); // Bilgilendirme modalı için state
+  const [currentLanguage, setCurrentLanguage] = useState<string>(i18n.language);
 
   const dispatch = useDispatch();
   const pointScale = useSharedValue(1);
@@ -94,6 +97,69 @@ export default function QuizPage() {
     );
   };
 
+  // Quiz ilerlemesini kaydetme fonksiyonu
+  const saveQuizProgress = async (currentIndex: number, currentScore: number) => {
+    if (!listId) return;
+    
+    try {
+      const progressData = {
+        currentQuestionIndex: currentIndex,
+        score: currentScore,
+        questions: questions,
+        timestamp: new Date().getTime()
+      };
+      
+      await AsyncStorage.setItem(`quiz_progress_${listId}`, JSON.stringify(progressData));
+      console.log('Quiz ilerlemesi kaydedildi');
+    } catch (error) {
+      console.error('Quiz ilerlemesi kaydedilemedi:', error);
+    }
+  };
+
+  // Quiz ilerlemesini yükleme fonksiyonu
+  const loadQuizProgress = async () => {
+    if (!listId) return false;
+    
+    try {
+      const savedProgress = await AsyncStorage.getItem(`quiz_progress_${listId}`);
+      
+      if (savedProgress) {
+        const progressData = JSON.parse(savedProgress);
+   
+        // Kaydedilmiş soruları ve ilerlemeyi yükle
+        setQuestions(progressData.questions);
+        setCurrentQuestionIndex(progressData.currentQuestionIndex);
+        setScore(progressData.score);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Quiz ilerlemesi yüklenemedi:', error);
+      return false;
+    }
+  };
+
+  // Quiz ilerlemesini temizleme fonksiyonu
+  const clearQuizProgress = async () => {
+    if (!listId) return;
+    
+    try {
+      await AsyncStorage.removeItem(`quiz_progress_${listId}`);
+      console.log('Quiz ilerlemesi temizlendi');
+    } catch (error) {
+      console.error('Quiz ilerlemesi temizlenemedi:', error);
+    }
+  };
+
+  // Dil değişikliklerini izle
+  useEffect(() => {
+    // Dil değiştiğinde currentLanguage'i güncelle
+    if (i18n.language !== currentLanguage) {
+      setCurrentLanguage(i18n.language);
+    }
+  }, [i18n.language]);
+
   // Flashcardları çek
   useEffect(() => {
     const loadFlashcards = async () => {
@@ -101,14 +167,22 @@ export default function QuizPage() {
       
       try {
         setLoading(true);
-        const wordList = await fetchWordListItems(listId as string);
+        
+        // Her durumda kelime listesini çek
+        const wordList = await fetchWordListItems(listId as string, currentLanguage);
         setFlashcards(wordList.cards);
         setWordList(wordList);
         
-        if (wordList.cards.length > 0) {
-          // Flashcardlardan quiz soruları oluştur
-          const quizQuestions = generateQuizQuestions(wordList.cards);
-          setQuestions(quizQuestions);
+        // Önce kaydedilmiş ilerlemeyi kontrol et
+        const hasProgress = await loadQuizProgress();
+        
+        // Eğer kaydedilmiş ilerleme yoksa veya yüklenemediyse, yeni quiz başlat
+        if (!hasProgress) {
+          if (wordList.cards.length > 0) {
+            // Flashcardlardan quiz soruları oluştur
+            const quizQuestions = generateQuizQuestions(wordList.cards);
+            setQuestions(quizQuestions);
+          }
         }
       } catch (error) {
         console.error('Flashcard yükleme hatası:', error);
@@ -118,7 +192,12 @@ export default function QuizPage() {
     };
     
     loadFlashcards();
-  }, [listId]);
+    
+    // İlk açılışta bilgilendirme modalını göster
+    setTimeout(() => {
+      setShowInfoModal(true);
+    }, 500);
+  }, [listId, currentLanguage]);
   
   // Flashcardlardan quiz soruları oluştur
   const generateQuizQuestions = (cards: FlashCard[]): QuizQuestion[] => {
@@ -197,8 +276,10 @@ export default function QuizPage() {
     // Cevaba göre uygun ses dosyasını çal
     await playSound(correct);
     
+    let newScore = score;
     if (correct) {
-      setScore(prev => prev + 1);
+      newScore = score + 1;
+      setScore(newScore);
       
       // Doğru cevap verildiğinde point'i artır
       const user = await supabase.auth.getUser();
@@ -208,12 +289,19 @@ export default function QuizPage() {
       }
     }
     
+    // Kullanıcının mevcut ilerlemesini kaydet
+    await saveQuizProgress(currentQuestionIndex, newScore);
+    
     // Move to next question after delay
     setTimeout(async () => {
       if (currentQuestionIndex < questions.length - 1) {
-        setCurrentQuestionIndex(prev => prev + 1);
+        const nextIndex = currentQuestionIndex + 1;
+        setCurrentQuestionIndex(nextIndex);
         setSelectedAnswer(null);
         setIsCorrect(null);
+        
+        // Bir sonraki soruya geçtiğimizde ilerlemeyi kaydet
+        await saveQuizProgress(nextIndex, newScore);
       } else {
         // Tüm sorular bitti, başarı sesini çal
         try {
@@ -228,21 +316,21 @@ export default function QuizPage() {
           console.error('Başarı sesi çalma hatası:', error);
         }
         
+        // Quiz tamamlandığında ilerlemeyi temizle
+        await clearQuizProgress();
         setShowResult(true);
       }
     }, 1500);
   };
-  
-  const handleRestart = async () => {
-    setCurrentQuestionIndex(0);
-    setSelectedAnswer(null);
-    setIsCorrect(null);
-    setScore(0);
-    setShowResult(false);
-  };
-
-  
-  const handleBackToStudyMode = () => {
+  console.log(wordList)
+  const handleBackToStudyMode = async () => {
+    // Sonuç ekranından çıkarken ilerlemeyi temizle
+    if (showResult) {
+      await clearQuizProgress();
+    } else {
+      // Eğer quiz tamamlanmadan çıkılıyorsa, mevcut ilerlemeyi kaydet
+      await saveQuizProgress(currentQuestionIndex, score);
+    }
     router.back();
   };
   
@@ -308,141 +396,176 @@ export default function QuizPage() {
   }
   
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: mode === 'dark' ? Colors.dark.background : Colors.light.background }]}> 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={0}
-      >
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
+    <View style={{ flex: 1 }}>
+      <SafeAreaView style={[styles.container, { backgroundColor: mode === 'dark' ? Colors.dark.background : Colors.light.background }]}> 
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={0}
         >
-          <Image
-            source={require('@/assets/images/game-background.png')}
-            style={styles.backgroundImage}
-            resizeMode="cover"
-          />
-          <View style={styles.header}>
-        
-
-        <View>
-          <Text style={styles.headerTitle}>{wordList?.title}</Text>
-          <Text style={styles.headerSubtitle}>{wordList?.subtitle}</Text>
-        </View>
-        <View style={styles.pointContainer}>
-          <View style={styles.pointIconWrapper}>
-            <Icon
-              name="water"
-              size={24}
-              color="#FFFFFF"
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Image
+              source={require('@/assets/images/game-background.png')}
+              style={styles.backgroundImage}
+              resizeMode="cover"
             />
-          </View>
-          <Animated.Text style={[styles.pointText, pointAnimatedStyle]}>
-            {userPoint}
-          </Animated.Text>
-        </View>
-      </View>
-      
-      
-      <View style={styles.headerProgressCustom}>
+            <View style={styles.header}>
+              <View style={styles.headerTitleContainer}>
+                <Text style={styles.headerTitle}>{wordList?.title}</Text>
+              </View>
+              
+              <View style={styles.headerRightContainer}>
+                <TouchableOpacity 
+                  style={styles.infoButton} 
+                  onPress={() => setShowInfoModal(true)}
+                >
+                  <MaterialCommunityIcons name="information-outline" size={24} color="#FFF" />
+                </TouchableOpacity>
+                
+                <View style={styles.pointContainer}>
+                  <View style={styles.pointIconWrapper}>
+                    <Icon
+                      name="water"
+                      size={24}
+                      color="#FFFFFF"
+                    />
+                  </View>
+                  <Animated.Text style={[styles.pointText, pointAnimatedStyle]}>
+                    {userPoint}
+                  </Animated.Text>
+                </View>
+              </View>
+            </View>
         
-        <Text style={styles.progressTextCustom}>{currentQuestionIndex + 1} / {questions.length}</Text>
-        <View style={styles.progressBarWrapper}>
-          <View style={styles.progressBarBg}>
-            <View 
-              style={[
-                styles.progressBarFill, 
-                { width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }
-              ]}
-            />
-          </View>
-        </View>
-      </View>
-      
-      <Animated.View 
-        key={currentQuestionIndex}
-        entering={FadeInDown}
-        style={styles.questionContainer}
-      >
-        <Text style={styles.questionLabel}>{t('quiz.questionLabel')}</Text>
-        <View style={styles.wordContainerCustom}>
-          <Text style={styles.wordTextCustom}>{currentQuestion.word}</Text>
-        </View>
         
-        <View style={styles.optionsContainer}>
-          {currentQuestion.options.map((option, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[
-                styles.optionButton,
-                selectedAnswer === option && (
-                  option === currentQuestion.correctAnswer 
-                    ? styles.correctOption 
-                    : styles.incorrectOption
-                )
-              ]}
-              onPress={() => handleAnswerSelect(option)}
-              disabled={selectedAnswer !== null}
-            >
-              <Text 
+        <View style={styles.headerProgressCustom}>
+          
+          <Text style={styles.progressTextCustom}>{currentQuestionIndex + 1} / {questions.length}</Text>
+          <View style={styles.progressBarWrapper}>
+            <View style={styles.progressBarBg}>
+              <View 
                 style={[
-                  styles.optionText,
+                  styles.progressBarFill, 
+                  { width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }
+                ]}
+              />
+            </View>
+          </View>
+        </View>
+        
+        <Animated.View 
+          key={currentQuestionIndex}
+          entering={FadeInDown}
+          style={styles.questionContainer}
+        >
+          <Text style={styles.questionLabel}>{t('quiz.questionLabel')}</Text>
+          <View style={styles.wordContainerCustom}>
+            <Text style={styles.wordTextCustom}>{currentQuestion.word}</Text>
+          </View>
+          
+          <View style={styles.optionsContainer}>
+            {currentQuestion.options.map((option, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.optionButton,
                   selectedAnswer === option && (
                     option === currentQuestion.correctAnswer 
-                      ? styles.correctOptionText 
-                      : styles.incorrectOptionText
+                      ? styles.correctOption 
+                      : styles.incorrectOption
                   )
                 ]}
+                onPress={() => handleAnswerSelect(option)}
+                disabled={selectedAnswer !== null}
               >
-                {option}
-              </Text>
-              
-              {selectedAnswer === option && option === currentQuestion.correctAnswer && (
-                <MaterialCommunityIcons 
-                  name="check-circle" 
-                  size={24} 
-                  color="#FFFFFF" 
-                  style={styles.optionIcon}
-                />
-              )}
-              
-              {selectedAnswer === option && option !== currentQuestion.correctAnswer && (
-                <MaterialCommunityIcons 
-                  name="close-circle" 
-                  size={24} 
-                  color="#FFFFFF" 
-                  style={styles.optionIcon}
-                />
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
-      </Animated.View>
-      
-      {selectedAnswer && (
-        <Animated.View 
-          entering={FadeInUp}
-          style={[
-            styles.feedbackContainer,
-            isCorrect ? styles.correctFeedback : styles.incorrectFeedback
-          ]}
-        >
-          <MaterialCommunityIcons 
-            name={isCorrect ? "check-circle" : "close-circle"} 
-            size={24} 
-            color="#FFFFFF" 
-          />
-          <Text style={styles.feedbackText}>
-            {isCorrect 
-  ? t('quiz.correct') 
-  : t('quiz.incorrect', { answer: currentQuestion.correctAnswer })}
-          </Text>
+                <Text 
+                  style={[
+                    styles.optionText,
+                    selectedAnswer === option && (
+                      option === currentQuestion.correctAnswer 
+                        ? styles.correctOptionText 
+                        : styles.incorrectOptionText
+                    )
+                  ]}
+                >
+                  {option}
+                </Text>
+                
+                {selectedAnswer === option && option === currentQuestion.correctAnswer && (
+                  <MaterialCommunityIcons 
+                    name="check-circle" 
+                    size={24} 
+                    color="#FFFFFF" 
+                    style={styles.optionIcon}
+                  />
+                )}
+                
+                {selectedAnswer === option && option !== currentQuestion.correctAnswer && (
+                  <MaterialCommunityIcons 
+                    name="close-circle" 
+                    size={24} 
+                    color="#FFFFFF" 
+                    style={styles.optionIcon}
+                  />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
         </Animated.View>
-      )}
-      </ScrollView>
-    </KeyboardAvoidingView>
-  </SafeAreaView>
+        
+        {selectedAnswer && (
+          <Animated.View 
+            entering={FadeInUp}
+            style={[
+              styles.feedbackContainer,
+              isCorrect ? styles.correctFeedback : styles.incorrectFeedback
+            ]}
+          >
+            <MaterialCommunityIcons 
+              name={isCorrect ? "check-circle" : "close-circle"} 
+              size={24} 
+              color="#FFFFFF" 
+            />
+            <Text style={styles.feedbackText}>
+              {isCorrect 
+    ? t('quiz.correct') 
+    : t('quiz.incorrect', { answer: currentQuestion.correctAnswer })}
+            </Text>
+          </Animated.View>
+        )}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+    
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={showInfoModal}
+      onRequestClose={() => setShowInfoModal(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>{t('quiz.infoTitle') || "Quiz Oyunu"}</Text>
+          </View>
+          <View style={styles.modalBody}>
+            <Text style={styles.modalDescription}>{t('quiz.infoDescription')}</Text>
+          </View>
+          <View style={styles.modalFooter}>
+            <TouchableOpacity 
+              style={styles.modalButton} 
+              onPress={() => setShowInfoModal(false)}
+            >
+              <Text style={styles.modalButtonText}>{t('buttons.okay') || "Anladım"}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  </View>
 );
 }
 
@@ -550,6 +673,16 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E5E7EB',
     marginTop: 40,
   },
+  headerTitleContainer: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'center',
+  },
+  headerRightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -578,6 +711,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    maxWidth: 90,
   },
   pointIconWrapper: {
     backgroundColor: '#3a75d5',
@@ -590,6 +724,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginRight: 8,
+  },
+  infoButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(73, 151, 229, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 10,
+    marginRight: 5,
   },
   headerProgressCustom: {
     flexDirection: 'row',
@@ -813,5 +957,67 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+  },
+  // Modal stilleri
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    width: '85%',
+    maxWidth: 400,
+    padding: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    backgroundColor: '#4361EE',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  },
+  modalTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalBody: {
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+  },
+  modalDescription: {
+    color: '#333333',
+    fontSize: 16,
+    lineHeight: 24,
+    textAlign: 'center',
+  },
+  modalFooter: {
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    padding: 16,
+    alignItems: 'center',
+  },
+  modalButton: {
+    backgroundColor: '#4361EE',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    minWidth: 120,
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

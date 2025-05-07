@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Modal } from 'react-native';
 import { Audio } from 'expo-av';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, ScrollView, Dimensions, StatusBar, Platform, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -41,6 +42,7 @@ const HangmanGame = () => {
   const [loading, setLoading] = useState(true);
   const [scoreAnimation] = useState(new Animated.Value(0));
   const [fadeAnim] = useState(new Animated.Value(0));
+  const [showInfoModal, setShowInfoModal] = useState(false);
   const [remainingAttempts, setRemainingAttempts] = useState(5); // Kalan hak sayısı
   const [attemptAnimation] = useState(new Animated.Value(0)); // Hak azalma animasyonu için
   const { t, i18n } = useTranslation();
@@ -110,6 +112,11 @@ const HangmanGame = () => {
     }).start();
     
     selectRandomWord();
+    
+    // İlk açılışta bilgilendirme modalını göster
+    setTimeout(() => {
+      setShowInfoModal(true);
+    }, 500);
   }, []);
 
   const getMaskedWord = () => {
@@ -401,12 +408,19 @@ const HangmanGame = () => {
             <TouchableOpacity style={styles.headerBackButton} onPress={() => {
               router.replace('/');
             }}>
-              <Icon name="arrow-back" size={24} color="#FFF" />
+              <Icon name="arrow-back" size={24} color="#FFFFFF" />
             </TouchableOpacity>
             
             <View style={styles.titleContainerCenter}>
               <Text style={styles.title}>{t('writing.title')}</Text>
             </View>
+            
+            <TouchableOpacity 
+              style={styles.infoButton} 
+              onPress={() => setShowInfoModal(true)}
+            >
+              <Icon name="info-outline" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
 
           { currentWord && (
@@ -524,6 +538,30 @@ const HangmanGame = () => {
           )}
         </ScrollView>
       </SafeAreaView>
+      
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showInfoModal}
+        onRequestClose={() => {
+          setShowInfoModal(false);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{t('writing.infoTitle') || "Kelime Tahmin Oyunu"}</Text>
+            <Text style={styles.modalDescription}>
+              {t('writing.infoDescription') || "Maksimum kazanabileceğin puan kelimedeki harf sayısı kadardır. Her bilemediğin harf için kazanacağın puan 1 eksilir. Daha çok puan kazanmak için kelimeyi hatasız tahmin etmeye çalış. Bol şans!"}
+            </Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setShowInfoModal(false)}
+            >
+              <Text style={styles.modalButtonText}>{t('buttons.okay') || "Anladım"}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -534,6 +572,52 @@ const buttonSize = Math.min(28, width / 14); // Daha küçük buton boyutu
 const isSmallDevice = width < 375;
 
 const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#4361EE',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  modalDescription: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 20,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  modalButton: {
+    backgroundColor: '#4361EE',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    marginTop: 10,
+  },
+  modalButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -570,6 +654,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     marginBottom: 20,
     marginTop: 40,
+  },
+  infoButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(73, 151, 229, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 5,
   },
   backButton: {
     width: 160,

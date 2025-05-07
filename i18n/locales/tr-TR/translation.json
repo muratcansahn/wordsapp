@@ -265,7 +265,9 @@
     "share": "Paylaş",
     "backToHome": "Ana Sayfaya Dön",
     "knownWords": "bilinen kelime",
-    "unknownWords": "bilinmeyen kelime"
+    "unknownWords": "bilinmeyen kelime",
+    "infoTitle": "Kelime Kartları",
+    "infoDescription": "Kelime kartları, kelimeleri öğrenmek için etkili bir yöntemdir. Bildiğin kelimeleri sağa, bilmediğin kelimeleri sola kaydır. Bildiğin kelimeler sana puan kazandırır ve biliyorum listesine eklenir. Bilmediğin kelimeler ise bilmiyorum listesine eklenir."
   },
   "wordMatching": {
     "title": "Kelime Eşleştirme",
@@ -280,7 +282,9 @@
     "turkish": "Türkçe",
     "matchedWords": "Eşleşen Kelimeler",
     "language": "Türkçe",
-    "earnedPoints": "Kazandınız"
+    "earnedPoints": "Kazandınız",
+    "infoTitle": "Kelime Eşleştirme Oyunu",
+    "infoDescription": "Bu oyunda tek yapman gereken, kelimeleri anlamları ile eşleştirmen. Puan almak için oyunu tamamlaman yeterli olacaktır. Bol şans!"
   },
   "studyMode": {
     "title": "Nasıl öğrenmek istersiniz?",
@@ -308,7 +312,9 @@
       "retry": "Tekrar Dene",
       "correct": "Doğru!",
       "incorrect": "Yanlış! Doğru cevap: {{answer}}",
-      "back": "Geri Dön"
+      "back": "Geri Dön",
+      "infoTitle": "Quiz Oyunu",
+      "infoDescription": "Bildiğin kelimeler sana puan kazandırır, bu modül biliyorum/bilmiyorum kelime listelerini etkilemez. Aynı listeyi sınırsız oynayabilirsin. Fakat sadece ilk oynayışında puan kazanırsın. Bol şans!"
     
   },
   "learnIndex": {
@@ -355,7 +361,9 @@
     "youWon": "Kazandınız!",
     "youLost": "Kaybettiniz!",
     "remainingAttempts": "Kalan hak: {{attempts}}",
-    "attemptLost": "Bir hak kaybettiniz!"
+    "attemptLost": "Bir hak kaybettiniz!",
+    "infoTitle": "Kelime Tahmin Oyunu",
+    "infoDescription": "Maksimum kazanabileceğin puan kelimedeki harf sayısı kadardır. Her bilemediğin harf için kazanacağın puan 1 eksilir. Daha çok puan kazanmak için kelimeyi hatasız tahmin etmeye çalış. Bol şans!"
   }
 
 }

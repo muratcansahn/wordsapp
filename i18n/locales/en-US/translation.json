@@ -242,7 +242,9 @@
     "share": "Share",
     "backToHome": "Back to Home",
     "knownWords": "known word",
-    "unknownWords": "unknown word"
+    "unknownWords": "unknown word",
+    "infoTitle": "Flashcards",
+    "infoDescription": "Flashcards are an effective way to learn words. Swipe right for words you know, left for words you don't know. Words you know will earn you points and be added to your known list. Words you don't know will be added to your unknown list."
   },
   "wordMatching": {
     "title": "Word Matching",
@@ -285,7 +287,9 @@
       "retry": "Try Again",
       "correct": "Correct!",
       "incorrect": "Incorrect! Correct answer: {{answer}}",
-      "back": "Back"
+      "back": "Back",
+      "infoTitle": "Quiz Game",
+      "infoDescription": "Words you know earn you points, this module doesn't affect your know/don't know word lists. You can play the same list unlimited times. But you only earn points on your first play. Good luck!"
     
   },
   "learnIndex": {

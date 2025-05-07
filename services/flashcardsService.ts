@@ -87,7 +87,7 @@ export const fetchWordListItems = async (listId: string, languageCode?: string):
       };
     }
     
-    // Dil kodu parametre olarak gelmezse i18n'den al
+    // Dil kodu parametre olarak gelmezse i18n'den mevcut dili al
     const selectedLanguage = languageCode || i18n.language;
     // Kelimelerin çevirilerini çek (sadece seçili dile göre)
     const { data: translations, error: translationsError } = await supabase

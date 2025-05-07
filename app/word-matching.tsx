@@ -10,7 +10,9 @@ import {
   SafeAreaView,
   Dimensions,
   Platform,
-  StatusBar as RNStatusBar
+  StatusBar as RNStatusBar,
+  Modal,
+  Pressable
 } from 'react-native';
 import Loader from '@/components/common/loader/native-loader';
 import { useRouter } from 'expo-router';
@@ -68,6 +70,7 @@ export default function WordMatchingScreen() {
   const [earnedPoints, setEarnedPoints] = useState(0);
   const [newTotalPoints, setNewTotalPoints] = useState(0);
   const [sound, setSound] = useState<Audio.Sound | null>(null); // Ses nesnesi için state
+  const [showInfoModal, setShowInfoModal] = useState(false); // Bilgilendirme modalı için state
   
   // Animasyon değerleri
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -84,6 +87,11 @@ export default function WordMatchingScreen() {
   useEffect(() => {
     // Sayfa yüklendiğinde otomatik olarak oyunu başlat
     startNewGame();
+    
+    // İlk açılışta bilgilendirme modalını göster
+    setTimeout(() => {
+      setShowInfoModal(true);
+    }, 500);
   }, []);
   
   // Oyun tamamlandığında sesi çalmak için useEffect
@@ -420,6 +428,13 @@ export default function WordMatchingScreen() {
         <View style={styles.titleContainerCenter}>
           <Text style={styles.title}>{t('wordMatching.title', 'KELİME EŞLEŞTİRME')}</Text>
         </View>
+        
+        <TouchableOpacity 
+          style={styles.infoButton} 
+          onPress={() => setShowInfoModal(true)}
+        >
+          <Icon name="info-outline" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
       </View>
       <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
       <ScrollView 
@@ -600,6 +615,30 @@ export default function WordMatchingScreen() {
             
           )}
         </ScrollView>
+        
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={showInfoModal}
+          onRequestClose={() => {
+            setShowInfoModal(false);
+          }}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>{t('wordMatching.infoTitle') || "Kelime Eşleştirme Oyunu"}</Text>
+              <Text style={styles.modalDescription}>
+                {t('wordMatching.infoDescription') || "Bu oyunda tek yapman gereken, kelimeleri anlamları ile eşleştirmen. Puan almak için oyunu tamamlaman yeterli olacaktır. Bol şans!"}
+              </Text>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => setShowInfoModal(false)}
+              >
+                <Text style={styles.modalButtonText}>{t('buttons.okay') || "Anladım"}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
     </ThemedView>
     );
 }
@@ -608,6 +647,54 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
+  },
+  
+  // Modal stilleri
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#4361EE',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  modalDescription: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 20,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  modalButton: {
+    backgroundColor: '#4361EE',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    marginTop: 10,
+  },
+  modalButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 
   completionGradient: {
@@ -677,6 +764,15 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
+  },
+  infoButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(73, 151, 229, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
   },
   backButtonText: {
     color: '#fff',
@@ -1020,11 +1116,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    paddingHorizontal:15,
+    paddingHorizontal: 15,
     marginBottom: 20,
     marginTop: 40,
-    
   },
+
   titleContainerCenter: {
     flex: 1,
     alignItems: 'center',

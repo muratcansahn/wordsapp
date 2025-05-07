@@ -245,13 +245,17 @@
     "share": "Compartir",
     "backToHome": "Volver al inicio",
     "knownWords": "palabra conocida",
-    "unknownWords": "palabra desconocida"
+    "unknownWords": "palabra desconocida",
+    "infoTitle": "Tarjetas de Vocabulario",
+    "infoDescription": "Las tarjetas de vocabulario son una forma eficaz de aprender palabras. Desliza a la derecha para las palabras que conoces, a la izquierda para las que no conoces. Las palabras que conoces te darán puntos y se añadirán a tu lista de palabras conocidas. Las palabras que no conoces se añadirán a tu lista de palabras desconocidas."
   },
   "writing": {
-    "title": "Ejercicio de Escritura",
+    "title": "Ejercicio de escritura",
     "loadingWord": "Cargando palabra...",
-    "score": "Puntuación: {{score}}",
+    "score": "Puntos: {{score}}",
     "writeWord": "Escribe la palabra:",
+    "infoTitle": "Juego de Adivinanza de Palabras",
+    "infoDescription": "La puntuación máxima que puedes ganar es igual al número de letras en la palabra. Por cada letra que no adivines, pierdes 1 punto. Intenta adivinar la palabra sin errores para ganar más puntos. ¡Buena suerte!",
     "hint": "Pista: {{translation}}",
     "revealLetter": "Revelar letra (-15 puntos)",
     "skipWord": "Saltar palabra",
@@ -289,7 +293,9 @@
     "turkish": "Turco",
     "matchedWords": "Palabras emparejadas",
     "language": "Español",
-    "earnedPoints": "Has ganado"
+    "earnedPoints": "Has ganado",
+    "infoTitle": "Juego de Emparejamiento de Palabras",
+    "infoDescription": "En este juego, solo tienes que emparejar palabras con sus significados. Para ganar puntos, solo necesitas completar el juego. ¡Buena suerte!"
   },
   "studyMode": {
     "title": "¿Cómo te gustaría aprender?",
@@ -317,7 +323,9 @@
       "retry": "Intentar de nuevo",
       "correct": "¡Correcto!",
       "incorrect": "¡Incorrecto! Respuesta correcta: {{answer}}",
-      "back": "Volver"
+      "back": "Volver",
+      "infoTitle": "Juego de Quiz",
+      "infoDescription": "Las palabras que conoces te hacen ganar puntos, este módulo no afecta tus listas de palabras que conoces/no conoces. Puedes jugar la misma lista ilimitadamente. Pero solo ganas puntos en tu primera partida. ¡Buena suerte!"
     
   },
   "learnIndex": {
