@@ -1,7 +1,11 @@
 {
   "appName": "Ship Mobile Fast",
   "common": {
-    "goBack": "Go Back"
+    "goBack": "Go Back",
+    "tryAgain": "Try Again",
+    "betterLuckNextTime": "Better luck next time",
+    "oopsYouLost": "Oops! You lost",
+    "correctAnswer": "Correct answer"
   },
   "language": "Language",
   "success": "Success",

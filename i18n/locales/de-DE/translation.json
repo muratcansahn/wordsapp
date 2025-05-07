@@ -4,7 +4,8 @@
     "goBack": "Zurück",
     "tryAgain": "Versuche es erneut",
     "betterLuckNextTime": "Viel Glück beim nächsten Mal",
-    "oopsYouLost": "Hoppla! Du hast verloren"
+    "oopsYouLost": "Hoppla! Du hast verloren",
+    "correctAnswer": "Richtige Antwort"
   },
   "language": "Sprache",
   "success": "Erfolgreich",

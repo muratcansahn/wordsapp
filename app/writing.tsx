@@ -181,74 +181,62 @@ const HangmanGame = () => {
     }
   };
 
-  // Ses dosyalarını önceden yükle
-  const [winSound, setWinSound] = useState<Audio.Sound | null>(null);
-  const [loseSound, setLoseSound] = useState<Audio.Sound | null>(null);
-
-  // Component mount olduğunda sesleri yükle
+  // Audio API başlatma işlemi için useEffect
   useEffect(() => {
-    const loadSounds = async () => {
+    const initAudio = async () => {
       try {
-        const { sound: successSound } = await Audio.Sound.createAsync(
-          require('@/assets/audio/success-end.mp3')
-        );
-        setWinSound(successSound);
-
-        const { sound: failSound } = await Audio.Sound.createAsync(
-          require('@/assets/audio/fail-end.mp3')
-        );
-        setLoseSound(failSound);
-
-        console.log('Sesler başarıyla yüklendi');
+        // Audio API'yi başlat
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: false,
+          shouldDuckAndroid: true,
+        });
+        console.log('Audio modülü başarıyla başlatıldı');
       } catch (error) {
-        console.error('Ses yükleme hatası:', error);
+        console.error('Audio modülü başlatma hatası:', error);
       }
     };
-
-    loadSounds();
-
-    // Component unmount olduğunda sesleri boşalt
-    return () => {
-      if (winSound) {
-        winSound.unloadAsync();
-      }
-      if (loseSound) {
-        loseSound.unloadAsync();
-      }
-    };
+    
+    initAudio();
   }, []);
 
   // Ses dosyalarını çalmak için fonksiyon
+  // Her çağrıda yeni bir ses nesnesi oluşturur ve çalar
   const playSound = async (soundType: 'win' | 'lose') => {
     try {
-      console.log(`playSound called with type: ${soundType}`); // Log the type requested
+      console.log(`Ses çalınıyor: ${soundType}`);
+      
+      let soundSource;
       if (soundType === 'win') {
-        if (winSound) {
-          console.log('Attempting to play WIN sound object.'); // Log which object
-          await winSound.setPositionAsync(0);
-          await winSound.playAsync();
-          console.log('Kazanma sesi çalındı');
-        } else {
-          console.log('WIN sound object is null.'); // Log if null
-        }
+        soundSource = require('@/assets/audio/success-end.mp3');
       } else if (soundType === 'lose') {
-        if (loseSound) {
-          console.log('Attempting to play LOSE sound object.'); // Log which object
-          await loseSound.setPositionAsync(0);
-          await loseSound.playAsync();
-          console.log('Kaybetme sesi çalındı');
-        } else {
-          console.log('LOSE sound object is null.'); // Log if null
-        }
+        soundSource = require('@/assets/audio/fail-end.mp3');
       } else {
-        // This case should not happen with the current types, but good for safety
-        console.log(`Invalid soundType received: ${soundType}`);
+        console.log(`Geçersiz ses tipi: ${soundType}`);
+        return;
       }
+      
+      // Yeni bir ses nesnesi oluştur ve çal
+      const { sound } = await Audio.Sound.createAsync(
+        soundSource,
+        { shouldPlay: true }
+      );
+      
+      // Ses çalındığında unload et
+      sound.setOnPlaybackStatusUpdate(async (status) => {
+        if (status.isLoaded && 'didJustFinish' in status && status.didJustFinish) {
+          console.log(`${soundType} sesi tamamlandı, temizleniyor...`);
+          await sound.unloadAsync();
+        }
+      });
+      
+      console.log(`${soundType} sesi başarıyla çalınıyor`);
     } catch (error) {
-      console.error(`Ses çalma hatası (${soundType}):`, error); // Add type to error log
+      console.error(`Ses çalma hatası (${soundType}):`, error);
     }
   };
 
+  // Kelime tamamlama ve oyun durumu kontrolü için useEffect
   useEffect(() => {
     if (!currentWord || gameStatus !== 'playing') return; // Sadece oyun devam ediyorsa ve kelime varsa kontrol et
 
@@ -276,12 +264,12 @@ const HangmanGame = () => {
         duration: 200,
         useNativeDriver: true
       }).start(() => {
+        // Oyun durumunu değiştir - ses çalma işlemi ayrı bir useEffect'te yapılacak
         setGameStatus('won');
-        playSound('win'); // Durum set edildikten sonra sesi çal
 
         if (userId) {
           dispatch(updateUserStats({
-            point: (userState.point || 0) + dynamicScore, // Ensure currentPoint has a fallback
+            point: (userState.point || 0) + dynamicScore,
           }));
           dispatch(incrementWordStatusCounter());
         }
@@ -299,9 +287,7 @@ const HangmanGame = () => {
     // Kaybetme durumu kontrolü (remainingAttempts güncellendiğinde çalışır)
     else if (remainingAttempts <= 0) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      console.log('Oyun kaybedildi (useEffect), ses çalınacak'); // useEffect içindeki log
-
-      playSound('lose').catch(err => console.error('Kaybetme sesi çalma hatası:', err));
+      console.log('Oyun kaybedildi (useEffect)');
 
       // Fade-out animasyonu
       Animated.timing(fadeAnim, {
@@ -309,7 +295,8 @@ const HangmanGame = () => {
         duration: 200,
         useNativeDriver: true
       }).start(() => {
-        setGameStatus('lost'); // Durum set edildikten sonra sesi çal
+        // Oyun durumunu değiştir - ses çalma işlemi ayrı bir useEffect'te yapılacak
+        setGameStatus('lost');
 
         // Fade-in animasyonu
         setTimeout(() => {
@@ -321,8 +308,28 @@ const HangmanGame = () => {
         }, 100);
       });
     }
-  // Bağımlılıkları ekle: guessedLetters, remainingAttempts, currentWord, gameStatus, userId, userState.point, dispatch, playSound, fadeAnim
-  }, [guessedLetters, remainingAttempts, currentWord, gameStatus, userId, userState.point, dispatch, playSound, fadeAnim, dynamicScoreValue]);
+  }, [guessedLetters, remainingAttempts, currentWord, gameStatus, userId, userState.point, dispatch, fadeAnim, dynamicScoreValue]);
+  
+  // Oyun durumu değişikliklerini izleyip ses çalma işlemini yapan ayrı bir useEffect
+  // Bu sayede ses çalma işlemi sadece bir kez gerçekleşecek
+  useEffect(() => {
+    // Sadece durum değiştiğinde çalış
+    if (gameStatus === 'won') {
+      // Kazanma durumunda ses çal
+      console.log('Kazanma durumu tespit edildi, ses çalınıyor...');
+      // setTimeout kullanarak işlemi sıraya koy
+      setTimeout(() => {
+        playSound('win');
+      }, 0);
+    } else if (gameStatus === 'lost') {
+      // Kaybetme durumunda ses çal
+      console.log('Kaybetme durumu tespit edildi, ses çalınıyor...');
+      // setTimeout kullanarak işlemi sıraya koy
+      setTimeout(() => {
+        playSound('lose');
+      }, 0);
+    }
+  }, [gameStatus]); // Sadece gameStatus değiştiğinde çalış
 
   const CompletionView = () => {
     // Win ve loss durumlarına göre farklı renkler ve içerik
@@ -370,10 +377,13 @@ const HangmanGame = () => {
                 
                 <Text style={styles.rewardMessage}>{rewardText}</Text>
               </>
-            ) : null 
-            }
-
-          
+            ) : (
+              // Kaybetme durumunda sadece doğru cevabı göster, çerçeve ve gri arka plan olmadan
+              <View style={styles.correctAnswerContainerSimple}>
+                <Text style={styles.correctAnswerLabel}>{t('common.correctAnswer')}:</Text>
+                <Text style={styles.correctAnswerText}>{currentWord?.translation}</Text>
+              </View>
+            )}
             
             <TouchableOpacity
               style={[styles.backButton, !isWin && {backgroundColor: '#E53935'}]}
@@ -1267,6 +1277,56 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
+  },
+  
+  // Doğru cevap gösterimi için stil tanımlamaları
+  correctAnswerContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginVertical: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E53935',
+  },
+  // Sade doğru cevap gösterimi için stil tanımı (kırmızı çerçeve ve gri arka plan olmadan)
+  correctAnswerContainerSimple: {
+    width: '100%',
+    alignItems: 'center',
+    marginVertical: 16,
+    padding: 10,
+  },
+  correctAnswerLabel: {
+    fontSize: 16,
+    color: '#757575',
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  correctAnswerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#E53935',
+    marginBottom: 16,
+  },
+  wordMeaningContainer: {
+    width: '100%',
+    backgroundColor: '#f5f5f5',
+    padding: 12,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  wordText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#212121',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  meaningText: {
+    fontSize: 16,
+    color: '#4361EE',
+    textAlign: 'center',
   },
 });
 
