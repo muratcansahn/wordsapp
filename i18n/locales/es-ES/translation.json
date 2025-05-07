@@ -223,7 +223,11 @@
     "selectFish": "Alimenta tus Peces",
     "selectFishDescription": "¿Qué pez te gustaría alimentar?",
     "orangeFish": "Pez Naranja",
-    "blueFish": "Pez Azul"
+    "blueFish": "Pez Azul",
+    "fishFeeding": {
+      "feeding": "Alimentando al pez",
+      "feedingSuccess": "¡El pez fue alimentado con éxito!"
+    }
   },
   "flashcards": {
     "noCards": "No hay tarjetas para mostrar.",

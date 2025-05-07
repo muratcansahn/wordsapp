@@ -223,7 +223,11 @@
     "selectFish": "Füttere deine Fische",
     "selectFishDescription": "Welchen Fisch möchtest du füttern?",
     "orangeFish": "Oranger Fisch",
-    "blueFish": "Blauer Fisch"
+    "blueFish": "Blauer Fisch",
+    "fishFeeding": {
+      "feeding": "Fisch wird gefüttert",
+      "feedingSuccess": "Fisch wurde erfolgreich gefüttert!"
+    }
   },
   "writing": {
     "title": "Schreibübung",

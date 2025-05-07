@@ -110,10 +110,26 @@
     "theme": "Tema"
   },
   "inAppPurchases": {
-    "title": "Ship Mobile Fast Pro'yu deneyin",
-    "subtitle": "En güçlü modelimizde premium özelliklerle daha fazla mesaj",
-    "info": "Otomatik olarak {{price}} / {{period}} ile devam eder. Her zaman iptal edebilirsiniz. 7 günlük para iade garantisi içerir.",
-    "lifetime-info": "Ömür boyu erişim için {{price}}. 7 günlük para iade garantisi içerir.",
+    "title": "Tüm Özellikleri Aç",
+    "subtitle": "Premium özelliklerle daha fazlasına erişin",
+    "info": "Otomatik olarak {{price}} / {{period}} ile devam eder. Her zaman iptal edebilirsiniz.",
+    "lifetime-info": "Ömür boyu erişim için {{price}}.",
+    "features": {
+      "noAds": "Reklamsız deneyim",
+      "unlimitedIdentification": "Sınırsız anlık kelime tanımlama",
+      "hardWords": "Zor kelimeleri tanımlama gücü",
+      "accurateProgress": "Doğru ilerleme takibi",
+      "statistics": "Kelime öğrenme istatistikleri",
+      "customLists": "Özel kelime listeleri oluşturma",
+      "progressMap": "İlerleme haritası ve rota takibi"
+    },
+    "monthlyPlan": "Aylık Plan",
+    "yearlyPlan": "Yıllık Plan",
+    "bestSavings": "EN İYİ TASARRUF",
+    "subscribe": "Şimdi Başla",
+    "billedMonthly": "Aylık faturalandırılır",
+    "billedYearly": "Yıllık faturalandırılır",
+    "autoRenew": "İstediğiniz zaman iptal edin. Plan otomatik olarak yenilenecektir.",
     "cards": {
       "feature1": {
         "title": "Özellik 1",
@@ -227,7 +243,11 @@
     "blueFish": "Mavi Balık",
     "noGameRightTitle": "Oyun Hakkı Yok",
     "noGameRightDesc": "Yeni oyun hakkınız için beklemeniz gereken süre:\n\n{{time}}",
-    "okButton": "Tamam"
+    "okButton": "Tamam",
+    "fishFeeding": {
+      "feeding": "Balık Besleniyor",
+      "feedingSuccess": "Balık başarıyla beslendi!"
+    }
   },
   "flashcards": {
     "noCards": "Gösterilecek kart yok.",

@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import Button from '@/components/common/buttons/button';
 import { Popup } from '@/components/common/Popup';
 import {
   BORDER_RADIUS,
@@ -70,6 +71,10 @@ interface FishDataInterface {
 type FishDataType = FishDataInterface[];
 
 const createStyles = (mode: 'light' | 'dark') => StyleSheet.create({
+  modalTestButton: {
+    marginHorizontal: 16,
+    marginVertical: 8,
+  },
   container: {
     flex: FLEX.one,
     backgroundColor: mode === 'dark' ? '#001529' : '#E6F7FF',
@@ -740,9 +745,20 @@ export default function DashboardScreen() {
     FeedUserFish();
   };
   
+  const goToModalTest = () => {
+    router.push('/modal-test');
+  };
+
   return (
     <ThemedView style={styles.container}>
       <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <Button
+          onPress={goToModalTest}
+          bgColor={Colors.light.primary}
+          style={styles.modalTestButton}
+        >
+          <Text>Modal Test Ekranı</Text>
+        </Button>
         {/* Butonlar */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
@@ -873,7 +889,7 @@ export default function DashboardScreen() {
           setIsEating(false);
         }}
         position="center"
-        title="Balık Besleniyor"
+        title={t('dashboard.fishFeeding.feeding')}
       >
         <View style={styles.feedingPopupContent}>
           <View style={styles.feedingContainer}>
@@ -902,7 +918,7 @@ export default function DashboardScreen() {
         
           {feedingSuccess && (
             <Text style={styles.feedingSuccessText}>
-              Balık başarıyla beslendi!
+              {t('dashboard.fishFeeding.feedingSuccess')}
             </Text>
           )}
         </View>
