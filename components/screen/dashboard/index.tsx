@@ -16,6 +16,7 @@ import { ThemedView } from '@/components/common/view';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { PointContainer } from '@/components/common/point-container';
 import { useRouter } from 'expo-router';
 import Button from '@/components/common/buttons/button';
 import { Popup } from '@/components/common/Popup';
@@ -536,9 +537,10 @@ export default function DashboardScreen() {
   const router = useRouter();
   const dispatch = useDispatch();
 
-  
   // Redux'tan kullanıcı bilgilerini al
   const { id, full_name, point, streak_count, wordStatusUpdateCounter } = useSelector((state: RootState) => state.user);
+  // Puan konteynerı için referans
+  const pointContainerRef = React.useRef<any>(null);
   const [wordStats, setWordStats] = useState<Array<{
     id: string;
     title: string;
@@ -816,16 +818,7 @@ export default function DashboardScreen() {
             </Text>
           </TouchableOpacity>
      
-            <View style={styles.pointContainer}>
-              <View style={styles.pointIconWrapper}>
-                <Ionicons
-                  name="water-outline"
-                  size={ICON_SIZE.sm}
-                  color="#FFFFFF"
-                />
-              </View>
-              <Text style={styles.pointText}>{point}</Text>
-            </View>
+            <PointContainer ref={pointContainerRef} />
        
         </View>
         <Aquarium 

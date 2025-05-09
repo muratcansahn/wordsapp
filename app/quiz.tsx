@@ -20,6 +20,7 @@ import Animated, {
   useSharedValue,
   withTiming
 } from 'react-native-reanimated';
+import { PointContainer } from '@/components/common/point-container';
 import { fetchWordListItems, FlashCard, WordListWithItems } from '@/services/flashcardsService';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
@@ -57,8 +58,8 @@ export default function QuizPage() {
   const [currentLanguage, setCurrentLanguage] = useState<string>(i18n.language);
 
   const dispatch = useDispatch();
-  const pointScale = useSharedValue(1);
-  const pointOpacity = useSharedValue(1);
+  // Puan konteynerı için referans
+  const pointContainerRef = React.useRef<any>(null);
   useEffect(() => {
     const sendSkippedList = async () => {
       if (showResult && listId) {
@@ -79,22 +80,13 @@ export default function QuizPage() {
     // showResult değiştiğinde tetiklenir
   }, [showResult, listId]);
 
-  const pointAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: pointScale.value }],
-      opacity: pointOpacity.value,
-    };
-  });
+
 
   const animatePoint = () => {
-    pointScale.value = withSequence(
-      withSpring(1.3),
-      withSpring(1)
-    );
-    pointOpacity.value = withSequence(
-      withTiming(0.6, { duration: 100 }),
-      withTiming(1, { duration: 100 })
-    );
+    // PointContainer bileşenindeki animatePoint fonksiyonunu çağır
+    if (pointContainerRef.current && pointContainerRef.current.animatePoint) {
+      pointContainerRef.current.animatePoint();
+    }
   };
 
   // Quiz ilerlemesini kaydetme fonksiyonu
@@ -442,18 +434,7 @@ export default function QuizPage() {
                   <MaterialCommunityIcons name="information-outline" size={24} color="#FFF" />
                 </TouchableOpacity>
                 
-                <View style={styles.pointContainer}>
-                  <View style={styles.pointIconWrapper}>
-                    <Icon
-                      name="water"
-                      size={24}
-                      color="#FFFFFF"
-                    />
-                  </View>
-                  <Animated.Text style={[styles.pointText, pointAnimatedStyle]}>
-                    {userPoint}
-                  </Animated.Text>
-                </View>
+                <PointContainer ref={pointContainerRef} />
               </View>
             </View>
         
@@ -726,20 +707,22 @@ const styles = StyleSheet.create({
   pointContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#4a85e5',
-    borderRadius: 25,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(73, 151, 229, 0.8)',
+    borderRadius: 20,
     padding: 8,
+    paddingHorizontal: 12,
     marginLeft: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
     maxWidth: 90,
   },
   pointIconWrapper: {
-    backgroundColor: '#3a75d5',
-    borderRadius: 20,
+    backgroundColor: 'rgba(59, 130, 200, 0.8)',
+    borderRadius: 16,
     padding: 5,
     marginRight: 8,
   },
@@ -747,7 +730,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
-    marginRight: 8,
+    textAlign: 'center',
+    minWidth: 30,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   infoButton: {
     width: 40,

@@ -30,6 +30,7 @@ import { incrementUserPointWithRedux } from '@/services/userService';
 import { RootState } from '@/store';
 import { ThemedText } from '@/components/common/typography';
 import { useTheme } from '@/hooks/theme/useTheme';
+import { PointContainer } from '@/components/common/point-container';
 import Animated, { 
   useAnimatedStyle,
   withSpring,
@@ -63,19 +64,15 @@ export default function FlashcardsScreen() {
   const dispatch = useDispatch();
   const { mode } = useTheme();
   const userPoint = useSelector((state: RootState) => state.user.point);
-  
-  const pointScale = useSharedValue(1);
-  const pointOpacity = useSharedValue(1);
+  // Puan konteynerı için referans
+  const pointContainerRef = React.useRef<any>(null);
 
   // Ses state'leri
   const [knownSound, setKnownSound] = useState<Audio.Sound | null>(null);
   const [unknownSound, setUnknownSound] = useState<Audio.Sound | null>(null);
   const [successSound, setSuccessSound] = useState<Audio.Sound | null>(null);
 
-  const pointAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pointScale.value }],
-    opacity: pointOpacity.value,
-  }));
+  
 
   // allWordsMarked true olduğunda başarı sesi sadece bir kere çalınsın
   useEffect(() => {
@@ -126,15 +123,13 @@ export default function FlashcardsScreen() {
     };
   }, []); // Boş bağımlılık dizisi ile sadece mount/unmount'ta çalışır
 
+  
+
   const animatePoint = () => {
-    pointScale.value = withSequence(
-      withSpring(1.3, { damping: 10, stiffness: 100 }),
-      withSpring(1, { damping: 10, stiffness: 100 })
-    );
-    pointOpacity.value = withSequence(
-      withTiming(0.6, { duration: 100 }),
-      withTiming(1, { duration: 100 })
-    );
+    // PointContainer bileşenindeki animatePoint fonksiyonunu çağır
+    if (pointContainerRef.current && pointContainerRef.current.animatePoint) {
+      pointContainerRef.current.animatePoint();
+    }
   };
 
   useEffect(() => {
@@ -546,18 +541,7 @@ export default function FlashcardsScreen() {
             <Icon name="information-outline" size={22} color="#FFFFFF" />
           </TouchableOpacity>
           
-          <View style={styles.pointContainer}>
-            <View style={styles.pointIconWrapper}>
-              <Icon
-                name="water"
-                size={22}
-                color="#FFFFFF"
-              />
-            </View>
-            <Animated.Text style={[styles.pointText, pointAnimatedStyle]}>
-              {userPoint}
-            </Animated.Text>
-          </View>
+          <PointContainer ref={pointContainerRef} />
         </View>
       </View>
 
@@ -797,19 +781,21 @@ const styles = StyleSheet.create({
   pointContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#4a85e5',
-    borderRadius: 25,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(73, 151, 229, 0.8)',
+    borderRadius: 20,
     padding: 8,
+    paddingHorizontal: 12,
     marginLeft: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
   },
   pointIconWrapper: {
-    backgroundColor: '#3a75d5',
-    borderRadius: 20,
+    backgroundColor: 'rgba(59, 130, 200, 0.8)',
+    borderRadius: 16,
     padding: 5,
     marginRight: 8,
   },
@@ -817,7 +803,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
-    marginRight: 8,
+    textAlign: 'center',
+    minWidth: 30,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   statsContainer: {
     flexDirection: 'row',
