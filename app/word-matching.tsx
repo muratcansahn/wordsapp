@@ -14,6 +14,7 @@ import {
   Modal,
   Pressable
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Loader from '@/components/common/loader/native-loader';
 import { useRouter } from 'expo-router';
 import { useSelector, useDispatch } from 'react-redux';
@@ -88,10 +89,27 @@ export default function WordMatchingScreen() {
     // Sayfa yüklendiğinde otomatik olarak oyunu başlat
     startNewGame();
     
-    // İlk açılışta bilgilendirme modalını göster
-    setTimeout(() => {
-      setShowInfoModal(true);
-    }, 500);
+    // Kullanıcının daha önce info modalı görüp görmediğini kontrol et
+    const checkInfoModalShown = async () => {
+      try {
+        const hasSeenInfoModal = await AsyncStorage.getItem('hasSeenWordMatchingInfoModal');
+        
+        // Eğer kullanıcı daha önce modalı görmemişse göster
+        if (hasSeenInfoModal === null) {
+          setTimeout(() => {
+            setShowInfoModal(true);
+          }, 500);
+        }
+      } catch (error) {
+        console.error('AsyncStorage okuma hatası:', error);
+        // Hata durumunda modalı göster
+        setTimeout(() => {
+          setShowInfoModal(true);
+        }, 500);
+      }
+    };
+    
+    checkInfoModalShown();
   }, []);
   
   // Oyun tamamlandığında sesi çalmak için useEffect
@@ -632,7 +650,14 @@ export default function WordMatchingScreen() {
               </Text>
               <TouchableOpacity
                 style={styles.modalButton}
-                onPress={() => setShowInfoModal(false)}
+                onPress={() => {
+                  // Modalı kapat
+                  setShowInfoModal(false);
+                  
+                  // AsyncStorage'a kullanıcının modalı gördüğünü kaydet
+                  AsyncStorage.setItem('hasSeenWordMatchingInfoModal', 'true')
+                    .catch(error => console.error('AsyncStorage yazma hatası:', error));
+                }}
               >
                 <Text style={styles.modalButtonText}>{t('buttons.okay') || "Anladım"}</Text>
               </TouchableOpacity>

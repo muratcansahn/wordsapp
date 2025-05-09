@@ -12,8 +12,10 @@ import {
   PanResponder,
   PanResponderGestureState,
   Image,
-  SafeAreaView
+  SafeAreaView,
+  Modal
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useLocalSearchParams, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -55,6 +57,7 @@ export default function FlashcardsScreen() {
   const [unknownWordCount, setUnknownWordCount] = useState(0);
   const [allWordsMarked, setAllWordsMarked] = useState(false);
   const [successSoundPlayed, setSuccessSoundPlayed] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false); // Bilgilendirme modalı için state
   const position = useRef(new RNAnimated.ValueXY()).current;
   const newCardAnimation = useRef(new RNAnimated.Value(0)).current;
   const dispatch = useDispatch();
@@ -194,6 +197,28 @@ export default function FlashcardsScreen() {
     if (!isInitialized) {
       loadData();
     }
+    
+    // Kullanıcının daha önce info modalı görüp görmediğini kontrol et
+    const checkInfoModalShown = async () => {
+      try {
+        const hasSeenInfoModal = await AsyncStorage.getItem('hasSeenFlashcardsInfoModal');
+        
+        // Eğer kullanıcı daha önce modalı görmemişse göster
+        if (hasSeenInfoModal === null) {
+          setTimeout(() => {
+            setShowInfoModal(true);
+          }, 500);
+        }
+      } catch (error) {
+        console.error('AsyncStorage okuma hatası:', error);
+        // Hata durumunda modalı göster
+        setTimeout(() => {
+          setShowInfoModal(true);
+        }, 500);
+      }
+    };
+    
+    checkInfoModalShown();
   }, [params, isInitialized]);
 
   useEffect(() => {
@@ -503,21 +528,36 @@ export default function FlashcardsScreen() {
       />
       <SafeAreaView style={styles.contentContainer}>
         <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>{selectedList.title}</Text>
-          <Text style={styles.headerSubtitle}>{selectedList.subtitle}</Text>
-        </View>
-        <View style={styles.pointContainer}>
-          <View style={styles.pointIconWrapper}>
-            <Icon
-              name="water"
-              size={24}
-              color="#FFFFFF"
-            />
+        <TouchableOpacity style={styles.headerBackButton} onPress={() => {
+          router.replace('/');
+        }}>
+          <Icon name="arrow-left" size={22} color="#FFFFFF" />
+        </TouchableOpacity>
+        
+        <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">
+          {selectedList.title}
+        </Text>
+        
+        <View style={styles.headerRightContainer}>
+          <TouchableOpacity 
+            style={styles.infoButton} 
+            onPress={() => setShowInfoModal(true)}
+          >
+            <Icon name="information-outline" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+          
+          <View style={styles.pointContainer}>
+            <View style={styles.pointIconWrapper}>
+              <Icon
+                name="water"
+                size={22}
+                color="#FFFFFF"
+              />
+            </View>
+            <Animated.Text style={[styles.pointText, pointAnimatedStyle]}>
+              {userPoint}
+            </Animated.Text>
           </View>
-          <Animated.Text style={[styles.pointText, pointAnimatedStyle]}>
-            {userPoint}
-          </Animated.Text>
         </View>
       </View>
 
@@ -575,6 +615,40 @@ export default function FlashcardsScreen() {
         </TouchableOpacity>
       </View>
       </SafeAreaView>
+      
+      {/* Bilgilendirme Modalı */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showInfoModal}
+        onRequestClose={() => setShowInfoModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('flashcards.infoTitle') || "Kelime Kartı Oyunu"}</Text>
+            </View>
+            <View style={styles.modalBody}>
+              <Text style={styles.modalDescription}>{t('flashcards.infoDescription') || "Kelimeleri sağa kaydırırsanız bildiğinizi, sola kaydırırsanız bilmediğinizi belirtmiş olursunuz. Göz ikonuna basarak kelimenin çevirisini görebilirsiniz. Bol şans!"}</Text>
+            </View>
+            <View style={styles.modalFooter}>
+              <TouchableOpacity 
+                style={styles.modalButton} 
+                onPress={() => {
+                  // Modalı kapat
+                  setShowInfoModal(false);
+                  
+                  // AsyncStorage'a kullanıcının modalı gördüğünü kaydet
+                  AsyncStorage.setItem('hasSeenFlashcardsInfoModal', 'true')
+                    .catch(error => console.error('AsyncStorage yazma hatası:', error));
+                }}
+              >
+                <Text style={styles.modalButtonText}>{t('buttons.okay') || "Anladım"}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -587,6 +661,64 @@ const styles = StyleSheet.create({
   centerContent: {
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  // Modal stilleri
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalHeader: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#4361EE',
+    textAlign: 'center',
+  },
+  modalBody: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  modalDescription: {
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  modalFooter: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  modalButton: {
+    backgroundColor: '#4361EE',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    marginTop: 10,
+  },
+  modalButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   backgroundImage: {
     flex: 1,
@@ -610,18 +742,49 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: PADDING.md,
-    paddingBottom: PADDING.md,
-    marginTop: 10,
+    paddingHorizontal: PADDING.sm,
+    paddingVertical: PADDING.sm,
+    marginBottom: MARGIN.sm,
+    width: '100%',
+  },
+  headerLeftContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerRightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  headerBackButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#00A3FF',
+    marginRight: 8,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  infoButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(73, 151, 229, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: MARGIN.xs,
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: {width: 1, height: 1},
-    textShadowRadius: 3,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+    flex: 1,
+    marginHorizontal: 8,
   },
   headerSubtitle: {
     fontSize: 14,

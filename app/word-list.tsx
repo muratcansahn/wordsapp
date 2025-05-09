@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Dimensions } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ThemedText } from '@/components/common/typography';
@@ -214,9 +215,33 @@ export default function WordListScreen() {
   // Kelime kartını render et
   const renderWordItem = ({ item }: { item: WordItem }) => (
   <View style={styles.wordCardModern}>
-    <View style={styles.wordContentModern}>
-      <ThemedText style={styles.wordTextModern}>{item.text}</ThemedText>
-      <ThemedText style={styles.translationTextModern}>{item.translation}</ThemedText>
+    <View style={styles.cardHeader}>
+      <View style={styles.wordContentModern}>
+        <ThemedText style={styles.wordTextModern}>{item.text}</ThemedText>
+        <ThemedText style={styles.translationTextModern}>{item.translation}</ThemedText>
+      </View>
+      <View style={styles.actionButtonsRow}>
+        {item.status !== 1 && (
+          <TouchableOpacity
+            style={styles.actionButtonModernGreen}
+            onPress={() => handleUpdateStatus(item.id, 1)}
+            activeOpacity={0.85}
+          >
+            <ThemedText style={styles.actionButtonModernText}>{t('known')}</ThemedText>
+          </TouchableOpacity>
+        )}
+        {item.status !== 2 && (
+          <TouchableOpacity
+            style={styles.actionButtonModernRed}
+            onPress={() => handleUpdateStatus(item.id, 2)}
+            activeOpacity={0.85}
+          >
+            <ThemedText style={styles.actionButtonModernText}>{t('unknown')}</ThemedText>
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+    <View style={styles.exampleContainer}>
       {item.example ? (
         <ThemedText style={styles.exampleTextModern}>{item.example}</ThemedText>
       ) : null}
@@ -224,60 +249,44 @@ export default function WordListScreen() {
         <ThemedText style={styles.exampleOriginalTextModern}>{item.example_original}</ThemedText>
       ) : null}
     </View>
-    <View style={styles.actionButtonsRow}>
-      {item.status !== 1 && (
-        <TouchableOpacity
-          style={styles.actionButtonModernGreen}
-          onPress={() => handleUpdateStatus(item.id, 1)}
-          activeOpacity={0.85}
-        >
-          <ThemedText style={styles.actionButtonModernText}>{t('known')}</ThemedText>
-        </TouchableOpacity>
-      )}
-      {item.status !== 2 && (
-        <TouchableOpacity
-          style={styles.actionButtonModernRed}
-          onPress={() => handleUpdateStatus(item.id, 2)}
-          activeOpacity={0.85}
-        >
-          <ThemedText style={styles.actionButtonModernText}>{t('unknown')}</ThemedText>
-        </TouchableOpacity>
-      )}
-    </View>
   </View>
 );
   
   return (
     <ThemedView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={ICON_SIZE.sm} color={Colors[mode].text} />
-        </TouchableOpacity>
-        <ThemedText style={styles.title}>{title}</ThemedText>
-        <View style={styles.placeholder} />
-      </View>
-      
-      {isLoading ? (
-        <View style={styles.loaderContainer}>
-          <NativeLoader />
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.headerBackButton} onPress={() => router.back()}>
+            <Icon name="arrow-back" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+          <View style={styles.titleContainerCenter}>
+            <ThemedText style={styles.title}>{title}</ThemedText>
+          </View>
+          <View style={styles.placeholder} />
         </View>
-      ) : words.length > 0 ? (
-        <FlatList
-          data={words}
-          renderItem={renderWordItem}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.listContent}
-        />
-      ) : (
-        <View style={styles.emptyContainer}>
-          <ThemedText style={styles.emptyText}>
-            {t('noWordsFound')}
-          </ThemedText>
-        </View>
-      )}
+        
+        {isLoading ? (
+          <View style={styles.loaderContainer}>
+            <NativeLoader />
+          </View>
+        ) : words.length > 0 ? (
+          <FlatList
+            data={words}
+            renderItem={renderWordItem}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.listContent}
+          />
+        ) : (
+          <View style={styles.emptyContainer}>
+            <ThemedText style={styles.emptyText}>
+              {t('noWordsFound')}
+            </ThemedText>
+          </View>
+        )}
     </ThemedView>
   );
 }
+
+const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
@@ -289,10 +298,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: PADDING.md,
+    marginTop: MARGIN.xl,
     marginBottom: MARGIN.md,
   },
-  backButton: {
-    padding: PADDING.xs,
+  headerBackButton: {
+    padding: 10,
+    borderRadius: 25,
+    backgroundColor: '#00A3FF',
+    marginLeft: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  titleContainerCenter: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontSize: FONT_SIZE.lg,
@@ -302,7 +325,7 @@ const styles = StyleSheet.create({
     width: ICON_SIZE.sm + PADDING.xs * 2,
   },
   listContent: {
-    padding: PADDING.md,
+    padding: PADDING.sm,
     paddingBottom: PADDING.xl * 2,
   },
   wordCardModern: {
@@ -310,89 +333,97 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
     backgroundColor: '#fff',
-    borderRadius: 18,
+    borderRadius: 12,
     marginBottom: MARGIN.md,
-    marginHorizontal: 2,
-    padding: PADDING.lg,
+    marginHorizontal: 4,
+    padding: PADDING.md,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
     borderWidth: 1,
-    borderColor: 'rgba(16,185,129,0.08)',
+    borderColor: 'rgba(16,185,129,0.12)',
+    maxWidth: width - PADDING.md * 2,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
   },
   wordContentModern: {
     flex: 1,
+  },
+  exampleContainer: {
     width: '100%',
-    marginBottom: 10,
+    marginTop: 6,
   },
   wordTextModern: {
-    fontSize: FONT_SIZE.lg,
+    fontSize: FONT_SIZE.md + 1,
     fontWeight: 'bold',
     color: '#111827',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   translationTextModern: {
-    fontSize: FONT_SIZE.md,
+    fontSize: FONT_SIZE.sm + 1,
     color: '#10B981',
     fontWeight: '600',
     marginBottom: 2,
   },
   exampleTextModern: {
-    fontSize: FONT_SIZE.sm,
+    fontSize: FONT_SIZE.sm - 1,
     color: '#374151',
     opacity: 0.85,
     marginBottom: 2,
   },
   exampleOriginalTextModern: {
-    fontSize: FONT_SIZE.sm,
+    fontSize: FONT_SIZE.sm - 1,
     color: '#6B7280',
     opacity: 0.7,
     marginBottom: 2,
   },
   actionButtonsRow: {
     flexDirection: 'row',
-    gap: 10,
-    width: '100%',
+    gap: 6,
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
   actionButtonModernGreen: {
     backgroundColor: '#10B981',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 24,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    minWidth: 80,
+    minWidth: 70,
     marginLeft: 0,
     shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.18,
-    shadowRadius: 6,
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
     elevation: 2,
   },
   actionButtonModernRed: {
     backgroundColor: '#EF4444',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 24,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    minWidth: 80,
+    minWidth: 70,
     marginLeft: 0,
     shadowColor: '#EF4444',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.16,
-    shadowRadius: 6,
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
     elevation: 2,
   },
   actionButtonModernText: {
     color: '#fff',
-    fontSize: FONT_SIZE.md,
+    fontSize: FONT_SIZE.sm + 1,
     fontWeight: 'bold',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   emptyContainer: {
     alignItems: 'center',

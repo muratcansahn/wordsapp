@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Audio } from 'expo-av';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, ScrollView, Dimensions, StatusBar, Platform, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -113,10 +114,27 @@ const HangmanGame = () => {
     
     selectRandomWord();
     
-    // İlk açılışta bilgilendirme modalını göster
-    setTimeout(() => {
-      setShowInfoModal(true);
-    }, 500);
+    // Kullanıcının daha önce info modalı görüp görmediğini kontrol et
+    const checkInfoModalShown = async () => {
+      try {
+        const hasSeenInfoModal = await AsyncStorage.getItem('hasSeenWritingInfoModal');
+        
+        // Eğer kullanıcı daha önce modalı görmemişse göster
+        if (hasSeenInfoModal === null) {
+          setTimeout(() => {
+            setShowInfoModal(true);
+          }, 500);
+        }
+      } catch (error) {
+        console.error('AsyncStorage okuma hatası:', error);
+        // Hata durumunda modalı göster
+        setTimeout(() => {
+          setShowInfoModal(true);
+        }, 500);
+      }
+    };
+    
+    checkInfoModalShown();
   }, []);
 
   const getMaskedWord = () => {
@@ -565,7 +583,14 @@ const HangmanGame = () => {
             </Text>
             <TouchableOpacity
               style={styles.modalButton}
-              onPress={() => setShowInfoModal(false)}
+              onPress={() => {
+                // Modalı kapat
+                setShowInfoModal(false);
+                
+                // AsyncStorage'a kullanıcının modalı gördüğünü kaydet
+                AsyncStorage.setItem('hasSeenWritingInfoModal', 'true')
+                  .catch(error => console.error('AsyncStorage yazma hatası:', error));
+              }}
             >
               <Text style={styles.modalButtonText}>{t('buttons.okay') || "Anladım"}</Text>
             </TouchableOpacity>

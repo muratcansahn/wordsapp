@@ -176,7 +176,7 @@ export default function QuizPage() {
         // Önce kaydedilmiş ilerlemeyi kontrol et
         const hasProgress = await loadQuizProgress();
         
-        // Eğer kaydedilmiş ilerleme yoksa veya yüklenemediyse, yeni quiz başlat
+        // Eğer kaydedilmiş ilerleme yoksa veya yüklenemedişse, yeni quiz başlat
         if (!hasProgress) {
           if (wordList.cards.length > 0) {
             // Flashcardlardan quiz soruları oluştur
@@ -193,10 +193,27 @@ export default function QuizPage() {
     
     loadFlashcards();
     
-    // İlk açılışta bilgilendirme modalını göster
-    setTimeout(() => {
-      setShowInfoModal(true);
-    }, 500);
+    // Kullanıcının daha önce info modalı görüp görmediğini kontrol et
+    const checkInfoModalShown = async () => {
+      try {
+        const hasSeenInfoModal = await AsyncStorage.getItem('hasSeenQuizInfoModal');
+        
+        // Eğer kullanıcı daha önce modalı görmemişse göster
+        if (hasSeenInfoModal === null) {
+          setTimeout(() => {
+            setShowInfoModal(true);
+          }, 500);
+        }
+      } catch (error) {
+        console.error('AsyncStorage okuma hatası:', error);
+        // Hata durumunda modalı göster
+        setTimeout(() => {
+          setShowInfoModal(true);
+        }, 500);
+      }
+    };
+    
+    checkInfoModalShown();
   }, [listId, currentLanguage]);
   
   // Flashcardlardan quiz soruları oluştur
@@ -557,7 +574,14 @@ export default function QuizPage() {
           <View style={styles.modalFooter}>
             <TouchableOpacity 
               style={styles.modalButton} 
-              onPress={() => setShowInfoModal(false)}
+              onPress={() => {
+                // Modalı kapat
+                setShowInfoModal(false);
+                
+                // AsyncStorage'a kullanıcının modalı gördüğünü kaydet
+                AsyncStorage.setItem('hasSeenQuizInfoModal', 'true')
+                  .catch(error => console.error('AsyncStorage yazma hatası:', error));
+              }}
             >
               <Text style={styles.modalButtonText}>{t('buttons.okay') || "Anladım"}</Text>
             </TouchableOpacity>
