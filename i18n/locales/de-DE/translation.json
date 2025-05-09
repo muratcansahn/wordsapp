@@ -220,14 +220,20 @@
     "performance": "Leistung",
     "revising": "Wiederholung",
     "streak": "Serie",
-    "feedFish": "Fische füttern",
+    "feedFish": "Fisch füttern",
     "selectFish": "Füttere deine Fische",
     "selectFishDescription": "Welchen Fisch möchtest du füttern?",
     "orangeFish": "Oranger Fisch",
     "blueFish": "Blauer Fisch",
     "fishFeeding": {
       "feeding": "Fisch wird gefüttert",
-      "feedingSuccess": "Fisch wurde erfolgreich gefüttert!"
+      "feedingSuccess": "Fisch wurde erfolgreich gefüttert!",
+      "feedTitle": "Fisch füttern",
+      "insufficientPoints": "Unzureichende Punkte",
+      "confirmMessage": "Möchtest du den Fisch füttern für ?",
+      "needPoints": "Du benötigst mindestens",
+      "pointsRequired": "Punkte, um den Fisch zu füttern.",
+      "feed": "Füttern"
     }
   },
   "writing": {

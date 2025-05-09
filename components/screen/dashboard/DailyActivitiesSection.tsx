@@ -134,15 +134,15 @@ const DailyActivitiesSection = () => {
     }, [gameStatus]);
 
     const dailyContent = useMemo(() => [
-        {
-          id: '1',
-          title: t('dailyActivities.dailyContent.1.title'),
-          description: t('dailyActivities.dailyContent.1.description'),
-          icon: 'calendar',
-          gradient: ['#FF9A9E', '#FAD0C4'] as readonly [string, string],
-          action: 'flashcards',
-          gameType: 'dailywords'
-        },
+        // {
+        //   id: '1',
+        //   title: t('dailyActivities.dailyContent.1.title'),
+        //   description: t('dailyActivities.dailyContent.1.description'),
+        //   icon: 'calendar',
+        //   gradient: ['#FF9A9E', '#FAD0C4'] as readonly [string, string],
+        //   action: 'flashcards',
+        //   gameType: 'dailywords'
+        // },
         {
           id: '3',
           title: t('dailyActivities.dailyContent.3.title'),

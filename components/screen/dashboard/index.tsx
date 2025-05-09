@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Button from '@/components/common/buttons/button';
 import { Popup } from '@/components/common/Popup';
+import { ConfirmationDialog } from '@/components/common/ConfirmationDialog';
 import {
   BORDER_RADIUS,
   FLEX,
@@ -489,9 +490,42 @@ sectionTitle: {
   },
   pointText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginRight: 8,
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
+    marginLeft: MARGIN.xs,
+  },
+  miniPointContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1890FF',
+    borderRadius: BORDER_RADIUS.md,
+    paddingHorizontal: PADDING.sm,
+    paddingVertical: 4,
+  },
+  miniPointIconWrapper: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  miniPointText: {
+    color: '#FFFFFF',
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  dialogMessageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    width: '100%',
+    paddingHorizontal: PADDING.sm,
+  },
+  dialogMessageText: {
+    fontSize: FONT_SIZE.lg,
+    color: mode === 'dark' ? Colors.dark.text : Colors.light.text,
+    flexShrink: 1,
+    textAlign: 'center',
+    marginBottom: MARGIN.xxxl,
   },
 });
 
@@ -543,11 +577,11 @@ export default function DashboardScreen() {
   const [feedingSuccess, setFeedingSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [fishData, setFishData] = useState<FishDataType>([]);
+  const [confirmDialogVisible, setConfirmDialogVisible] = useState(false);
   const foodAnimation = useRef(new Animated.Value(0)).current;
   const mouthAnimation = useRef(new Animated.Value(0)).current;
 
   async function playSound() {
-    console.log('Loading Sound');
     try {
       // Ensure the path is correct relative to your project structure
       const { sound } = await Audio.Sound.createAsync( require('@/assets/audio/eat.mp3') ); 
@@ -707,7 +741,7 @@ export default function DashboardScreen() {
         // Point'i azalt
         const { data: userData, error: userError } = await supabase
           .from('Users')
-          .update({ point: point - 1 })
+          .update({ point: point - 50 })
           .eq('id', id)
           .select();
 
@@ -766,7 +800,9 @@ export default function DashboardScreen() {
               styles.feedFishButton,
               point <= 0 ? styles.feedFishButtonDisabled : {}
             ]}
-            onPress={startFeedingProcess}
+            onPress={() => {
+              setConfirmDialogVisible(true);
+            }}
             disabled={isFeeding || point <= 0}
           >
             <Ionicons
@@ -923,6 +959,60 @@ export default function DashboardScreen() {
           )}
         </View>
       </Popup>
+
+      {/* Özel onay dialog'u */}
+      <ConfirmationDialog
+        visible={confirmDialogVisible}
+        title={point >= 50 ? t('dashboard.fishFeeding.feedTitle') || "Balık Besleme" : t('dashboard.fishFeeding.insufficientPoints') || "Yetersiz Puan"}
+        message={point >= 50 
+          ? (
+            <View style={styles.dialogMessageContainer}>
+              <View style={[styles.miniPointContainer, { marginRight: 5 }]}>
+                <View style={styles.miniPointIconWrapper}>
+                  <Ionicons
+                    name="water-outline"
+                    size={18}
+                    color="#FFFFFF"
+                  />
+                </View>
+                <Text style={styles.miniPointText}>50</Text>
+              </View>
+              <Text style={styles.dialogMessageText}> {t('dashboard.fishFeeding.confirmMessage') || " karşılığında balığı beslemek istiyor musunuz?"}</Text>
+            </View>
+          ) 
+          : (
+            <View style={styles.dialogMessageContainer}>
+              <Text style={styles.dialogMessageText}>{t('dashboard.fishFeeding.needPoints') || "Balığı beslemek için en az "}</Text>
+              <View style={[styles.miniPointContainer, { marginHorizontal: 3 }]}>
+                <View style={styles.miniPointIconWrapper}>
+                  <Ionicons
+                    name="water-outline"
+                    size={18}
+                    color="#FFFFFF"
+                  />
+                </View>
+                <Text style={styles.miniPointText}>50</Text>
+              </View>
+              <Text style={styles.dialogMessageText}> {t('dashboard.fishFeeding.pointsRequired') || " puana ihtiyacınız var."}</Text>
+            </View>
+          )}
+        confirmText={point >= 50 ? t('dashboard.fishFeeding.feed') || "Besle" : t('common.ok') || "Tamam"}
+        cancelText={point >= 50 ? t('buttons.cancel') || "İptal" : undefined}
+        iconColor={point >= 50 ? "#1890FF" : "#EF4444"}
+        confirmButtonColor={point >= 50 ? "#1890FF" : undefined}
+        isLoading={isFeeding}
+        onConfirm={() => {
+          if (point >= 50) {
+            setConfirmDialogVisible(false);
+            startFeedingProcess();
+          } else {
+            setConfirmDialogVisible(false);
+          }
+        }}
+        onCancel={() => {
+          setConfirmDialogVisible(false);
+        }}
+      />
     
     <DailyActivitiesSection />
     </ScrollView>

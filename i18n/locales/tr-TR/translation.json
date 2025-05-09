@@ -237,7 +237,7 @@
     "performance": "Performans",
     "revising": "Tekrar",
     "streak": "Seri",
-    "feedFish": "Balıkları Besle",
+    "feedFish": "Balığı Besle",
     "selectFish": "Balıklarınızı Besleyin",
     "selectFishDescription": "Hangi balığı beslemek istiyorsunuz?",
     "orangeFish": "Turuncu Balık",
@@ -247,7 +247,13 @@
     "okButton": "Tamam",
     "fishFeeding": {
       "feeding": "Balık Besleniyor",
-      "feedingSuccess": "Balık başarıyla beslendi!"
+      "feedingSuccess": "Balık başarıyla beslendi!",
+      "feedTitle": "Balık Besleme",
+      "insufficientPoints": "Yetersiz Puan",
+      "confirmMessage": "karşılığında balığı beslemek istiyor musunuz?",
+      "needPoints": "Balığı beslemek için en az",
+      "pointsRequired": "puana ihtiyacınız var.",
+      "feed": "Besle"
     }
   },
   "flashcards": {

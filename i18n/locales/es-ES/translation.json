@@ -220,14 +220,20 @@
     "performance": "Rendimiento",
     "revising": "Repasando",
     "streak": "Racha",
-    "feedFish": "Alimentar Peces",
+    "feedFish": "Alimentar Pez",
     "selectFish": "Alimenta tus Peces",
     "selectFishDescription": "¿Qué pez te gustaría alimentar?",
     "orangeFish": "Pez Naranja",
     "blueFish": "Pez Azul",
     "fishFeeding": {
       "feeding": "Alimentando al pez",
-      "feedingSuccess": "¡El pez fue alimentado con éxito!"
+      "feedingSuccess": "¡El pez fue alimentado con éxito!",
+      "feedTitle": "Alimentar Pez",
+      "insufficientPoints": "Puntos Insuficientes",
+      "confirmMessage": "¿Quieres alimentar al pez por ?",
+      "needPoints": "Necesitas al menos",
+      "pointsRequired": "puntos para alimentar al pez.",
+      "feed": "Alimentar"
     }
   },
   "flashcards": {
