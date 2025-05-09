@@ -181,6 +181,12 @@ export default function WordListScreen() {
           backgroundColor: '#10B981', // Yeşil renk (success)
           textColor: '#FFFFFF',
           delay: 0,
+          containerStyle: {
+            marginTop: 20, // Üstten boşluk ekle
+            borderRadius: 15, // Daha yuvarlak köşeler
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+          }
         }
       );
       
@@ -227,7 +233,7 @@ export default function WordListScreen() {
             onPress={() => handleUpdateStatus(item.id, 1)}
             activeOpacity={0.85}
           >
-            <ThemedText style={styles.actionButtonModernText}>{t('known')}</ThemedText>
+            <ThemedText style={styles.actionButtonModernText}>{t('wordListKnownButton')}</ThemedText>
           </TouchableOpacity>
         )}
         {item.status !== 2 && (
@@ -236,7 +242,7 @@ export default function WordListScreen() {
             onPress={() => handleUpdateStatus(item.id, 2)}
             activeOpacity={0.85}
           >
-            <ThemedText style={styles.actionButtonModernText}>{t('unknown')}</ThemedText>
+            <ThemedText style={styles.actionButtonModernText}>{t('wordListUnknownButton')}</ThemedText>
           </TouchableOpacity>
         )}
       </View>
