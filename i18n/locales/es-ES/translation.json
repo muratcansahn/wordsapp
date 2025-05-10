@@ -62,6 +62,20 @@
     "title5": "Entonces, ¿qué estás esperando?",
     "desc5": "¡Adelante y empieza a ganar dinero con tu aplicación!"
   },
+  "onboarding1": {
+    "header": "¡Di adiós a los métodos aburridos!",
+    "description": "¡Haz que el aprendizaje sea divertido con tarjetas de memoria, juegos de emparejamiento, juegos de adivinanzas de palabras y cuestionarios!"
+  },
+  "onboarding2": {
+    "header": "¡Simplifica tu repaso de palabras!",
+    "description": "¡Añade palabras desconocidas a tu lista, repásalas cuando quieras y sigue tu progreso fácilmente! El aprendizaje está bajo tu control.",
+    "feature1": "Añadir palabra a tu lista",
+    "feature2": "Repasar cuando quieras"
+  },
+  "onboarding3": {
+    "header": "¡Alimenta a tu pez, mantén la constancia!",
+    "description": "¡Alimenta a tu pez con los puntos que ganas, cuídalo todos los días y aumenta tu motivación para aprender!"
+  },
   "auth": {
     "signInWithEmail": "Iniciar sesión con correo electrónico",
     "termsOfService": "Al crear una cuenta, aceptas nuestros Términos de servicio y Política de privacidad.",

@@ -55,16 +55,26 @@
     "deleteAccount": "Hesabınızı silin"
   },
   "onboarding": {
-    "title1": "Hey! Ship Mobile Fast'e hoş geldin.",
-    "desc1": "Yüzlerce saat kod yazmaktan kurtul\nve uygulamanı sadece birkaç günde tamamla.",
-    "title2": "Her şey içeride hazır!",
-    "desc2": "Auth, Onboarding, Uygulama İçi Satın Alım, Sentry, Posthog, Google Admob, Bildirimler, Çoklu Dil Desteği, Temalar, Premium Ekranlar ve daha fazlası.",
-    "title3": "Tamamen Özelleştirilebilir",
-    "desc3": "Uygulamayı tamamen özelleştirilebilir bileşenlerden hazırladık, böylece kullanıcı arayüzünü, bileşenleri ve daha fazlasını kolayca değiştirebilirsin.",
-    "title4": "Hazır mısın?",
-    "desc4": "Çünkü tüm sıkıcı şeyleri biz hallettik. Sana sadece eğlenmek kaldı.",
-    "title5": "O halde ne bekliyorsun?",
-    "desc5": "Hemen ilerle ve uygulamadan para kazanmaya başla!"
+    "title1": "Kelime Öğrenmeyi Kolaylaştırın",
+    "desc1": "Yeni kelimeleri eğlenceli ve etkili bir şekilde öğrenin. Kişiselleştirilmiş öğrenme deneyimi ile dil becerilerinizi hızla geliştirin.",
+    "title2": "Kelime Listelerinizi Yönetin",
+    "desc2": "Bildiğiniz ve bilmediğiniz kelimeleri kolayca takip edin. Özel kelime listeleri oluşturun ve öğrenme sürecinizi organize edin.",
+    "title3": "İlerlemenizi Takip Edin",
+    "desc3": "Detaylı istatistikler ve görsellerle öğrenme sürecinizi izleyin. Hedeflerinize ne kadar yaklaştığınızı görün ve motivasyonunuzu koruyun."
+  },
+  "onboarding1": {
+    "header": "Sıkıcı yöntemlere elveda!",
+    "description": "Kelime kartları, eşleştirme oyunları ve kelime tahmin oyunları ve testler ile eğlenerek öğrenmeyi eğlenceli hale getir!."
+  },
+  "onboarding2": {
+    "header": "Kelime Tekrarını Kolaylaştır!",
+    "description": "Bilmediğin kelimeleri listene ekle, istediğin zaman tekrar et ve gelişimini kolayca takip et! Öğrenmek senin kontrolünde.",
+    "feature1": "Kelimeyi listene ekle",
+    "feature2": "İstediğin zaman tekrar et"
+  },
+  "onboarding3": {
+    "header": "Balığını Besle, Sürekliliğini Sağla!",
+    "description": "Kazandığın puanlarla balığını besle, her gün ilgilen ve öğrenme motivasyonunu artır!"
   },
   "auth": {
     "signInWithEmail": "E-posta ile giriş yap",

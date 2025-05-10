@@ -5,6 +5,7 @@ import Button from '@/components/common/buttons/button';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
 import { FONT_SIZE, MARGIN } from '@/constants/AppConstants';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface OnboardingSlideButtonProps {
   onPress: () => void;
@@ -20,7 +21,7 @@ const OnboardingSlideButton: React.FC<OnboardingSlideButtonProps> = ({
     <Button
       style={styles.button}
       onPress={onPress}
-      bgColor={Colors[mode].primary}
+      bgColor={undefined}
     >
       <ThemedText
         type="subtitle"
@@ -30,6 +31,7 @@ const OnboardingSlideButton: React.FC<OnboardingSlideButtonProps> = ({
       >
         {text}
       </ThemedText>
+
     </Button>
   );
 };
@@ -37,10 +39,22 @@ const OnboardingSlideButton: React.FC<OnboardingSlideButtonProps> = ({
 const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#fff', // Kart gibi beyaz zemin
+    overflow: 'hidden',
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 8,
+    position: 'relative',
     width: '100%',
-    marginBottom: MARGIN.xl,
+    borderWidth: 2,
+    borderColor: '#F7A943',
+    alignSelf: 'center',
+    // Mavi gradient alt bölüm için ekstra View eklenmeli
   },
+
   buttonText: {
     fontSize: FONT_SIZE.lg,
     fontWeight: 'bold',

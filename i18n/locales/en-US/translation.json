@@ -54,16 +54,26 @@
     "deleteAccount": "Delete Account"
   },
   "onboarding": {
-    "title1": "Hey! Welcome to Ship Mobile Fast",
-    "desc1": "Save hundreds of hours of boring stuff\nand ship your app in just couple of days.",
-    "title2": "Everything is Ready!",
-    "desc2": "Such as authentication, In App Purchases, Stripe payments, Push Notifications, Languages, Themes and more.",
-    "title3": "Highly Customizable",
-    "desc3": "We've made the app highly customizable, so you can easily change the UI, components, and more.",
-    "title4": "Are You Ready?",
-    "desc4": "Because we've handled all the boring stuff.",
-    "title5": "So What Are You Waiting For?",
-    "desc5": "Let's start and make your app great again!"
+    "title1": "Simplify Your Vocabulary Learning",
+    "desc1": "Learn new words in a fun and effective way. Improve your language skills quickly with a personalized learning experience.",
+    "title2": "Manage Your Word Lists",
+    "desc2": "Easily track words you know and don't know. Create custom word lists and organize your learning process.",
+    "title3": "Track Your Progress",
+    "desc3": "Monitor your learning journey with detailed statistics and visualizations. See how close you are to your goals and stay motivated."
+  },
+  "onboarding1": {
+    "header": "Say goodbye to boring methods!",
+    "description": "Make learning fun with flashcards, matching games, word guessing games, and quizzes!"
+  },
+  "onboarding2": {
+    "header": "Simplify Your Word Review!",
+    "description": "Add unknown words to your list, review them anytime, and easily track your progress! Learning is in your control.",
+    "feature1": "Add word to your list",
+    "feature2": "Review anytime you want"
+  },
+  "onboarding3": {
+    "header": "Feed Your Fish, Maintain Consistency!",
+    "description": "Feed your fish with the points you earn, take care of it every day and increase your learning motivation!"
   },
   "auth": {
     "description": "Ship your mobile app in just days",

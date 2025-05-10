@@ -147,7 +147,7 @@ const DailyActivitiesSection = () => {
           id: '3',
           title: t('dailyActivities.dailyContent.3.title'),
           description: t('dailyActivities.dailyContent.3.description'),
-          icon: 'game-controller',
+          icon: 'help-circle-outline',  // Kelime tahmin: soru ve tahmin etme kavramını temsil eder
           gradient: ['#4facfe', '#00f2fe'] as readonly [string, string],
           action: 'writing',
           gameType: 'wordguess'
@@ -156,7 +156,7 @@ const DailyActivitiesSection = () => {
           id: '4',
           title: t('dailyActivities.dailyContent.4.title'),
           description: t('dailyActivities.dailyContent.4.description'),
-          icon: 'link',
+          icon: 'shuffle-outline',  // Kelime eşleştirme: eşleştirme ve düzenleme kavramını temsil eder
           gradient: ['#43e97b', '#38f9d7'] as readonly [string, string],
           action: 'word-matching',
           gameType: 'wordmatching'
@@ -241,7 +241,9 @@ const DailyActivitiesSection = () => {
                     <ThemedText style={styles.sectionTitle}>{t('dashboard.dailyActivities')}</ThemedText>
                 </View>
 
-                {dailyContent.map(renderDailyCard)}
+                <View style={styles.cardsContainer}>
+                    {dailyContent.map(renderDailyCard)}
+                </View>
             </View>
             <Dialog
                 visible={dialogVisible}
@@ -274,10 +276,14 @@ const styles = StyleSheet.create({
         fontSize: FONT_SIZE.lg,
         fontWeight: 'bold',
     },
+    cardsContainer: {
+        flexDirection: 'column',
+    },
     dailyCard: {
         borderRadius: 16,
         overflow: 'hidden',
         marginBottom: MARGIN.lg,
+        width: '100%',
         ...Platform.select({
             ios: {
                 shadowColor: '#000',
@@ -292,7 +298,8 @@ const styles = StyleSheet.create({
     },
     dailyCardGradient: {
         position: 'relative',
-        minHeight: 120,
+        minHeight: 130,
+        borderRadius: 16,
     },
     cardOverlay: {
         ...StyleSheet.absoluteFillObject,
@@ -308,13 +315,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     iconContainer: {
-        width: 44,
-        height: 44,
-        borderRadius: 12,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        width: 48,
+        height: 48,
+        borderRadius: 14,
+        backgroundColor: 'rgba(255, 255, 255, 0.25)',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: MARGIN.sm,
+        marginRight: MARGIN.xl,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.3)',
     },
     headerTextContainer: {
         flex: 1,

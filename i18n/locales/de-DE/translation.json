@@ -62,6 +62,20 @@
     "title5": "Worauf warten Sie also noch?",
     "desc5": "Legen Sie los und beginnen Sie, mit Ihrer App Geld zu verdienen!"
   },
+  "onboarding1": {
+    "header": "Verabschiede dich von langweiligen Methoden!",
+    "description": "Mach das Lernen mit Karteikarten, Zuordnungsspielen, Wortratespielen und Quiz spaßig!"
+  },
+  "onboarding2": {
+    "header": "Vereinfache deine Wortwiederholung!",
+    "description": "Füge unbekannte Wörter zu deiner Liste hinzu, wiederhole sie jederzeit und verfolge deinen Fortschritt ganz einfach! Das Lernen liegt in deiner Hand.",
+    "feature1": "Wort zu deiner Liste hinzufügen",
+    "feature2": "Jederzeit wiederholen"
+  },
+  "onboarding3": {
+    "header": "Füttere deinen Fisch, bleibe konsequent!",
+    "description": "Füttere deinen Fisch mit den Punkten, die du verdienst, kümmere dich jeden Tag um ihn und steigere deine Lernmotivation!"
+  },
   "auth": {
     "signInWithEmail": "Mit E-Mail anmelden",
     "termsOfService": "Durch die Erstellung eines Kontos stimmen Sie unseren Nutzungsbedingungen und Datenschutzrichtlinien zu.",

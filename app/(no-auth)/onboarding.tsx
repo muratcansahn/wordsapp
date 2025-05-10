@@ -4,6 +4,7 @@ import {
   NativeSyntheticEvent,
   StyleSheet,
   View,
+  Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, {
@@ -15,6 +16,9 @@ import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
 import { PADDING, ScreenWidth } from '@/constants/AppConstants';
 import Container from '@/components/common/container';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Image } from 'react-native';
+const onboardingBackground = require('@/assets/images/game-background.png');
 import ProgressBar from '@/components/common/onboarding/progress-bar';
 import OnboardingSlide from '@/components/common/onboarding/onboarding-slide';
 import NavigationButton from '@/components/common/onboarding/onboarding-button';
@@ -38,6 +42,9 @@ const OnboardingScreen: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [buttonText, setButtonText] = useState<string>(t('buttons.next'));
   const { mode } = useTheme();
+  
+  // Ekran boyutlarını al
+  const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -56,9 +63,9 @@ const OnboardingScreen: React.FC = () => {
 
   const renderItem = useCallback(
     ({ item, index }: { item: OnboardingItem; index: number }) => (
-      <OnboardingSlide item={item} index={index} scrollX={scrollX} />
+      <OnboardingSlide item={item} index={index} scrollX={scrollX} isActive={currentIndex === index} />
     ),
-    [scrollX]
+    [scrollX, currentIndex]
   );
 
   const keyExtractor = useCallback((item: OnboardingItem) => item.id, []);
@@ -82,23 +89,38 @@ const OnboardingScreen: React.FC = () => {
   );
 
   return (
-    <Container bgColor={Colors[mode].background} edges={['top', 'bottom']}>
-      <ProgressBar
-        currentStep={currentIndex}
-        totalSteps={onboardingData.length}
-      />
-      <Animated.FlatList
-        ref={flatListRef}
-        data={onboardingData}
-        renderItem={renderItem}
-        horizontal
-        pagingEnabled
-        keyExtractor={keyExtractor}
-        showsHorizontalScrollIndicator={false}
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
-        onMomentumScrollEnd={onMomentumScrollEnd}
-      />
+    <Container
+      style={styles.container}
+      bgColor={undefined}
+      edges={['top', 'left', 'right']}
+    >
+      <View style={StyleSheet.absoluteFill}>
+        <Image
+          source={onboardingBackground}
+          style={[StyleSheet.absoluteFill, { width: '100%', height: '100%', resizeMode: 'cover' }]}
+          blurRadius={0}
+        />
+      </View>
+      <View style={{ height: 50 }}>
+        <ProgressBar
+          currentStep={currentIndex}
+          totalSteps={onboardingData.length}
+        />
+      </View>
+      <View style={styles.centerSection}>
+        <Animated.FlatList
+          ref={flatListRef}
+          data={onboardingData}
+          renderItem={renderItem}
+          horizontal
+          pagingEnabled
+          keyExtractor={keyExtractor}
+          showsHorizontalScrollIndicator={false}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          onMomentumScrollEnd={onMomentumScrollEnd}
+        />
+      </View>
       <View style={styles.buttonContainer}>
         <NavigationButton onPress={nextSlide} text={buttonText} />
       </View>
@@ -107,8 +129,19 @@ const OnboardingScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    height: Dimensions.get('window').height,
+    justifyContent: 'space-between',
+  },
+  centerSection: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   buttonContainer: {
     paddingHorizontal: PADDING.lg,
+    paddingBottom: 16,
   },
 });
 

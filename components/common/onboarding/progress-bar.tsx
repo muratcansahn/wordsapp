@@ -1,11 +1,10 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { ThemedView } from '@/components/common/view';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
 import {
@@ -49,18 +48,24 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
   });
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedView
-        style={styles.progressContainer}
-        lightColor={Colors.light.button}
-        darkColor={Colors.dark.button}
+    <View style={styles.container}>
+      <View
+        style={[styles.progressContainer, { backgroundColor: Colors[mode].button }]}
       >
         <Animated.View style={[styles.progressBar, progressStyle]} />
-      </ThemedView>
-      <Animated.View style={[styles.checkmark, checkmarkStyle]}>
-        <Check size={ICON_SIZE.xxs} color={Colors[mode].background} />
-      </Animated.View>
-    </ThemedView>
+      </View>
+      {isTheEnd && (
+        <Animated.View
+          style={[
+            styles.checkmark,
+            checkmarkStyle,
+            { backgroundColor: Colors[mode].tertiary },
+          ]}
+        >
+          <Check size={ICON_SIZE.xxs} color={Colors[mode].backgroundSecondary} />
+        </Animated.View>
+      )}
+    </View>
   );
 };
 
@@ -68,13 +73,16 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
+    alignItems: 'center',
     marginTop: MARGIN.sm,
     marginRight: MARGIN.lg,
   },
   progressContainer: {
-    width: '15%',
+    width: '20%',
+    height: 12,
     borderRadius: BORDER_RADIUS.lg,
     flexDirection: 'row',
+    overflow: 'hidden',
   },
   progressBar: {
     height: '100%',
@@ -83,8 +91,11 @@ const styles = StyleSheet.create({
   checkmark: {
     marginLeft: MARGIN.sm,
     justifyContent: 'center',
-    backgroundColor: Colors.light.tertiary,
+    alignItems: 'center',
     borderRadius: BORDER_RADIUS.lg,
+    width: 16,
+    height: 16,
+    padding: 2,
   },
 });
 
