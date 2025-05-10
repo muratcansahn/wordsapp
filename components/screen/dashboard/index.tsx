@@ -136,73 +136,9 @@ const createStyles = (mode: 'light' | 'dark') => StyleSheet.create({
     color: mode === 'dark' ? '#E6F7FF' : '#001529',
     marginLeft: MARGIN.xs,
   },
-  bubble: {
-    position: 'absolute',
-    borderRadius: 50,
-    zIndex: 1,
-  },
-  waterReflection: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 80,
-    opacity: 0.08,
-    transform: [{ scaleY: -1 }],
-  },
-  plantDecoration: {
-    position: 'absolute',
-    bottom: 0,
-    width: '100%',
-    height: 120,
-    opacity: 0.4,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: MARGIN.md,
-    padding: PADDING.sm,
-    backgroundColor: mode === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.3)',
-    borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 1,
-    borderColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-  },
-  statItem: {
-    alignItems: 'center',
-    padding: PADDING.sm,
-    minWidth: 80,
-  },
-  statValue: {
-    fontSize: FONT_SIZE.lg,
-    fontWeight: 'bold',
-    color: mode === 'dark' ? Colors.light.text : Colors.dark.text,
-  },
-  statLabel: {
-    fontSize: FONT_SIZE.sm,
-    color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
-    marginTop: 4,
-  },
-  feedButton: {
-    position: 'absolute',
-    right: MARGIN.lg,
-    bottom: MARGIN.lg,
-    backgroundColor: mode === 'dark' ? '#1890FF' : '#40A9FF',
-    padding: PADDING.md,
-    borderRadius: 30,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  feedButtonText: {
-    color: '#FFFFFF',
-    fontSize: FONT_SIZE.md,
-    fontWeight: '600',
-  },
+
+
+
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -456,17 +392,7 @@ sectionTitle: {
     height: '100%',
     borderRadius: 2,
   },
-  fishContainer: {
-    width: '100%',
-    height: 300,
-    position: 'relative',
-    marginTop: MARGIN.md,
-  },
-  balıkText: {
-    color: 'white',
-    fontSize: 16,
-    position: 'absolute',
-  },
+
   pointContainer: {
     flexDirection: 'row',
     alignItems: 'center',

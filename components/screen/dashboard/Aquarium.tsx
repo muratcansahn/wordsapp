@@ -1,5 +1,6 @@
 import React, { FC, useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Animated, Dimensions, Easing, Text } from 'react-native';
+import Reanimated, { useSharedValue, useAnimatedStyle, withTiming, withRepeat, withSequence, withDelay, Easing as ReanimatedEasing } from 'react-native-reanimated';
 import { FishComponent } from '@/components/fish/FishComponent';
 
 interface AquariumProps {
@@ -32,73 +33,74 @@ export const Aquarium: FC<AquariumProps> = ({
   const hungerLevel = fishData?.hunger_level || 50;
   const lastFeedTime = fishData?.last_feed_time || new Date().toISOString();
   
-  // Baloncuklar için animasyon değerleri
+  // Baloncuklar için Reanimated animasyon değerleri
   const bubbles = useRef([...Array(15)].map(() => ({
     xPos: Math.random() * 320 * 0.8,
     yPos: Math.random() * 200,
     size: Math.random() * 12 + 3,
     speed: Math.random() * 2000 + 1500,
-    xOffset: new Animated.Value(0),
-    yOffset: new Animated.Value(0),
-    opacity: new Animated.Value(Math.random() * 0.4 + 0.2),
-    scale: new Animated.Value(1),
-    rotation: new Animated.Value(0),
+    // Reanimated shared values kullanıyoruz
+    yOffset: useSharedValue(0),
+    xOffset: useSharedValue(0),
+    opacity: useSharedValue(Math.random() * 0.4 + 0.2),
+    scale: useSharedValue(1),
     color: Math.random() > 0.7 ? 'rgba(255, 255, 255, 0.5)' : 'rgba(220, 240, 255, 0.4)',
   }))).current;
 
-  const bubbleAnimations = useRef<Animated.CompositeAnimation[]>(bubbles.map(bubble => {
-    return Animated.loop(
-      Animated.parallel([
-        Animated.sequence([
-          Animated.timing(bubble.yOffset, {
-            toValue: -bubble.size * 20,
-            duration: bubble.speed,
-            easing: Easing.linear,
-            useNativeDriver: true,
-          }),
-          Animated.timing(bubble.yOffset, {
-            toValue: bubble.yPos,
-            duration: 0,
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.sequence([
-          Animated.timing(bubble.xOffset, {
-            toValue: Math.random() * 20 - 10,
-            duration: bubble.speed / 2,
-            easing: Easing.inOut(Easing.sin),
-            useNativeDriver: true,
-          }),
-          Animated.timing(bubble.xOffset, {
-            toValue: 0,
-            duration: bubble.speed / 2,
-            easing: Easing.inOut(Easing.sin),
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.sequence([
-          Animated.timing(bubble.scale, {
-            toValue: Math.random() * 0.4 + 0.8,
-            duration: bubble.speed / 2,
-            easing: Easing.inOut(Easing.sin),
-            useNativeDriver: true,
-          }),
-          Animated.timing(bubble.scale, {
-            toValue: 1,
-            duration: bubble.speed / 2,
-            easing: Easing.inOut(Easing.sin),
-            useNativeDriver: true,
-          }),
-        ]),
-      ])
-    );
-  }));
-  
   // Baloncuk animasyonlarını başlat
   useEffect(() => {
-    bubbleAnimations.current.forEach(animation => animation.start());
+    // Her baloncuk için animasyonları başlat
+    bubbles.forEach(bubble => {
+      // Y ekseni animasyonu - yukarı doğru hareket
+      bubble.yOffset.value = bubble.yPos;
+      bubble.yOffset.value = withRepeat(
+        withSequence(
+          withTiming(-bubble.size * 20, { 
+            duration: bubble.speed, 
+            easing: ReanimatedEasing.linear 
+          }),
+          withTiming(bubble.yPos, { duration: 0 })
+        ),
+        -1, // sonsuz tekrar
+        false // reverse yok
+      );
+      
+      // X ekseni animasyonu - hafif sağa sola hareket
+      bubble.xOffset.value = withRepeat(
+        withSequence(
+          withTiming(Math.random() * 20 - 10, { 
+            duration: bubble.speed / 2, 
+            easing: ReanimatedEasing.inOut(ReanimatedEasing.sin) 
+          }),
+          withTiming(0, { 
+            duration: bubble.speed / 2, 
+            easing: ReanimatedEasing.inOut(ReanimatedEasing.sin) 
+          })
+        ),
+        -1, // sonsuz tekrar
+        true // reverse
+      );
+      
+      // Ölçek animasyonu - büyüme küçülme
+      bubble.scale.value = withRepeat(
+        withSequence(
+          withTiming(Math.random() * 0.4 + 0.8, { 
+            duration: bubble.speed / 2, 
+            easing: ReanimatedEasing.inOut(ReanimatedEasing.sin) 
+          }),
+          withTiming(1, { 
+            duration: bubble.speed / 2, 
+            easing: ReanimatedEasing.inOut(ReanimatedEasing.sin) 
+          })
+        ),
+        -1, // sonsuz tekrar
+        true // reverse
+      );
+    });
+    
+    // Cleanup fonksiyonu - Reanimated'da genellikle gerekli değil
     return () => {
-      bubbleAnimations.current.forEach(animation => animation.stop());
+      // Gerekirse burada temizleme işlemleri yapılabilir
     };
   }, []);
   
@@ -215,29 +217,38 @@ export const Aquarium: FC<AquariumProps> = ({
     };
   }, []);
 
-  // Baloncukları render et
+  // Baloncukları render et - Reanimated kullanarak
   const renderBubbles = () => {
-    return bubbles.map((bubble, index) => (
-      <Animated.View
-        key={index}
-        style={[
-          styles.bubble,
-          {
-            left: bubble.xPos,
-            top: bubble.yPos,
-            width: bubble.size,
-            height: bubble.size,
-            backgroundColor: bubble.color,
-            transform: [
-              { translateY: bubble.yOffset },
-              { translateX: bubble.xOffset },
-              { scale: bubble.scale },
-            ],
-            opacity: bubble.opacity,
-          },
-        ]}
-      />
-    ));
+    return bubbles.map((bubble, index) => {
+      // Her baloncuk için animasyon stilini tanımla
+      const animatedStyle = useAnimatedStyle(() => {
+        return {
+          transform: [
+            { translateY: bubble.yOffset.value },
+            { translateX: bubble.xOffset.value },
+            { scale: bubble.scale.value },
+          ],
+          opacity: bubble.opacity.value,
+        };
+      });
+      
+      return (
+        <Reanimated.View
+          key={index}
+          style={[
+            styles.bubble,
+            {
+              left: bubble.xPos,
+              top: bubble.yPos,
+              width: bubble.size,
+              height: bubble.size,
+              backgroundColor: bubble.color,
+            },
+            animatedStyle,
+          ]}
+        />
+      );
+    });
   };
   
   return (
