@@ -11,7 +11,7 @@ export default function LearnLayout() {
     <Stack
       screenOptions={{
         headerStyle: {
-          backgroundColor: Colors[mode].background,
+          backgroundColor: '#fff',
         },
         headerTintColor: Colors[mode].text,
         headerShadowVisible: false,
@@ -26,9 +26,10 @@ export default function LearnLayout() {
         }}
       />
       <Stack.Screen
+
         name="study-mode"
         options={{
-          title: t('learnLayout.studyModeTitle'),
+          headerShown: false,
         }}
       />
     </Stack>

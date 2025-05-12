@@ -33,6 +33,7 @@ import { incrementUserPointByAmountWithRedux } from '@/services/userService';
 import { Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Audio } from 'expo-av';
+import * as Haptics from 'expo-haptics';
 
 // Arka plan resmini import et
 import gameBackgroundImage from '../assets/images/game-background.png';
@@ -286,6 +287,8 @@ export default function WordMatchingScreen() {
     const isMatch = word.translation === translation;
     
     if (isMatch) {
+      // Doğru eşleşme için haptic feedback
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       // Doğru eşleşme
       const updatedWords = matchingWords.map(w => 
         w.id === wordId ? { ...w, matched: true, selected: false } : { ...w, selected: false }
@@ -357,6 +360,8 @@ export default function WordMatchingScreen() {
       return;
     } else {
       // Yanlış eşleşme
+      // Yanlış eşleşme için haptic feedback
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       // Yanlış eşleşme durumunu aktifleştir
       setWrongMatch(true);
       
@@ -434,7 +439,8 @@ export default function WordMatchingScreen() {
         style={styles.backgroundImage} 
         resizeMode="cover"
       />
-      <View style={styles.headerContainer}>
+      <SafeAreaView style={styles.contentContainer}>
+        <View style={styles.headerContainer}>
         <TouchableOpacity 
           style={styles.headerBackButton} 
           onPress={() => router.replace('/')}
@@ -458,6 +464,7 @@ export default function WordMatchingScreen() {
       <ScrollView 
         showsVerticalScrollIndicator={false} 
         contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
       >
           {isLoading ? (
             <View style={[styles.container, styles.centerContent]}>
@@ -633,6 +640,7 @@ export default function WordMatchingScreen() {
             
           )}
         </ScrollView>
+      </SafeAreaView>
         
         <Modal
           animationType="fade"
@@ -1141,9 +1149,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    paddingHorizontal: 15,
-    marginBottom: 20,
-    marginTop: 40,
+    marginTop: MARGIN.lg,
+    height: 50,
   },
 
   titleContainerCenter: {

@@ -31,6 +31,8 @@
     "continue": "Continuar",
     "goToHomeScreen": "Ir a la página principal"
   },
+  "emptyTitle": "¡Aún no tienes palabras!",
+  "emptyDesc": "Puedes empezar a aprender agregando nuevas palabras.",
   "placeholders": {
     "email": "Su dirección de correo electrónico",
     "password": "Su contraseña",

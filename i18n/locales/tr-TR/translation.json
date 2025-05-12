@@ -32,6 +32,8 @@
     "goToHomeScreen": "Ana sayfaya git",
     "feed": "Besle"
   },
+  "emptyTitle": "Henüz hiç kelimen yok!",
+  "emptyDesc": "Yeni kelimeler ekleyerek öğrenmeye başlayabilirsin.",
   "placeholders": {
     "email": "Email adresiniz",
     "password": "Şifreniz",

@@ -247,7 +247,8 @@ export default function LearnPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#fff',
+    paddingTop: PADDING.lg,
   },
   header: {
     paddingHorizontal: PADDING.lg,

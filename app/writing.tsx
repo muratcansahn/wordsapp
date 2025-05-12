@@ -10,7 +10,7 @@ import * as Haptics from 'expo-haptics';
 import { Animated } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
-import { ICON_SIZE } from '@/constants/AppConstants';
+import { ICON_SIZE, MARGIN } from '@/constants/AppConstants';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
@@ -676,7 +676,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 20,
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: 'transparent',
@@ -688,7 +687,7 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 15,
     marginBottom: 20,
-    marginTop: 40,
+    marginTop: MARGIN.lg,
   },
   infoButton: {
     width: 40,

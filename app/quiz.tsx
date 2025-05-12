@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Audio } from 'expo-av';
+import * as Haptics from 'expo-haptics';
 import { addSkippedWordListId } from '@/services/gameRequestServices';
 import { useTranslation } from 'react-i18next';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, SafeAreaView, ActivityIndicator, Image, KeyboardAvoidingView, ScrollView, Platform, Modal } from 'react-native';
@@ -281,7 +282,13 @@ export default function QuizPage() {
     setSelectedAnswer(answer);
     const correct = answer === currentQuestion.correctAnswer;
     setIsCorrect(correct);
-    
+
+    // Haptik geri bildirim ekle
+    if (correct) {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
     // Cevaba göre uygun ses dosyasını çal
     await playSound(correct);
     

@@ -282,10 +282,35 @@ export default function WordListScreen() {
             contentContainerStyle={styles.listContent}
           />
         ) : (
-          <View style={styles.emptyContainer}>
-            <ThemedText style={styles.emptyText}>
-              {t('noWordsFound')}
-            </ThemedText>
+          <View style={styles.emptyContainerModern}>
+            <View style={styles.emptyCardBox}>
+              <ThemedText style={[
+                styles.emptyTitle,
+                { color: mode === 'dark' ? Colors.dark.text : Colors.light.text }
+              ]}>
+                {t('emptyTitle')}
+              </ThemedText>
+              <ThemedText style={[
+                styles.emptyDesc,
+                { color: mode === 'dark' ? Colors.dark.text : Colors.light.text }
+              ]}>
+                {t('emptyDesc')}
+              </ThemedText>
+              <TouchableOpacity
+                style={[
+                  styles.emptyAddButton,
+                  { backgroundColor: mode === 'dark' ? Colors.dark.secondary : Colors.light.secondary }
+                ]}
+                onPress={() => router.back()}
+              >
+                <ThemedText style={[
+                  styles.emptyAddButtonText,
+                  { color: mode === 'dark' ? Colors.dark.background : Colors.light.background }
+                ]}>
+                  Geri Dön
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
     </ThemedView>
@@ -431,14 +456,51 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     letterSpacing: 0.2,
   },
-  emptyContainer: {
+  emptyContainerModern: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: PADDING.xl,
+    backgroundColor: 'transparent',
   },
-  emptyText: {
-    fontSize: FONT_SIZE.md,
+  emptyCardBox: {
+    width: '90%',
+    maxWidth: 320,
+    backgroundColor: '#fff',
+    borderColor: Colors.light.primary,
+    borderWidth: 2,
+    borderRadius: 24,
+    padding: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyTitle: {
+    fontSize: FONT_SIZE.lg + 4,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  emptyDesc: {
+    fontSize: FONT_SIZE.md + 1,
     opacity: 0.7,
+    textAlign: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 16,
+  },
+  emptyAddButton: {
+    borderRadius: 22,
+    paddingVertical: 12,
+    paddingHorizontal: 36,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.13,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  emptyAddButtonText: {
+    fontWeight: 'bold',
+    fontSize: FONT_SIZE.md + 1,
+    letterSpacing: 0.2,
+    textAlign: 'center',
   },
   loaderContainer: {
     flex: 1,

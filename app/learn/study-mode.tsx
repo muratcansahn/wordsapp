@@ -118,7 +118,8 @@ export default function StudyModePage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: '#fff',
+    paddingTop: 80,
   },
   header: {
     marginTop: STYLE_MARGIN * 4,

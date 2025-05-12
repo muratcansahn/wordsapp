@@ -51,6 +51,7 @@ export default function FlashcardsScreen() {
   const [selectedList, setSelectedList] = useState<WordListWithItems | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showTranslation, setShowTranslation] = useState(false);
+const translationAnim = useRef(new RNAnimated.Value(0)).current; // 0: gizli, 1: görünür
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -414,12 +415,27 @@ export default function FlashcardsScreen() {
   {selectedList.cards[currentIndex].word.charAt(0).toUpperCase() + selectedList.cards[currentIndex].word.slice(1).toLowerCase()}
 </Text>
               {showTranslation && (
-                <View style={styles.translationWrapper}>
-                  <Text style={styles.translationText}>{selectedList.cards[currentIndex].translation}</Text>
-                  <Text style={styles.exampleText}>{selectedList.cards[currentIndex].example_original}</Text>
-                  <Text style={styles.exampleText}>{selectedList.cards[currentIndex].example_translated}</Text>
-                </View>
-              )}
+  <RNAnimated.View
+    style={[
+      styles.translationWrapper,
+      {
+        opacity: translationAnim,
+        transform: [
+          {
+            scale: translationAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0.95, 1]
+            })
+          }
+        ]
+      }
+    ]}
+  >
+    <Text style={styles.translationText}>{selectedList.cards[currentIndex].translation}</Text>
+    <Text style={styles.exampleText}>{selectedList.cards[currentIndex].example_original}</Text>
+    <Text style={styles.exampleText}>{selectedList.cards[currentIndex].example_translated}</Text>
+  </RNAnimated.View>
+)}
             </View>
           </LinearGradient>
         </RNAnimated.View>
@@ -568,10 +584,28 @@ export default function FlashcardsScreen() {
       </View>
 
       <View style={styles.cardControlsContainer}>
-        <Text style={styles.counterText}>{currentIndex + 1} / {selectedList.cards.length}</Text>
+        <View style={styles.counterCircle}>
+  <Text style={styles.counterText}>{currentIndex + 1} / {selectedList.cards.length}</Text>
+</View>
         <TouchableOpacity 
           style={styles.controlButton}
-          onPress={() => setShowTranslation(!showTranslation)}
+          onPress={() => {
+  if (!showTranslation) {
+    setShowTranslation(true);
+    RNAnimated.timing(translationAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  } else {
+    RNAnimated.timing(translationAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => setShowTranslation(false));
+  }
+}
+          }
         >
           <Icon name={showTranslation ? 'eye-off' : 'eye'} size={22} color="#FFFFFF" />
           <Text style={styles.controlButtonText}>{t('flashcards.show')}</Text>
@@ -894,19 +928,24 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginLeft: MARGIN.xs,
   },
-  counterText: {
-    fontSize: 16,
-    color: '#4B5563',
-    fontWeight: '600',
+  counterCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: PADDING.md,
-    paddingVertical: PADDING.xs,
-    borderRadius: BORDER_RADIUS.lg,
-    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
+    marginRight: 8,
+  },
+  counterText: {
+    fontSize: 16,
+    color: '#4B5563',
+    fontWeight: '600',
+    textAlign: 'center',
   },
   cardWrapper: {
     flex: 1,

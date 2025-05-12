@@ -31,6 +31,8 @@
     "continue": "Fortfahren",
     "goToHomeScreen": "Zur Startseite"
   },
+  "emptyTitle": "Du hast noch keine Wörter!",
+  "emptyDesc": "Du kannst mit dem Lernen beginnen, indem du neue Wörter hinzufügst.",
   "placeholders": {
     "email": "Ihre E-Mail-Adresse",
     "password": "Ihr Passwort",
