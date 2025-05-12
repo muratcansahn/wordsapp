@@ -47,16 +47,21 @@ export const FishComponent: React.FC<FishComponentProps> = ({
         </View>
 )}
       </View>
-      <SelectedFish
-        width={width}
-        height={height}
-        mouthAnim={mouthAnim}
-        direction={direction}
-        isEating={isEating}
-        // style={{
-        //   transform: [{ scaleX: direction === "left" ? -1 : 1 }],
-        // }}      
-        />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <View
+          style={{
+            transform: [{ scaleX: direction === 'left' ? -1 : 1 }],
+          }}
+        >
+          <SelectedFish
+            width={width}
+            height={height}
+            mouthAnim={mouthAnim}
+            direction={direction}
+            isEating={isEating}
+          />
+        </View>
+      </View>
     </View>
   );
 };
@@ -67,7 +72,7 @@ const styles = StyleSheet.create({
     top: -10,
     left: 0,
     right: 0,
-    alignItems: 'center',
+    alignItems: 'center', // ortaya hizala
     zIndex: 1,
   },
   hungerBar: {

@@ -179,11 +179,10 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
     setIsLoading(true);
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setInitialized(true);
         setIsAuthenticated(!!session);
-  
+        setUser(session?.user ?? null);
+        setSession(session);
+        setInitialized(true)
         if (session?.user) {
           // Önce veritabanına kaydet
           await saveUserToDatabase(session.user);
@@ -212,6 +211,9 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         } else {
           dispatch(clearReduxUser());
         }
+    
+
+
       }
     );
     setIsLoading(false);

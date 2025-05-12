@@ -2,25 +2,22 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   View, 
   Text,
+  ActivityIndicator,
   TouchableOpacity, 
   StyleSheet, 
   ScrollView,
   Animated, 
   Easing,
-  Dimensions,
-  Modal,
 } from 'react-native';
 import { Audio } from 'expo-av';
 import { useSelector, useDispatch } from 'react-redux';
 import { ThemedText } from '@/components/common/typography';
 import { ThemedView } from '@/components/common/view';
 import { useTranslation } from 'react-i18next';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { PointContainer } from '@/components/common/point-container';
 import { useRouter } from 'expo-router';
 import Button from '@/components/common/buttons/button';
-import { Popup } from '@/components/common/Popup';
 import { ConfirmationDialog } from '@/components/common/ConfirmationDialog';
 import {
   BORDER_RADIUS,
@@ -31,15 +28,15 @@ import {
   PADDING,
 } from '@/constants/AppConstants';
 import { Colors } from '@/constants/Colors';
-import { useTheme } from '@/hooks/theme/useTheme';
 import { RootState } from '@/store';
-import { updateUserStats, setReduxUser } from '@/store/userSlice';
+import { setReduxUser } from '@/store/userSlice';
 import { supabase } from '@/lib/supabase';
 import { FishTypes } from '@/assets/svg/fish';
+import { FishComponent } from '@/components/fish/FishComponent';
 import DailyActivitiesSection from './DailyActivitiesSection';
 import { fetchWordStatuses } from '@/services/userService';
-import { FishComponent } from '@/components/fish/FishComponent';
-import { getHungerColor } from './utils';
+
+
 import { Aquarium } from './Aquarium';
 
 // Kelime istatistikleri - Redux ile değiştirildi
@@ -530,10 +527,13 @@ sectionTitle: {
   },
 });
 
+import { useAuth } from '@/context/SupabaseProvider';
+
 export default function DashboardScreen() {
-  const { mode } = useTheme();
-  const styles = useMemo(() => createStyles(mode), [mode]);
-  const { t } = useTranslation();
+  const { initialized, isLoading } = useAuth();
+  const mode: 'light' = 'light';
+  const styles = useMemo(() => createStyles(mode), []);
+  const { t } = useTranslation() ;
   const router = useRouter();
   const dispatch = useDispatch();
 
@@ -574,11 +574,8 @@ export default function DashboardScreen() {
   // Yem animasyonu için değerler
   const [isFeeding, setIsFeeding] = useState(false);
   const [isEating, setIsEating] = useState<boolean | false>(false);
-  const [feedPopupVisible, setFeedPopupVisible] = useState(false);
-  const [feedingPopupVisible, setFeedingPopupVisible] = useState(false);
   const [feedingSuccess, setFeedingSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [fishData, setFishData] = useState<FishDataType>([]);
+  const [fishData, setFishData] = useState<FishDataType | null>(null);
   const [confirmDialogVisible, setConfirmDialogVisible] = useState(false);
   const [showDirectAnimation, setShowDirectAnimation] = useState(false); // Ekranda doğrudan animasyon göstermek için
   const foodAnimation = useRef(new Animated.Value(0)).current;
@@ -608,7 +605,6 @@ export default function DashboardScreen() {
   useEffect(() => {
     const fetchUserFishes = async () => {
       try {
-        setIsLoading(true); // Yükleme başlıyor
         const { data: userFishes, error } = await supabase
           .from('UserFishes')
           .select('*')
@@ -624,7 +620,6 @@ export default function DashboardScreen() {
       } catch (error) {
         console.error('Balık verilerini getirirken hata:', error);
       } finally {
-        setIsLoading(false); // Yükleme bitti (başarılı veya başarısız olsa da)
       }
     };
     
@@ -681,41 +676,6 @@ export default function DashboardScreen() {
   }, [showDirectAnimation, isEating]);
 
   // Açlık seviyesine göre renk döndüren yardımcı fonksiyon
-
-
-
-
-
-  const renderFish = () => {
-    return fishData.map((fish, index) => {
-      const direction =  "left";
-      const mouthAnim = new Animated.Value(0);
-                
-      return (
-        <View
-          key={`fish-${index}`}
-          style={[
-            {
-              position: 'absolute',
-              top: 130,
-              left: 30,
-            }
-          ]}
-        >
-          <FishComponent
-            width={70}
-            height={70}
-            mouthAnim={fish.mouthAnim}
-            direction={direction}
-            isEating={false}
-            type={"orange"}
-            hungerLevel={fish.hunger_level}
-            lastFeedTime={fish.last_feed_time}
-          />
-        </View>
-      );
-    });
-  };
 
   const startFeedingProcess = () => {
     // Besleme işlemini başlat
@@ -802,9 +762,24 @@ export default function DashboardScreen() {
     router.push('/modal-test');
   };
 
+  if (isLoading || !initialized) {
+    return null;
+  }
+
+  if (fishData === null) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={Colors.light.primary} />
+      </View>
+    );
+  }
+
   return (
     <ThemedView style={styles.container}>
-      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <Button
           onPress={goToModalTest}
           bgColor={Colors.light.primary}
