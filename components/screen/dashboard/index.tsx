@@ -8,6 +8,7 @@ import {
   Animated, 
   Easing,
   Dimensions,
+  Modal,
 } from 'react-native';
 import { Audio } from 'expo-av';
 import { useSelector, useDispatch } from 'react-redux';
@@ -454,6 +455,79 @@ sectionTitle: {
     textAlign: 'center',
     marginBottom: MARGIN.xxxl,
   },
+  // Modal stilleri (React Native Modal için)
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '80%',
+    backgroundColor: mode === 'dark' ? '#001529' : '#FFFFFF',
+    borderRadius: BORDER_RADIUS.lg,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalHeader: {
+    backgroundColor: mode === 'dark' ? '#002140' : '#E6F7FF',
+    paddingVertical: PADDING.sm,
+    paddingHorizontal: PADDING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: mode === 'dark' ? '#003a8c' : '#91d5ff',
+  },
+  modalTitle: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
+    color: mode === 'dark' ? '#FFFFFF' : '#001529',
+    textAlign: 'center',
+  },
+  // Doğrudan ekranda gösterilecek animasyon için stiller
+  directAnimationOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999, // En üstte görüntülenmesi için
+  },
+  directAnimationContainer: {
+    width: '80%',
+    backgroundColor: mode === 'dark' ? '#001529' : '#FFFFFF',
+    borderRadius: BORDER_RADIUS.lg,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  directAnimationHeader: {
+    backgroundColor: mode === 'dark' ? '#002140' : '#E6F7FF',
+    paddingVertical: PADDING.sm,
+    paddingHorizontal: PADDING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: mode === 'dark' ? '#003a8c' : '#91d5ff',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  directAnimationTitle: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: 'bold',
+    color: mode === 'dark' ? '#FFFFFF' : '#001529',
+    flex: 1,
+    textAlign: 'center',
+  },
+  closeButton: {
+    padding: 4,
+  },
 });
 
 export default function DashboardScreen() {
@@ -506,6 +580,7 @@ export default function DashboardScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [fishData, setFishData] = useState<FishDataType>([]);
   const [confirmDialogVisible, setConfirmDialogVisible] = useState(false);
+  const [showDirectAnimation, setShowDirectAnimation] = useState(false); // Ekranda doğrudan animasyon göstermek için
   const foodAnimation = useRef(new Animated.Value(0)).current;
   const mouthAnimation = useRef(new Animated.Value(0)).current;
 
@@ -559,6 +634,7 @@ export default function DashboardScreen() {
   }, [id]);
 
   const startFeedingAnimation = () => {
+    console.log('Besleme animasyonu başlatılıyor');
     // Yem animasyonunu başlangıç konumuna getir
     foodAnimation.setValue(0);
     mouthAnimation.setValue(0);
@@ -569,35 +645,40 @@ export default function DashboardScreen() {
       // Önce yemi düşür
       Animated.timing(foodAnimation, {
         toValue: 110, // Balığın ağzına kadar olan mesafe
-        duration: 1000,
+        duration: 1500, // Apple için süreyi artırdım
         useNativeDriver: true,
         easing: Easing.linear
       }),
       // Sonra balığın ağzını aç
       Animated.timing(mouthAnimation, {
         toValue: 1,
-        duration: 500,
+        duration: 800, // Apple için süreyi artırdım
         useNativeDriver: false,
         easing: Easing.linear
       })
     ]).start(() => {
       // Ağız açma animasyonu bittikten sonra
+      console.log('Besleme animasyonu tamamlandı');
       setFeedingSuccess(true);
       playSound(); // Ses çalma buraya taşındı
-      // 1.5 saniye sonra popup'ı kapat
+      // 2.5 saniye sonra animasyonu kapat
       setTimeout(() => {
-        setFeedingPopupVisible(false);
+        setShowDirectAnimation(false);
         setIsFeeding(false);
         setIsEating(false);
-      }, 1500);
+        setFeedingSuccess(false); // Başarı mesajını da kapat
+        mouthAnimation.setValue(0); // Balık ağzının animasyonunu sıfırla
+      }, 2500);
     });
   };
 
   useEffect(() => {
-    if (feedingPopupVisible) {
+    if (showDirectAnimation && isEating) {
+      // Doğrudan ekranda animasyon gösteriliyor ve besleme işlemi devam ediyor
+      console.log('Doğrudan animasyon gösteriliyor - animasyonu başlatıyorum');
       startFeedingAnimation();
     }
-  }, [feedingPopupVisible]);
+  }, [showDirectAnimation, isEating]);
 
   // Açlık seviyesine göre renk döndüren yardımcı fonksiyon
 
@@ -637,8 +718,14 @@ export default function DashboardScreen() {
   };
 
   const startFeedingProcess = () => {
-    setFeedingPopupVisible(true);
-    const FeedUserFish = async () => {
+    // Besleme işlemini başlat
+    setIsFeeding(true);
+
+    // Ekranda doğrudan animasyonu göstermek için state değiştir
+    setShowDirectAnimation(true);
+    
+    // Veritabanı işlemlerini yapalım
+    setTimeout(async () => {
       try {
         // Önce mevcut hunger_level'i kontrol et
         const { data: currentFish, error: fetchError } = await supabase
@@ -678,7 +765,6 @@ export default function DashboardScreen() {
           return;
         }
 
-
         // Redux store'u hemen güncelle
         if (userData && userData[0]) {
           const updatedUser = userData[0];
@@ -699,12 +785,17 @@ export default function DashboardScreen() {
           setFishData(fishResponse.data);
         }
 
+        // Animasyon başlatmak için isEating'i true yap
+        console.log('Veritabanı işlemleri tamamlandı, isEating true yapılıyor');
+        setIsEating(true);
+        
+        // Doğrudan ekranda animasyon gösteriyoruz, popup modal kullanmıyoruz
+        // startFeedingAnimation fonksiyonu useEffect ile otomatik çağrılacak
+
       } catch (err) {
         console.error("Beklenmeyen hata:", err);
       }
-    };
-  
-    FeedUserFish();
+    }, 300);
   };
   
   const goToModalTest = () => {
@@ -754,7 +845,6 @@ export default function DashboardScreen() {
         <View style={styles.sectionHeader}>
           <ThemedText style={styles.sectionTitle}>{t('dashboard.wordStatus')}</ThemedText>
         </View>
-        
         <View style={styles.wordStatsContainer}>
           {wordStats.map((stat) => (
             <TouchableOpacity 
@@ -788,96 +878,43 @@ export default function DashboardScreen() {
             </TouchableOpacity>
           ))}
         </View>
-
-
-      {/* Balık seçme popup'ı */}
-      <Popup
-        visible={feedPopupVisible}
-        onClose={() => setFeedPopupVisible(false)}
-        position="center"
-        title="Hangi Balığı Beslemek İstersiniz?"
-      >
-        <View style={styles.popupContent}>
-          {fishData && fishData.map((fish) => {
-            // Balık türüne göre SVG bileşenini al
-            const hungerColor = getHungerColor(fish.hunger_level);
-            
-            return (
-              <TouchableOpacity
-                key={fish.id}
-                style={styles.fishSelectButton}
-                onPress={() => {}}
-              >
-                <View style={styles.fishPreviewContainer}>
-                  <View style={styles.hungerIndicatorPreviewContainer}>
-                    <View 
-                      style={[
-                        styles.hungerIndicatorPreview, 
-                        { width: fish.hunger_level, backgroundColor: hungerColor }
-                      ]} 
-                    />
-                  </View>
-                  <FishComponent 
-                    width={40}
-                    height={30}
-                    mouthAnim={fish.mouthAnim}
-                    direction={"right"}
-                    isEating={false}
-                    type={fish.type}
-                    hungerLevel={fish.hunger_level}
-                    lastFeedTime={fish.last_feed_time}
-                  />
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-   
-      </Popup>
-      
-      {/* Besleme animasyonu popup'ı */}
-      <Popup
-        visible={feedingPopupVisible}
-        onClose={() => {
-          setFeedingPopupVisible(false);
-          setIsFeeding(false);
-          setIsEating(false);
-        }}
-        position="center"
-        title={t('dashboard.fishFeeding.feeding')}
-      >
-        <View style={styles.feedingPopupContent}>
-          <View style={styles.feedingContainer}>
-            <Animated.View
-              style={[
-                styles.foodItem,
-                {
-                  transform: [{
-                    translateY: foodAnimation
-                  }]
-                }
-              ]}
-            >
-              <View style={styles.foodDot} />
-            </Animated.View>
-            <FishComponent 
-              width={120}
-              height={90}
-              mouthAnim={mouthAnimation}
-              direction={"left"}
-              isEating={isEating}
-              type={"orange"}
+      {/* Doğrudan ekranda animasyon gösterme */}
+      {showDirectAnimation && (
+        <View style={styles.directAnimationOverlay}>
+          <View style={styles.directAnimationContainer}>
+            <View style={styles.feedingPopupContent}>
+              <View style={styles.feedingContainer}>
+                <Animated.View
+                  style={[
+                    styles.foodItem,
+                    {
+                      transform: [{
+                        translateY: foodAnimation
+                      }]
+                    }
+                  ]}
+                >
+                  <View style={styles.foodDot} />
+                </Animated.View>
+                <FishComponent 
+                  width={120}
+                  height={90}
+                  mouthAnim={mouthAnimation}
+                  direction={"left"}
+                  isEating={isEating}
+                  type={"orange"}
+                />
+              </View>
               
-            />
+              {feedingSuccess && (
+                <Text style={styles.feedingSuccessText}>
+                  {t('dashboard.fishFeeding.feedingSuccess') || "Başarıyla beslendi!"}
+                </Text>
+              )}
+            </View>
           </View>
-        
-          {feedingSuccess && (
-            <Text style={styles.feedingSuccessText}>
-              {t('dashboard.fishFeeding.feedingSuccess')}
-            </Text>
-          )}
         </View>
-      </Popup>
+      )}
 
       {/* Özel onay dialog'u */}
       <ConfirmationDialog

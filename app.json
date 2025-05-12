@@ -19,7 +19,19 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.muratcansahn.denemev1",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSMicrophoneUsageDescription": "Bu uygulama ses özellikleri için mikrofon izni ister.",
+        "NSSpeechRecognitionUsageDescription": "Bu uygulama konuşma tanıma özellikleri için izin ister.",
+        "NSCameraUsageDescription": "Bu uygulama profil fotoğrafı çekmek için kamera izni ister.",
+        "NSPhotoLibraryUsageDescription": "Bu uygulama fotoğraf seçmek için fotoğraf kütüphanesine erişim izni ister.",
+        "NSPhotoLibraryAddUsageDescription": "Bu uygulama fotoğrafları kaydetmek için fotoğraf kütüphanesine erişim izni ister.",
+        "NSUserTrackingUsageDescription": "Bu tanımlayıcı, size kişiselleştirilmiş içerik sunmak için kullanılacaktır.",
+        "LSApplicationQueriesSchemes": [
+          "instagram",
+          "instagram-stories",
+          "facebook",
+          "facebook-stories"
+        ]
       }
     },
     "android": {
@@ -33,7 +45,15 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.618549544946-6qbr87l7njjfksht904vsp5f9ckc65kr",
+          
+          "scopes": ["profile", "email"]
+        }
+      ]
     ],
     "extra": {
       "router": {

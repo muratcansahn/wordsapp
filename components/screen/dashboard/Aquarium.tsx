@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Animated, Dimensions, Easing, Text } from 'react-native';
+import { View, StyleSheet, Animated, Dimensions, Easing, Text, AppState } from 'react-native';
 import Reanimated, { useSharedValue, useAnimatedStyle, withTiming, withRepeat, withSequence, withDelay, Easing as ReanimatedEasing } from 'react-native-reanimated';
 import { FishComponent } from '@/components/fish/FishComponent';
 
@@ -17,90 +17,111 @@ export const Aquarium: FC<AquariumProps> = ({
   direction = 1, // 1: sağa, -1: sola
   // hungerLevel = fishData.hunger_level,
 }) => {
-  // fishData yoksa veya yüklenmemişse render etme
-  if (!fishData) {
-    return null;
-  }
   // Balık animasyonu için Animated değerleri
   const [mouthAnim] = useState(new Animated.Value(0));
   const fishPositionX = useRef(new Animated.Value(0)).current;
   const fishRotation = useRef(new Animated.Value(0)).current;
   const [fishDirection, setFishDirection] = useState<"right" | "left">(direction === 1 ? "right" : "left"); // Başlangıç yönünü direction prop'una göre ayarla
   const [isTurning, setIsTurning] = useState(false);
-  // fishData'nın içeriğini kontrol et
   
-  // fishData'dan gerekli değerleri çıkar
-  const hungerLevel = fishData?.hunger_level || 50;
-  const lastFeedTime = fishData?.last_feed_time || new Date().toISOString();
-  
-  // Baloncuklar için Reanimated animasyon değerleri
+  // Baloncuklar için standart React Native Animated API kullanıyoruz
   const bubbles = useRef([...Array(15)].map(() => ({
     xPos: Math.random() * 320 * 0.8,
     yPos: Math.random() * 200,
     size: Math.random() * 12 + 3,
     speed: Math.random() * 2000 + 1500,
-    // Reanimated shared values kullanıyoruz
-    yOffset: useSharedValue(0),
-    xOffset: useSharedValue(0),
-    opacity: useSharedValue(Math.random() * 0.4 + 0.2),
-    scale: useSharedValue(1),
+    // Standart Animated değerleri kullanıyoruz
+    yOffset: new Animated.Value(0),
+    xOffset: new Animated.Value(0),
+    opacity: new Animated.Value(Math.random() * 0.4 + 0.2),
+    scale: new Animated.Value(1),
     color: Math.random() > 0.7 ? 'rgba(255, 255, 255, 0.5)' : 'rgba(220, 240, 255, 0.4)',
   }))).current;
+  
+  // fishData'dan gerekli değerleri çıkar
+  const hungerLevel = fishData?.hunger_level || 50;
+  const lastFeedTime = fishData?.last_feed_time || new Date().toISOString();
 
   // Baloncuk animasyonlarını başlat
   useEffect(() => {
     // Her baloncuk için animasyonları başlat
-    bubbles.forEach(bubble => {
-      // Y ekseni animasyonu - yukarı doğru hareket
-      bubble.yOffset.value = bubble.yPos;
-      bubble.yOffset.value = withRepeat(
-        withSequence(
-          withTiming(-bubble.size * 20, { 
-            duration: bubble.speed, 
-            easing: ReanimatedEasing.linear 
+    const animations = bubbles.map(bubble => {
+      // Başlangıç değerlerini ayarla
+      bubble.yOffset.setValue(bubble.yPos);
+      bubble.xOffset.setValue(0);
+      bubble.scale.setValue(1);
+      
+      // Y ekseni animasyonu - yukarı doğru hareket (sonsuz loop)
+      const yAnimation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(bubble.yOffset, {
+            toValue: -bubble.size * 20,
+            duration: bubble.speed,
+            easing: Easing.linear,
+            useNativeDriver: true
           }),
-          withTiming(bubble.yPos, { duration: 0 })
-        ),
-        -1, // sonsuz tekrar
-        false // reverse yok
+          Animated.timing(bubble.yOffset, {
+            toValue: bubble.yPos,
+            duration: 0,
+            useNativeDriver: true
+          })
+        ]),
+        { iterations: -1 }
       );
       
       // X ekseni animasyonu - hafif sağa sola hareket
-      bubble.xOffset.value = withRepeat(
-        withSequence(
-          withTiming(Math.random() * 20 - 10, { 
-            duration: bubble.speed / 2, 
-            easing: ReanimatedEasing.inOut(ReanimatedEasing.sin) 
+      const xAnimation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(bubble.xOffset, {
+            toValue: Math.random() * 20 - 10,
+            duration: bubble.speed / 2,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true
           }),
-          withTiming(0, { 
-            duration: bubble.speed / 2, 
-            easing: ReanimatedEasing.inOut(ReanimatedEasing.sin) 
+          Animated.timing(bubble.xOffset, {
+            toValue: 0,
+            duration: bubble.speed / 2,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true
           })
-        ),
-        -1, // sonsuz tekrar
-        true // reverse
+        ]),
+        { iterations: -1 }
       );
       
       // Ölçek animasyonu - büyüme küçülme
-      bubble.scale.value = withRepeat(
-        withSequence(
-          withTiming(Math.random() * 0.4 + 0.8, { 
-            duration: bubble.speed / 2, 
-            easing: ReanimatedEasing.inOut(ReanimatedEasing.sin) 
+      const scaleAnimation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(bubble.scale, {
+            toValue: Math.random() * 0.4 + 0.8,
+            duration: bubble.speed / 2,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true
           }),
-          withTiming(1, { 
-            duration: bubble.speed / 2, 
-            easing: ReanimatedEasing.inOut(ReanimatedEasing.sin) 
+          Animated.timing(bubble.scale, {
+            toValue: 1,
+            duration: bubble.speed / 2,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true
           })
-        ),
-        -1, // sonsuz tekrar
-        true // reverse
+        ]),
+        { iterations: -1 }
       );
+      
+      // Tüm animasyonları başlat
+      yAnimation.start();
+      xAnimation.start();
+      scaleAnimation.start();
+      
+      return { yAnimation, xAnimation, scaleAnimation };
     });
     
-    // Cleanup fonksiyonu - Reanimated'da genellikle gerekli değil
+    // Temizleme fonksiyonu
     return () => {
-      // Gerekirse burada temizleme işlemleri yapılabilir
+      animations.forEach(anim => {
+        anim.yAnimation.stop();
+        anim.xAnimation.stop();
+        anim.scaleAnimation.stop();
+      });
     };
   }, []);
   
@@ -120,142 +141,186 @@ export const Aquarium: FC<AquariumProps> = ({
     // Başlangıç pozisyonunu ayarla
     fishPositionX.setValue(xPosition);
     
-    // Sabit framerate ile animasyon (setInterval kullanıyoruz)
-    const animationInterval = setInterval(() => {
-      // Pozisyonu güncelle
-      xPosition += xVelocity;
-      
-      // Sınırları kontrol et
-      if (xPosition >= boundaryWidth) {
-        // Sağ kenara çarptı - sola dön
-        xVelocity = -speed;
-        xPosition = boundaryWidth; // Sınırda tut
-        
-        if (isFacingRight && !isTurning) {
-          // Dönüş animasyonu başlat
-          setIsTurning(true);
-          
-          // Önce hafifçe geri geri git, sonra dön
-          Animated.sequence([
-            // Hafifçe geri çekil
-            Animated.timing(fishPositionX, {
-              toValue: boundaryWidth - 15,
-              duration: 300,
-              easing: Easing.out(Easing.cubic),
-              useNativeDriver: true
-            }),
-            // Dönüş sırasında hafifçe aşağı yukarı hareket
-            Animated.timing(fishRotation, {
-              toValue: 1,
-              duration: 400,
-              easing: Easing.inOut(Easing.cubic),
-              useNativeDriver: true
-            })
-          ]).start(() => {
-            // Dönüş tamamlandı
-            setFishDirection("left");
-            isFacingRight = false;
-            setIsTurning(false);
-            fishRotation.setValue(0);
-          });
-        }
-      } else if (xPosition <= -boundaryWidth) {
-        // Sol kenara çarptı - sağa dön
-        xVelocity = speed;
-        xPosition = -boundaryWidth; // Sınırda tut
-        
-        if (!isFacingRight && !isTurning) {
-          // Dönüş animasyonu başlat
-          setIsTurning(true);
-          
-          // Önce hafifçe geri geri git, sonra dön
-          Animated.sequence([
-            // Hafifçe geri çekil
-            Animated.timing(fishPositionX, {
-              toValue: -boundaryWidth + 15,
-              duration: 300,
-              easing: Easing.out(Easing.cubic),
-              useNativeDriver: true
-            }),
-            // Dönüş sırasında hafifçe aşağı yukarı hareket
-            Animated.timing(fishRotation, {
-              toValue: 1,
-              duration: 400,
-              easing: Easing.inOut(Easing.cubic),
-              useNativeDriver: true
-            })
-          ]).start(() => {
-            // Dönüş tamamlandı
-            setFishDirection("right");
-            isFacingRight = true;
-            setIsTurning(false);
-            fishRotation.setValue(0);
-          });
-        }
+    // Animasyon interval referansı
+    let animationInterval: NodeJS.Timeout | null = null;
+    
+    // Animasyonu başlatan fonksiyon
+    const startAnimation = () => {
+      // Eğer zaten çalışan bir animasyon varsa, önce onu temizle
+      if (animationInterval) {
+        clearInterval(animationInterval);
       }
       
-      // Hareket halindeyse ve dönüş yapmıyorsa pozisyonu güncelle
-      if (!isTurning) {
-        fishPositionX.setValue(xPosition);
+      // Sabit framerate ile animasyon (setInterval kullanıyoruz)
+      animationInterval = setInterval(() => {
+        // Pozisyonu güncelle
+        xPosition += xVelocity;
+        
+        // Sınırları kontrol et
+        if (xPosition >= boundaryWidth) {
+          // Sağ kenara çarptı - sola dön
+          xVelocity = -speed;
+          xPosition = boundaryWidth; // Sınırda tut
+          
+          if (isFacingRight && !isTurning) {
+            // Dönüş animasyonu başlat
+            setIsTurning(true);
+            
+            // Önce hafifçe geri geri git, sonra dön
+            Animated.sequence([
+              // Hafifçe geri çekil
+              Animated.timing(fishPositionX, {
+                toValue: boundaryWidth - 15,
+                duration: 300,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: true
+              }),
+              // Dönüş sırasında hafifçe aşağı yukarı hareket
+              Animated.timing(fishRotation, {
+                toValue: 1,
+                duration: 400,
+                easing: Easing.inOut(Easing.cubic),
+                useNativeDriver: true
+              })
+            ]).start(() => {
+              // Dönüş tamamlandı
+              setFishDirection("left");
+              isFacingRight = false;
+              setIsTurning(false);
+              fishRotation.setValue(0);
+            });
+          }
+        } else if (xPosition <= -boundaryWidth) {
+          // Sol kenara çarptı - sağa dön
+          xVelocity = speed;
+          xPosition = -boundaryWidth; // Sınırda tut
+          
+          if (!isFacingRight && !isTurning) {
+            // Dönüş animasyonu başlat
+            setIsTurning(true);
+            
+            // Önce hafifçe geri geri git, sonra dön
+            Animated.sequence([
+              // Hafifçe geri çekil
+              Animated.timing(fishPositionX, {
+                toValue: -boundaryWidth + 15,
+                duration: 300,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: true
+              }),
+              // Dönüş sırasında hafifçe aşağı yukarı hareket
+              Animated.timing(fishRotation, {
+                toValue: 1,
+                duration: 400,
+                easing: Easing.inOut(Easing.cubic),
+                useNativeDriver: true
+              })
+            ]).start(() => {
+              // Dönüş tamamlandı
+              setFishDirection("right");
+              isFacingRight = true;
+              setIsTurning(false);
+              fishRotation.setValue(0);
+            });
+          }
+        }
+        
+        // Hareket halindeyse ve dönüş yapmıyorsa pozisyonu güncelle
+        if (!isTurning) {
+          fishPositionX.setValue(xPosition);
+        }
+        
+      }, 1000/60); // 60 FPS
+    };
+    
+    // Animasyonu durduran fonksiyon
+    const stopAnimation = () => {
+      if (animationInterval) {
+        clearInterval(animationInterval);
+        animationInterval = null;
       }
-      
-    }, 1000/60); // 60 FPS
+    };
+    
+    // AppState değişimini dinle
+    const appStateSubscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        // Uygulama ön plana geldiğinde animasyonu başlat
+        startAnimation();
+      } else if (nextAppState === 'background' || nextAppState === 'inactive') {
+        // Uygulama arka plana gittiğinde animasyonu durdur
+        stopAnimation();
+      }
+    });
+    
+    // İlk başlangıçta animasyonu başlat
+    startAnimation();
     
     // Temizleme fonksiyonu
     return () => {
-      clearInterval(animationInterval);
+      stopAnimation();
+      appStateSubscription.remove();
     };
   }, [direction]); // direction değiştiğinde tekrar çalışsın
   
   const animationRef = useRef(null);
 
+  // Baloncuk animasyonlarını yönetmek için AppState'i kullan
   useEffect(() => {
+    // Baloncuk animasyonlarını durdur veya başlat
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'background' || nextAppState === 'inactive') {
+        // Uygulama arka plana gittiğinde animasyonları durdur
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+          animationRef.current = null;
+        }
+      }
+    };
+    
+    // AppState değişimini dinle
+    const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
+    
     return () => {
+      // Temizleme işlemleri
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
+      appStateSubscription.remove();
     };
   }, []);
-
-  // Baloncukları render et - Reanimated kullanarak
-  const renderBubbles = () => {
-    return bubbles.map((bubble, index) => {
-      // Her baloncuk için animasyon stilini tanımla
-      const animatedStyle = useAnimatedStyle(() => {
-        return {
-          transform: [
-            { translateY: bubble.yOffset.value },
-            { translateX: bubble.xOffset.value },
-            { scale: bubble.scale.value },
-          ],
-          opacity: bubble.opacity.value,
-        };
-      });
-      
-      return (
-        <Reanimated.View
-          key={index}
-          style={[
-            styles.bubble,
-            {
-              left: bubble.xPos,
-              top: bubble.yPos,
-              width: bubble.size,
-              height: bubble.size,
-              backgroundColor: bubble.color,
-            },
-            animatedStyle,
-          ]}
-        />
-      );
-    });
-  };
+  
+  // fishData yoksa boş bir container döndür
+  if (!fishData) {
+    return <View style={styles.container} />;
+  }
   
   return (
     <View style={styles.container}>
       <View style={styles.aquariumBox}>        
         {/* Baloncuklar */}
-        {renderBubbles()}
+        {bubbles && bubbles.map((bubble, index) => (
+          <Animated.View
+            key={index}
+            style={[
+              styles.bubble,
+              {
+                left: bubble.xPos,
+                top: bubble.yPos,
+                width: bubble.size,
+                height: bubble.size,
+                backgroundColor: bubble.color,
+              },
+              {
+                transform: [
+                  { translateY: bubble.yOffset },
+                  { translateX: bubble.xOffset },
+                  { scale: bubble.scale },
+                ],
+                opacity: bubble.opacity,
+              }
+            ]}
+          />
+        ))}
         {/* FishComponent eklenmiş versiyonu - Animated ile */}
         <Animated.View 
           style={[
@@ -296,7 +361,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   aquariumBox: {
-    width: 340,
+    width: '100%',
     height: 220,
     backgroundColor: '#87CEFA', // Açık mavi renk (light sky blue)
     borderRadius: 20,
