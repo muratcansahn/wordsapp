@@ -20,12 +20,7 @@ const SettingsScreen = () => {
       route: '/settings/language',
       color: '#007AFF',
     },
-    {
-      icon: 'theme-light-dark',
-      title: 'Tema',
-      route: '/settings/theme',
-      color: '#FF9500',
-    },
+
     {
       icon: 'shield-lock',
       title: 'Gizlilik',
