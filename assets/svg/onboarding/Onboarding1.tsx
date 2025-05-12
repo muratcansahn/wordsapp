@@ -11,11 +11,13 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'react-native';
 import Button from '@/components/common/buttons/button';
 import { useTranslation } from 'react-i18next';
+import OnboardingCard from '@/components/common/onboarding/onboarding-card';
 
 
 interface OnboardingProps {
   width?: number;
   height?: number;
+  isActive?: boolean;
 }
 
 const Onboarding1: React.FC<OnboardingProps> = ({ width = 300, height = 300 }) => {
@@ -128,111 +130,105 @@ const Onboarding1: React.FC<OnboardingProps> = ({ width = 300, height = 300 }) =
   const styles = useMemo(() => createStyles(mode, screenWidth, screenHeight), [mode, screenWidth, screenHeight]);
 
   return (
-  <ScrollView
-    style={styles.scrollView}
-    contentContainerStyle={styles.scrollViewContent}
-    showsVerticalScrollIndicator={false}
-  >
     <View style={styles.container}>
-      <View style={styles.card}>
-        {/* Balık Görseli */}
-        <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 18, marginBottom: 32 }}>
-  <Animated.View style={{ transform: [{ translateY: flashcardsY }] }}>
-    <LinearGradient
-      colors={["#5ac8fa", "#a7c7ff"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={{
-        width: 48,
-        height: 48,
-        borderRadius: 14,
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: '#b2e0f7',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.10,
-        shadowRadius: 8,
-        elevation: 4,
-      }}
-    >
-      <Ionicons name="help-circle-outline" size={screenWidth < 350 ? 22 : 26} color="#fff" />
-    </LinearGradient>
-  </Animated.View>
-  <Animated.View style={{ transform: [{ translateY: quizY }] }}>
-    <LinearGradient
-      colors={["#34e89e", "#6be585"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={{
-        width: 48,
-        height: 48,
-        borderRadius: 14,
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: '#c1f7dc',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.10,
-        shadowRadius: 8,
-        elevation: 4,
-      }}
-    >
-      <Ionicons name="shuffle-outline" size={screenWidth < 350 ? 22 : 26} color="#fff" />
-    </LinearGradient>
-  </Animated.View>
-  <Animated.View style={{ transform: [{ translateY: wordMatchingY }] }}>
-    <LinearGradient
-      colors={["#b388ff", "#e0c3fc"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={{
-        width: 48,
-        height: 48,
-        borderRadius: 14,
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: '#e3d7fb',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.10,
-        shadowRadius: 8,
-        elevation: 4,
-      }}
-    >
-      <MaterialCommunityIcons name="format-list-checks" size={screenWidth < 350 ? 22 : 26} color="#fff" />
-    </LinearGradient>
-  </Animated.View>
-  <Animated.View style={{ transform: [{ translateY: writingY }] }}>
-    <LinearGradient
-      colors={["#ffb86b", "#ffd6a5"]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={{
-        width: 48,
-        height: 48,
-        borderRadius: 14,
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: '#ffe2c6',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.10,
-        shadowRadius: 8,
-        elevation: 4,
-      }}
-    >
-      <MaterialCommunityIcons name="cards" size={screenWidth < 350 ? 22 : 26} color="#fff" />
-    </LinearGradient>
-  </Animated.View>
-</View>
-        {/* Başlık */}
-        <Text style={styles.headerText}>{t('onboarding1.header')}</Text>
-        {/* Açıklama */}
-        <Text style={styles.secondaryFooter}>
-          {t('onboarding1.description')}
-        </Text>
-   
+      <View style={styles.container}>
+        <OnboardingCard
+          headerText={t('onboarding1.header')}
+          descriptionText={t('onboarding1.description')}
+          borderColor="#F7A943"
+        >
+          {/* İkonlar */}
+          <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 18, marginBottom: 32 }}>
+            <Animated.View style={{ transform: [{ translateY: flashcardsY }] }}>
+              <LinearGradient
+                colors={["#5ac8fa", "#a7c7ff"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 14,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  shadowColor: '#b2e0f7',
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.10,
+                  shadowRadius: 8,
+                  elevation: 4,
+                }}
+              >
+                <Ionicons name="help-circle-outline" size={screenWidth < 350 ? 22 : 26} color="#fff" />
+              </LinearGradient>
+            </Animated.View>
+            <Animated.View style={{ transform: [{ translateY: quizY }] }}>
+              <LinearGradient
+                colors={["#34e89e", "#6be585"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 14,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  shadowColor: '#c1f7dc',
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.10,
+                  shadowRadius: 8,
+                  elevation: 4,
+                }}
+              >
+                <Ionicons name="shuffle-outline" size={screenWidth < 350 ? 22 : 26} color="#fff" />
+              </LinearGradient>
+            </Animated.View>
+            <Animated.View style={{ transform: [{ translateY: wordMatchingY }] }}>
+              <LinearGradient
+                colors={["#b388ff", "#e0c3fc"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 14,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  shadowColor: '#e3d7fb',
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.10,
+                  shadowRadius: 8,
+                  elevation: 4,
+                }}
+              >
+                <MaterialCommunityIcons name="format-list-checks" size={screenWidth < 350 ? 22 : 26} color="#fff" />
+              </LinearGradient>
+            </Animated.View>
+            <Animated.View style={{ transform: [{ translateY: writingY }] }}>
+              <LinearGradient
+                colors={["#ffb86b", "#ffd6a5"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 14,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  shadowColor: '#ffe2c6',
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.10,
+                  shadowRadius: 8,
+                  elevation: 4,
+                }}
+              >
+                <MaterialCommunityIcons name="cards" size={screenWidth < 350 ? 22 : 26} color="#fff" />
+              </LinearGradient>
+            </Animated.View>
+          </View>
+        </OnboardingCard>
       </View>
     </View>
-  </ScrollView>
-);
+  );
+
 };
 
 // SVG içinde Animated.View kullanabilmek için özel bir bileşen tanımlıyoruz
@@ -240,15 +236,8 @@ const AnimatedG = Animated.createAnimatedComponent(G);
 
 // Stil oluşturma fonksiyonu
 const createStyles = (mode: 'light' | 'dark', screenWidth: number, screenHeight: number) => StyleSheet.create({
-  scrollView: { 
-    flex: 1, 
-    width: '100%' 
-  },
-  scrollViewContent: { 
-    flexGrow: 1, 
-    justifyContent: 'center', 
-    alignItems: 'center' 
-  },
+  scrollView: { flex: 1, width: '100%' },
+  scrollViewContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center' },
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -258,24 +247,6 @@ const createStyles = (mode: 'light' | 'dark', screenWidth: number, screenHeight:
     zIndex: 1,
     minHeight: screenHeight * 0.85,
     width: '100%'
-  },
-  card: {
-    backgroundColor: '#FFFFFF', // Kart arka planı beyaz
-    borderRadius: 20,
-    width: '100%',
-    maxWidth: Math.min(400, screenWidth - 32),
-    paddingVertical: 32,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    alignSelf: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
-    elevation: 10,
-    marginBottom: 24,
-    borderWidth: 2,
-    borderColor: '#F7A943', // Turuncu kenarlık
   },
   headerContainer: {
     alignItems: 'center',
@@ -287,14 +258,6 @@ const createStyles = (mode: 'light' | 'dark', screenWidth: number, screenHeight:
     color: '#4361EE', // Başlık mavi
     textAlign: 'center',
     marginBottom: 8,
-    lineHeight: screenWidth < 350 ? 28 : 32
-  },
-  headerTextYellow: {
-    fontSize: screenWidth < 350 ? 20 : 24,
-    fontWeight: '700',
-    color: '#FFDE59', // Sarı başlık
-    textAlign: 'center',
-    marginBottom: 16,
     lineHeight: screenWidth < 350 ? 28 : 32
   },
   strikethrough: {

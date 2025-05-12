@@ -19,7 +19,7 @@ import Container from '@/components/common/container';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'react-native';
 const onboardingBackground = require('@/assets/images/game-background.png');
-import ProgressBar from '@/components/common/onboarding/progress-bar';
+import ProgressDots from '@/components/common/onboarding/progress-dots';
 import OnboardingSlide from '@/components/common/onboarding/onboarding-slide';
 import NavigationButton from '@/components/common/onboarding/onboarding-button';
 import { LottieViewProps } from 'lottie-react-native';
@@ -102,10 +102,7 @@ const OnboardingScreen: React.FC = () => {
         />
       </View>
       <View style={{ height: 50 }}>
-        <ProgressBar
-          currentStep={currentIndex}
-          totalSteps={onboardingData.length}
-        />
+        
       </View>
       <View style={styles.centerSection}>
         <Animated.FlatList
@@ -121,6 +118,8 @@ const OnboardingScreen: React.FC = () => {
           onMomentumScrollEnd={onMomentumScrollEnd}
         />
       </View>
+      {/* Çizgiler kartın hemen altında */}
+      <ProgressDots currentStep={currentIndex} totalSteps={onboardingData.length} />
       <View style={styles.buttonContainer}>
         <NavigationButton onPress={nextSlide} text={buttonText} />
       </View>
@@ -133,11 +132,13 @@ const styles = StyleSheet.create({
     flex: 1,
     height: Dimensions.get('window').height,
     justifyContent: 'space-between',
+    overflow: 'hidden', // Taşan içeriğin gizlenmesini sağlar
   },
   centerSection: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden', // Taşan içeriğin gizlenmesini sağlar
   },
   buttonContainer: {
     paddingHorizontal: PADDING.lg,

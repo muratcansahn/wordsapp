@@ -1,18 +1,15 @@
 import * as React from 'react';
-import { useEffect, useRef, useMemo } from 'react';
-import Svg, { Path, Circle, Rect, G, TSpan, ClipPath, Defs } from 'react-native-svg';
-import { Text, ScrollView, Dimensions, StyleSheet } from 'react-native';
+import { useMemo, useEffect } from 'react';
+import { Text, Dimensions, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
 import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'react-native';
-import Animated from 'react-native-reanimated';
-const AnimatedImage = Animated.createAnimatedComponent(Image);
-import { useSharedValue, useAnimatedStyle, withTiming, Easing as ReanimatedEasing } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
+import OnboardingCard from '@/components/common/onboarding/onboarding-card';
+import { Animated, Easing } from 'react-native';
 
 interface OnboardingProps {
   width?: number;
@@ -21,22 +18,7 @@ interface OnboardingProps {
 }
 
 const Onboarding3: React.FC<OnboardingProps> = ({ width = 300, height = 300, isActive }) => {
-  // Balık animasyonu için reanimated shared value
   const screenWidth = Dimensions.get('window').width;
-  const fishX = useSharedValue(-screenWidth); // Ekran dışı başla
-  const fishStyle = useAnimatedStyle(() => {
-    // Dalga için parametreler
-    const amplitude = 18; // dalga yüksekliği (px)
-    const frequency = 110; // dalga frekansı (ne kadar sık dalga yapsın)
-    const translateY = Math.sin(fishX.value / frequency) * amplitude;
-    return {
-      transform: [
-        { translateX: fishX.value },
-        { translateY }
-      ]
-    };
-  });
-
   const { mode } = useTheme();
   const { t } = useTranslation();
   const primaryColor = Colors[mode].primary;
@@ -47,54 +29,75 @@ const Onboarding3: React.FC<OnboardingProps> = ({ width = 300, height = 300, isA
   const yellowColor = '#FFD700';
   const accentColor = '#ff7e5f';
   const textFill = mode === 'dark' ? '#fff' : '#333';
+  
+  // Balık animasyonu için klasik Animated API kullanılıyor
+  const fishAnim = React.useRef(new Animated.Value(0)).current;
+  const fishStartX = -1.3 * screenWidth;
 
-
-
-  React.useEffect(() => {
+  useEffect(() => {
     if (isActive) {
-      fishX.value = -screenWidth;
-      // Bir sonraki frame'de animasyonu başlat
-      requestAnimationFrame(() => {
-        fishX.value = withTiming(0, {
-          duration: 1600,
-          easing: ReanimatedEasing.out(ReanimatedEasing.exp)
-        });
-      });
+      // Önce balığı ekran dışına koy (aynı anda başlat)
+      fishAnim.setValue(fishStartX);
+      // Animasyonu başlat (herhangi bir gecikme olmadan)
+      Animated.timing(fishAnim, {
+        toValue: 0,
+        duration: 800,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        useNativeDriver: true,
+      }).start();
     } else {
-      // Slide pasif olursa balık dışarıda kalsın
-      fishX.value = -screenWidth;
+      // Slide aktif değilse balığı tekrar dışarı al
+      fishAnim.setValue(fishStartX);
     }
-  }, [screenWidth, isActive]);
+  }, [isActive, screenWidth]);
 
+  // Dalga efekti için Y pozisyonu
+  const waveAmplitude = 10;
+  const waveFrequency = 100;
+  const fishY = fishAnim.interpolate({
+    inputRange: [fishStartX, 0],
+    outputRange: [0, Math.sin(0 / waveFrequency) * waveAmplitude],
+  });
 
+  // Animated.Image style
+  const fishAnimatedStyle = {
+    transform: [
+      { translateX: fishAnim },
+      { translateY: fishY },
+    ],
+  };
 
   const screenHeight = Dimensions.get('window').height;
   const styles = useMemo(() => createStyles(mode, screenWidth, screenHeight), [mode, screenWidth, screenHeight]);
 
   return (
-    <ScrollView
-      style={styles.scrollView}
-      contentContainerStyle={styles.scrollViewContent}
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={styles.container}>
       <View style={styles.container}>
-        <View style={styles.card}>
-          {/* Balık görseli */}
-          <View style={{ alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
-            <AnimatedImage
+        <OnboardingCard
+          headerText={t('onboarding3.header')}
+          descriptionText={t('onboarding3.description')}
+          borderColor="#F7A943"
+        >
+          {/* Balık animasyonu */}
+          <View style={{ width: 180, height: 130, alignItems: 'center', justifyContent: 'center', marginBottom: 32, overflow: 'hidden', position: 'relative' }}>
+            <Animated.Image
               source={require('@/assets/images/game-screen-fish.png')}
-              style={[{ width: 170, height: 125, resizeMode: 'contain' }, fishStyle]}
+              style={[
+                {
+                  width: 170,
+                  height: 125,
+                  resizeMode: 'contain',
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                },
+                fishAnimatedStyle
+              ]}
             />
           </View>
-          {/* Başlık */}
-          <Text style={styles.headerText}>{t('onboarding3.header')}</Text>
-          {/* Açıklama */}
-          <Text style={styles.secondaryFooter}>
-            {t('onboarding3.description')}
-          </Text>
-        </View>
+        </OnboardingCard>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
@@ -110,39 +113,6 @@ const createStyles = (mode: 'light' | 'dark', screenWidth: number, screenHeight:
     zIndex: 1,
     minHeight: screenHeight * 0.85,
     width: '100%'
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 2,
-    width: '100%',
-    maxWidth: 390,
-    marginBottom: 24,
-    borderWidth: 2,
-    borderColor: '#F7A943',
-  },
-  headerText: {
-    fontSize: 25,
-    fontWeight: 'bold',
-    color: '#4361EE',
-    textAlign: 'center',
-    marginBottom: 18,
-    marginTop: 0,
-  },
-  secondaryFooter: {
-    fontSize: 17,
-    color: mode === 'dark' ? '#e4e4e4' : '#3a3a3a',
-    textAlign: 'center',
-    marginTop: 0,
-    marginBottom: 0,
-    lineHeight: 24,
-    fontWeight: '400',
   },
 });
 

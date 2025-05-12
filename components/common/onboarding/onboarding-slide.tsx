@@ -35,7 +35,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: Dimensions.get('window').width,
     height: '100%',
-    paddingHorizontal: 16,
+    paddingHorizontal: 4,
+    overflow: 'hidden', // Taşan içeriğin gizlenmesini sağlar
   },
 });
 
