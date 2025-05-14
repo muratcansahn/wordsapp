@@ -44,8 +44,10 @@ export const Aquarium: FC<AquariumProps> = ({
   }))).current;
   
   // fishData'dan gerekli değerleri çıkar
-  const hungerLevel = fishData?.hunger_level || 50;
-  const lastFeedTime = fishData?.last_feed_time || new Date().toISOString();
+  const hungerLevel = fishData?.hunger_level;
+  const lastFeedTime = fishData?.last_feed_time ;
+  console.log('hungerLevel', hungerLevel);
+  
 
   // Baloncuk animasyonlarını başlat
   useEffect(() => {

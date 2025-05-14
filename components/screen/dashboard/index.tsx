@@ -706,7 +706,7 @@ export default function DashboardScreen() {
           return;
         }
         
-        const newHungerLevel = Math.min(currentFish.hunger_level + 50, 100);
+        const newHungerLevel = Math.max(currentFish.hunger_level - 50, 0);
 
         // Balığı besle
         const { data, error } = await supabase

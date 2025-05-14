@@ -34,13 +34,13 @@ export const FishComponent: React.FC<FishComponentProps> = ({
     <View style={{ width, height }}>
       <View style={styles.hungerContainer}>
         {hungerLevel != null && (
-        <View style={[styles.hungerBar, { backgroundColor: '#e0e0e0' }]}>
+        <View style={[styles.hungerBar, { backgroundColor: '#e0e0e0' }]}>  
   <View 
     style={[
       styles.hungerIndicator, 
       { 
-        width: `${hungerLevel}%`,
-        backgroundColor: getHungerColor(hungerLevel)
+        width: `${100 - hungerLevel}%`,
+        backgroundColor: getHungerColor(100 - hungerLevel)
       }
     ]} 
   />
