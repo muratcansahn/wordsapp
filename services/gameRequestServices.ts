@@ -85,11 +85,63 @@ export const checkAndUpdateGameRequests = async (userId: string) => {
       .from('UserGameRequestDates')
       .select('dailywords, wordguess, wordmatching, dailywords_remaining, wordguess_remaining, wordmatching_remaining')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle(); // single yerine maybeSingle kullanıyoruz
 
-    if (error) {
+    if (error && error.code !== 'PGRST116') {
       console.error('❌ Son oyun zamanları getirilemedi:', error);
       return;
+    }
+    
+    // Eğer kullanıcının oyun hakları kaydı yoksa yeni kayıt oluşturalım
+    if (!lastRequests) {
+      console.log('⚠️ Kullanıcının oyun hakları kaydı bulunamadı');
+      
+      // Önce kullanıcının Users tablosunda var olup olmadığını kontrol edelim
+      const { data: userExists, error: userCheckError } = await supabase
+        .from('Users')
+        .select('id')
+        .eq('id', userId)
+        .maybeSingle();
+      
+      if (userCheckError) {
+        console.error('❌ Kullanıcı kontrolü yapılırken hata oluştu:', userCheckError);
+        return;
+      }
+      
+      if (!userExists) {
+        console.error(`❌ Kullanıcı ID: ${userId} Users tablosunda bulunamadı. Önce kullanıcıyı oluşturmanız gerekiyor.`);
+        return;
+      }
+      
+      console.log('✅ Kullanıcı doğrulandı, oyun hakları kaydı oluşturuluyor');
+      const currentDate = new Date().toISOString();
+      
+      try {
+        const { error: insertError } = await supabase
+          .from('UserGameRequestDates')
+          .insert([
+            {
+              user_id: userId,
+              dailywords: currentDate,
+              wordguess: currentDate,
+              wordmatching: currentDate,
+              dailywords_remaining: 2,
+              wordguess_remaining: 2,
+              wordmatching_remaining: 2,
+              skipped_wordlist_ids: [] // Boş array olarak başlat
+            },
+          ]);
+        
+        if (insertError) {
+          console.error('❌ Oyun hakları kaydı oluşturulamadı:', insertError);
+          return;
+        }
+        
+        console.log('✅ Yeni oyun hakları kaydı oluşturuldu');
+      } catch (insertCatchError) {
+        console.error('❌ Beklenmeyen hata:', insertCatchError);
+      }
+      return; // İlk oluşturmadan sonra diğer kontrolleri atla
     }
 
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;

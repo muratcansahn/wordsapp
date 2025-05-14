@@ -72,108 +72,174 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
   // Kullanıcıyı Users tablosuna kaydetme fonksiyonu
   const saveUserToDatabase = useCallback(async (userData: User) => {
     try {
-      // Önce kullanıcının tabloda var olup olmadığını kontrol ediyoruz
+      const now = new Date();
+  
+      // Kullanıcının veritabanında olup olmadığını kontrol et
       const { data: existingUser, error: queryError } = await supabase
         .from('Users')
         .select('id, last_streak_date, streak_count')
         .eq('id', userData.id)
         .single();
-
-      if (queryError) {
+  
+      if (queryError && queryError.code !== 'PGRST116') {
         console.error('Sorgu hatası:', queryError.message);
         return;
       }
-
-      const now = new Date(); // Şu anki tarih ve saat
-
-      // Oyun haklarını kontrol et ve güncelle
-      await checkAndUpdateGameRequests(userData.id);
-
-      // Yeni kullanıcı ise
-      if (!existingUser) {
+  
+      // Yeni kullanıcıysa
+      if (queryError && queryError.code === 'PGRST116') {
         const { error: insertError } = await supabase
           .from('Users')
           .insert([
             {
               id: userData.id,
-              full_name: userData.user_metadata?.full_name || 
-                        userData.user_metadata?.name || 
-                        userData.email?.split('@')[0] || 
-                        'Anonim Kullanıcı',
+              full_name:
+                userData.user_metadata?.full_name ||
+                userData.user_metadata?.name ||
+                userData.email?.split('@')[0] ||
+                'Anonim Kullanıcı',
               point: 5,
               streak_count: 1,
               last_streak_date: now.toISOString(),
               last_login_datetime: now.toISOString(),
             },
           ]);
-
+  
         if (insertError) {
           console.error('Kullanıcı ekleme hatası:', insertError);
+          return;
         } else {
           console.log('Kullanıcı başarıyla eklendi');
         }
-      } else {
-        // Mevcut kullanıcı için streak hesaplama
-        let newStreakCount = existingUser.streak_count || 0;
-        let shouldUpdateStreakDate = false;
-        let hoursDifference = 0;
-        const lastStreakDate = existingUser.last_streak_date ? new Date(existingUser.last_streak_date) : null;
+
+        // Yeni kullanıcı için UserGameRequestDates tablosuna kayıt ekle
+        // Önce kaydın var olup olmadığını kontrol edelim
+        const currentDate = now.toISOString();
         
-        if (!lastStreakDate) {
-          // İlk kez streak kaydı
+        try {
+          const { data: existingGameRequest, error: checkError } = await supabase
+            .from('UserGameRequestDates')
+            .select('user_id')
+            .eq('user_id', userData.id)
+            .maybeSingle(); // single yerine maybeSingle kullanarak hata oluşmasını engelleriz
+          
+          if (checkError && checkError.code !== 'PGRST116') {
+            console.error('UserGameRequestDates kontrol hatası:', checkError);
+          }
+          
+          // Kayıt yoksa ekleme yapalım
+          if (!existingGameRequest) {
+            let retryCount = 0;
+            let inserted = false;
+            
+            // Maksimum 3 deneme yapalım
+            while (retryCount < 3 && !inserted) {
+              const { error: gameRequestError } = await supabase
+                .from('UserGameRequestDates')
+                .insert([
+                  {
+                    user_id: userData.id,
+                    dailywords: currentDate,
+                    wordguess: currentDate,
+                    wordmatching: currentDate,
+                    dailywords_remaining: 2,
+                    wordguess_remaining: 2,
+                    wordmatching_remaining: 2,
+                    skipped_wordlist_ids: [] // Boş array olarak başlat
+                  },
+                ]);
+    
+              if (gameRequestError) {
+                console.error(`UserGameRequestDates ekleme hatası (Deneme ${retryCount + 1}/3):`, gameRequestError);
+                retryCount++;
+                // Kısa bir bekleme ekleyelim
+                await new Promise(resolve => setTimeout(resolve, 500));
+              } else {
+                console.log('UserGameRequestDates kaydı başarıyla oluşturuldu');
+                inserted = true;
+              }
+            }
+            
+            if (!inserted) {
+              console.error('UserGameRequestDates kaydı 3 denemeden sonra başarısız oldu');
+            }
+          } else {
+            console.log('UserGameRequestDates kaydı zaten mevcut');
+          }
+        } catch (gameRequestCatchError) {
+          console.error('UserGameRequestDates işleminde beklenmeyen hata:', gameRequestCatchError);
+        }
+        
+        // Kullanıcı ve oyun hakları kayıtları başarıyla oluşturuldu, şimdi oyun haklarını kontrol edebiliriz
+        try {
+          await checkAndUpdateGameRequests(userData.id);
+          console.log('Yeni kullanıcı için oyun hakları kontrol edildi ve güncellendi');
+        } catch (e) {
+          console.warn('Oyun hakları güncellenemedi:', e);
+        }
+        
+        return;
+      }
+  
+      // Mevcut kullanıcı için streak hesaplama
+      if (!existingUser) return;
+      let newStreakCount = existingUser.streak_count || 0;
+      let shouldUpdateStreakDate = false;
+      let hoursDifference = 0;
+  
+      const lastStreakDate = existingUser.last_streak_date
+        ? new Date(existingUser.last_streak_date)
+        : null;
+  
+      if (!lastStreakDate) {
+        newStreakCount = 1;
+        shouldUpdateStreakDate = true;
+      } else {
+        hoursDifference = (now.getTime() - lastStreakDate.getTime()) / (1000 * 60 * 60);
+  
+        if (hoursDifference < 24) {
+          shouldUpdateStreakDate = false;
+          console.log('24 saatten az süre geçmiş, streak korunuyor:', newStreakCount);
+        } else if (hoursDifference < 48) {
+          newStreakCount += 1;
+          shouldUpdateStreakDate = true;
+          console.log('24-48 saat arası giriş, streak artıyor:', newStreakCount);
+        } else {
           newStreakCount = 1;
           shouldUpdateStreakDate = true;
-        } else {
-          // Son giriş ile şu anki zaman arasındaki farkı saat cinsinden hesapla
-          hoursDifference = (now.getTime() - lastStreakDate.getTime()) / (1000 * 60 * 60);
-
-          if (hoursDifference < 24) {
-            // 24 saatten az - streak değişmez, tarih güncellenmez
-            newStreakCount = existingUser.streak_count;
-            shouldUpdateStreakDate = false;
-            console.log('24 saatten az süre geçmiş, streak korunuyor:', newStreakCount);
-          } else if (hoursDifference < 48) {
-            // 24-48 saat arası - streak artar, tarih güncellenir
-            newStreakCount = existingUser.streak_count + 1;
-            shouldUpdateStreakDate = true;
-            console.log('24-48 saat arası giriş, streak artıyor:', newStreakCount);
-          } else {
-            // 48 saatten fazla - streak sıfırlanır, tarih güncellenir
-            newStreakCount = 1;
-            shouldUpdateStreakDate = true;
-            console.log('48 saatten fazla süre geçmiş, streak sıfırlanıyor');
-          }
+          console.log('48 saatten fazla süre geçmiş, streak sıfırlanıyor');
         }
-
-        // Kullanıcı bilgilerini güncelle
-        const updateData: any = {
-          last_login_datetime: now.toISOString(),
-          streak_count: newStreakCount,
-        };
-
-        // Sadece gerekiyorsa streak tarihini güncelle
-        if (shouldUpdateStreakDate) {
-          updateData.last_streak_date = now.toISOString();
-          console.log('Streak tarihi güncelleniyor:', now.toISOString());
-        }
-
-        const { error: updateError } = await supabase
-          .from('Users')
-          .update(updateData)
-          .eq('id', userData.id);
-
-        if (updateError) {
-          console.error('Kullanıcı güncelleme hatası:', updateError);
-        } else {
-          const hours = Math.floor(hoursDifference);
-          const minutes = Math.floor((hoursDifference - hours) * 60);
-          console.log(`Kullanıcı bilgileri güncellendi. Yeni streak: ${newStreakCount}, Son girişten bu yana: ${hours} saat ${minutes} dakika`);
-        }
+      }
+  
+      const updateData: Record<string, any> = {
+        last_login_datetime: now.toISOString(),
+        streak_count: newStreakCount,
+      };
+  
+      if (shouldUpdateStreakDate) {
+        updateData.last_streak_date = now.toISOString();
+        console.log('Streak tarihi güncelleniyor:', now.toISOString());
+      }
+  
+      const { error: updateError } = await supabase
+        .from('Users')
+        .update(updateData)
+        .eq('id', userData.id);
+  
+      if (updateError) {
+        console.error('Kullanıcı güncelleme hatası:', updateError);
+      } else {
+        const hours = Math.floor(hoursDifference);
+        const minutes = Math.floor((hoursDifference - hours) * 60);
+        console.log(
+          `Kullanıcı bilgileri güncellendi. Yeni streak: ${newStreakCount}, Son girişten bu yana: ${hours} saat ${minutes} dakika`
+        );
       }
     } catch (error) {
       console.error('Kullanıcı kaydetme işlemi sırasında hata:', error);
     }
   }, []);
+  
 
   useEffect(() => {
     setIsLoading(true);
@@ -185,6 +251,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         setInitialized(true)
         if (session?.user) {
           // Önce veritabanına kaydet
+          console.log("session.user", session.user)
           await saveUserToDatabase(session.user);
           
           // Sonra güncel verileri çek
@@ -211,9 +278,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         } else {
           dispatch(clearReduxUser());
         }
-    
-
-
       }
     );
     setIsLoading(false);
@@ -231,7 +295,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
       error: JSON.stringify(error, null, 2)
     });
     setError(error.message);
-    showToast(error.message, true, Colors.light.error);
+    showToast(error.message, true, Colors.light.error,);
   }, []);
 
   const handleAuthAction = useCallback(
@@ -290,7 +354,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
     [handleError, saveUserToDatabase, dispatch]
   );
   
-
   const signIn = useCallback(
     (email: string, password: string) =>
       handleAuthAction(
@@ -419,6 +482,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
       });
+      // console.log("Apple signin başarılı", credential)
       if (!credential.identityToken) {
         throw new Error('Apple authentication failed');
       }
@@ -427,6 +491,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
           supabase.auth.signInWithIdToken({
             provider: 'apple',
             token: credential.identityToken ?? '',
+
           }),
         t('auth.signingInWithApple')
       );
@@ -448,6 +513,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
           refresh_token: parsedUrl.searchParams.get('refresh_token') ?? '',
         });
         if (error) throw error;
+
+        console.log("Apple signin başarılı111", data)
         if (data.session) {
           setSession(data.session);
           setUser(data.session.user);

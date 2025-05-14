@@ -3,6 +3,7 @@
     "name": "LangLearn Pro",
     "slug": "langlearnpro",
     "version": "1.0.0",
+    "owner": "muratcansahindev",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "automatic",
@@ -18,6 +19,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.muratcansahn.denemev1",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSMicrophoneUsageDescription": "Bu uygulama ses özellikleri için mikrofon izni ister.",
@@ -45,13 +47,15 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-router",
+      "expo-router","expo-apple-authentication",
       [
         "@react-native-google-signin/google-signin",
         {
           "iosUrlScheme": "com.googleusercontent.apps.618549544946-6qbr87l7njjfksht904vsp5f9ckc65kr",
-          
-          "scopes": ["profile", "email"]
+          "scopes": [
+            "profile",
+            "email"
+          ]
         }
       ]
     ],
@@ -60,7 +64,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "0340d517-7055-4a49-90b5-e53e886697f8"
+        "projectId": "58803994-0235-44df-8c4c-8d8d0d782307"
       }
     }
   }
