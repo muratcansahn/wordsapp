@@ -3,6 +3,7 @@ import { View, StyleSheet, FlatList, TouchableOpacity, Dimensions } from 'react-
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { ThemedText } from '@/components/common/typography';
 import { ThemedView } from '@/components/common/view';
 import { Ionicons } from '@expo/vector-icons';
@@ -152,6 +153,8 @@ export default function WordListScreen() {
 
   // Kelime durumunu güncelle
   const handleUpdateStatus = async (wordId: number, newStatus: number) => {
+    // Hafif haptic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const success = await updateWordStatus(wordId, userId, newStatus);
     
     if (success) {

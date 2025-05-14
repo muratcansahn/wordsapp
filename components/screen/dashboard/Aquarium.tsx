@@ -9,6 +9,7 @@ interface AquariumProps {
   hungerLevel?: number;
   lastFeedTime?: string;
   fishData?: any;
+  isEating?: boolean;
 }
 
 export const Aquarium: FC<AquariumProps> = ({ 
@@ -16,10 +17,14 @@ export const Aquarium: FC<AquariumProps> = ({
   fishType = 'orange', 
   direction = 1, // 1: sağa, -1: sola
   // hungerLevel = fishData.hunger_level,
+  isEating = false,
 }) => {
   // Balık animasyonu için Animated değerleri
   const [mouthAnim] = useState(new Animated.Value(0));
-  const fishPositionX = useRef(new Animated.Value(0)).current;
+  // Başlangıç pozisyonunu direction'a göre ayarla
+  const boundaryWidth = 110; // Animasyonun kullandığı sınır değeriyle aynı olmalı
+  const initialX = direction === 1 ? -boundaryWidth : boundaryWidth;
+  const fishPositionX = useRef(new Animated.Value(initialX)).current;
   const fishRotation = useRef(new Animated.Value(0)).current;
   const [fishDirection, setFishDirection] = useState<"right" | "left">(direction === 1 ? "right" : "left"); // Başlangıç yönünü direction prop'una göre ayarla
   const [isTurning, setIsTurning] = useState(false);
@@ -333,6 +338,7 @@ export const Aquarium: FC<AquariumProps> = ({
                     inputRange: [0, 0.5, 1],
                     outputRange: ['0deg', fishDirection === "left" ? '20deg' : '-20deg', '0deg']
                   }) },
+                // Beslenme sırasında balığın yönünü ayarla
                 { scaleX: fishDirection === "right" ? -1 : 1 } // Balığın yönünü ayarla
               ]
             }

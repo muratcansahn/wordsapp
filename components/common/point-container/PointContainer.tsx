@@ -215,9 +215,12 @@ const styles = StyleSheet.create({
   pointIconWrapper: {
     backgroundColor: '#1890FF',
     borderRadius: 16,
-    padding: 5,
-    marginRight: 8,
-    borderWidth: 1,
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 4,
+    borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   pointText: {

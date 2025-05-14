@@ -50,7 +50,7 @@ export const FishComponent: React.FC<FishComponentProps> = ({
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <View
           style={{
-            transform: [{ scaleX: direction === 'left' ? -1 : 1 }],
+            transform: [{ scaleX:isEating ? -1 : 1 }],
           }}
         >
           <SelectedFish

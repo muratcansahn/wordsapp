@@ -635,6 +635,13 @@ export default function DashboardScreen() {
     mouthAnimation.setValue(0);
     setFeedingSuccess(false);
     
+    // Balığın beslenme sırasında ters yöne bakmasını sağla
+    if (fishData && fishData.length > 0) {
+      // Beslenme sırasında balık ters yöne bakmalı
+      // FishComponent içinde isEating durumunda ters yöne bakacak şekilde ayarlandı
+      // Bu nedenle burada herhangi bir yön değişikliği yapmamıza gerek yok
+    }
+    
     // Yem düşme animasyonu
     Animated.sequence([
       // Önce yemi düşür
@@ -815,6 +822,7 @@ export default function DashboardScreen() {
         </View>
         <Aquarium 
           fishData={fishData[0]}
+          isEating={isEating}
         />
         {/* Kelime İstatistikleri */}
         <View style={styles.sectionHeader}>
@@ -854,7 +862,7 @@ export default function DashboardScreen() {
           ))}
         </View>
       {/* Doğrudan ekranda animasyon gösterme */}
-      {showDirectAnimation && (
+      {isEating && (
         <View style={styles.directAnimationOverlay}>
           <View style={styles.directAnimationContainer}>
             <View style={styles.feedingPopupContent}>
@@ -875,9 +883,9 @@ export default function DashboardScreen() {
                   width={120}
                   height={90}
                   mouthAnim={mouthAnimation}
-                  direction={"left"}
                   isEating={isEating}
                   type={"orange"}
+                  direction={"right"}
                 />
               </View>
               
@@ -902,7 +910,7 @@ export default function DashboardScreen() {
                 <View style={styles.miniPointIconWrapper}>
                   <Ionicons
                     name="water-outline"
-                    size={18}
+                    size={24}
                     color="#FFFFFF"
                   />
                 </View>
