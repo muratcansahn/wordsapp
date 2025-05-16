@@ -28,20 +28,13 @@ type AuthContextType = {
   session: Session | null;
   initialized: boolean;
   signOut: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
-  sendMagicLink: (email: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signInWithApple: () => Promise<void>;
   createSessionFromUrl: (url: string) => Promise<void>;
-  handleShowPassword: () => void;
   isLoading: boolean;
   error: string | null;
-  showPassword: boolean;
   isAuthenticated: boolean;
   handleError: (error: AuthError | Error) => void;
-  sendNewPasswordLink: (email: string) => Promise<void>;
-  setNewPassword: (password: string) => Promise<void>;
 };
 
 // TODO: 1.Uncomment GoogleSignin 
@@ -60,7 +53,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
   const [initialized, setInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
+  
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { t } = useTranslation();
   const url = Linking.useURL();
@@ -354,50 +347,9 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
     [handleError, saveUserToDatabase, dispatch]
   );
   
-  const signIn = useCallback(
-    (email: string, password: string) =>
-      handleAuthAction(
-        async () => await supabase.auth.signInWithPassword({ email, password }),
-        t('auth.signingIn')
-      ),
-    [handleAuthAction, t]
-  );
+  
 
-  const signUp = useCallback(
-    (email: string, password: string) =>
-      handleAuthAction(
-        async () => {
-          try {
-            console.log('Signup attempt with:', { email });
-            const { data, error } = await supabase.auth.signUp({
-              email,
-              password,
-              options: {
-                emailRedirectTo: redirectUrlVerify,
-              },
-            });
-            
-            if (error) {
-              console.error('Signup error:', {
-                code: error.status,
-                name: error.name,
-                message: error.message,
-                details: error
-              });
-              throw error;
-            }
-            
-            console.log('Signup successful:', data);
-            return { data: { session: data.session }, error: null };
-          } catch (err) {
-            console.error('Signup error caught:', err);
-            throw err;
-          }
-        },
-        t('auth.signingUp')
-      ),
-    [handleAuthAction, t, redirectUrlVerify]
-  );
+  
 
   const signOut = useCallback(async () => {
     await handleAuthAction(async () => {
@@ -407,33 +359,9 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
     }, t('auth.signingOut'));
   }, [handleAuthAction, t]);
 
-  const sendMagicLink = useCallback(
-    async (email: string) => {
-      await handleAuthAction(
-        async () =>
-          await supabase.auth.signInWithOtp({
-            email,
-            options: {
-              emailRedirectTo: redirectUrlVerify,
-            },
-          }),
-        t('auth.sendingMagicLink')
-      );
-    },
-    [handleAuthAction, t, redirectUrlVerify]
-  );
+  
 
-  const sendNewPasswordLink = useCallback(
-    async (email: string) => {
-      await handleAuthAction(async () => {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: redirectUrlNewPassword,
-        });
-        return { data: { session: null }, error };
-      }, t('auth.sendingResetPasswordLink'));
-    },
-    [handleAuthAction, t, redirectUrlNewPassword]
-  );
+  
 
   const signInWithGoogle = useCallback(async () => {
     console.log("Google signin başlatılıyor")
@@ -554,32 +482,9 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
     [handleError, saveUserToDatabase, dispatch]
   );
 
-  const handleShowPassword = useCallback(() => {
-    setShowPassword((prev) => !prev);
-  }, []);
+  
 
-  const setNewPassword = useCallback(
-    async (password: string) => {
-      const toast = showToast(
-        t('auth.settingNewPassword'),
-        false,
-        Colors.light.primary
-      );
-      try {
-        setIsLoading(true);
-        const { data, error } = await supabase.auth.updateUser({ password });
-        if (error) throw error;
-        setUser(data?.user ?? null);
-      } catch (error) {
-        handleError(error as AuthError);
-        setIsLoading(false);
-      } finally {
-        setIsLoading(false);
-        Toast.hide(toast);
-      }
-    },
-    [handleError, t]
-  ); 
+  
 
   useEffect(() => {
     if (url) {
@@ -600,20 +505,15 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
     session,
     initialized,
     signOut,
-    signIn,
-    signUp,
-    sendMagicLink,
     signInWithGoogle,
     signInWithApple,
     createSessionFromUrl,
-    handleShowPassword,
     isLoading,
     error,
     isAuthenticated,
-    showPassword,
     handleError,
-    sendNewPasswordLink,
-    setNewPassword,
+    
+    
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

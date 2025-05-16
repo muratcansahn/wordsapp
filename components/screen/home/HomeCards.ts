@@ -46,13 +46,6 @@ export const features: {
     name: 'home.settings',
     route: 'settings',
   },
-
-  {
-    id: '8',
-    icon: 'share-social',
-    name: 'home.socialSharing',
-    route: '(features)/social-sharing',
-  },
   {
     id: '9',
     icon: 'color-palette',

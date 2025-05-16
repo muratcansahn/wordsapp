@@ -59,14 +59,6 @@ const ModalsLayout = () => {
           headerLeft: HeaderClose,
         }}
       />
-      <Stack.Screen
-        name="kroko"
-        options={{
-          title: 'Kroko',
-          presentation: 'modal',
-          headerLeft: HeaderClose,
-        }}
-      />
     </Stack>
   );
 };

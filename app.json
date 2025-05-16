@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "LangLearn Pro",
+    "name": "AquaLingua",
     "slug": "langlearnpro",
     "version": "1.0.0",
     "owner": "muratcansahindev",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo.png",
     "userInterfaceStyle": "automatic",
     "warnings": false,
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./assets/images/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
