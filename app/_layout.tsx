@@ -29,7 +29,7 @@ import { FLEX } from '@/constants/AppConstants';
 // } from '@/context/RevenueCatProvider';
 
 //* If you want to use Admob, uncomment the following lines 👇
-// import { useAdmob } from '@/hooks/useAdmob';
+import { useAdmob } from '@/hooks/useAdmob';
 
 //* If you want to use PostHog, uncomment the following lines 👇
 // import { PostHogProvider } from 'posthog-react-native';
@@ -44,7 +44,7 @@ function MainLayout() {
   //* If you want to use RevenueCat, uncomment the following lines 👇
   // const { initializeRevenueCat } = useRevenueCat();
   //* If you want to use Admob, uncomment the following lines 👇
-  // const { admobState, initializeAdmobService } = useAdmob();
+  const { admobState, initializeAdmobService } = useAdmob();
 
   const segments = useSegments();
   const router = useRouter();
@@ -58,7 +58,7 @@ function MainLayout() {
     // Get user tracking permission
     // This function is important for compliance with privacy regulations
     //* If you want to use Admob, uncomment the following lines 👇
-    // initializeAdmobService();
+    initializeAdmobService();
     // Dont remove it , because Apple will reject the app if this is not implemented
     // You should configure this function according to your needs.
     getUserTrackingPermission();
@@ -67,10 +67,10 @@ function MainLayout() {
   }, []);
 
   useEffect(() => {
-    if (loaded && initialized /* admobState.admobReady.isLoaded */) {
-      SplashScreen.hideAsync();
+    if (loaded && initialized && admobState.admobReady.isLoaded) {
+        SplashScreen.hideAsync();
     }
-  }, [loaded, initialized /* admobState.admobReady.isLoaded */]);
+}, [loaded, initialized, admobState.admobReady.isLoaded]); 
 
   useEffect(() => {
     if (!session && segments[0] !== '(no-auth)') {
@@ -80,7 +80,7 @@ function MainLayout() {
     }
   }, [segments, router, session]);
 
-  if (!loaded || !initialized /* || !admobState.admobReady.isLoaded */) {
+  if (!loaded || !initialized || !admobState.admobReady.isLoaded ) {
     return <Slot />;
   }
 

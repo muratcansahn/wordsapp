@@ -1,39 +1,40 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-// import {
-//   AdEventType,
-//   AppOpenAd,
-//   InterstitialAd,
-//   RewardedAd,
-//   RewardedAdEventType,
-//   TestIds,
-// } from 'react-native-google-mobile-ads';
+import {
+  AdEventType,
+  AppOpenAd,
+  InterstitialAd,
+  RewardedAd,
+  RewardedAdEventType,
+  TestIds,
+} from 'react-native-google-mobile-ads';
 import { setAdLoaded, setAdLoading } from '@/store/slices/admobSlice';
 import { AppDispatch, RootState } from '@/store';
 import { StatusBar } from 'react-native';
-// import { admobConfig } from '@/services/admob/admobConfig';
-// import { initializeAdmob } from '@/services/admob/admobService';
+import { admobConfig } from '@/services/admob/admobConfig';
+import { initializeAdmob } from '@/services/admob/admobService';
 
 const getAdUnitId = (testId: string, prodId: string): string => {
   return __DEV__ ? testId : prodId;
 };
 
-// const interstitial = InterstitialAd.createForAdRequest(
-//   getAdUnitId(TestIds.INTERSTITIAL, admobConfig.interstitialAdUnitId)
-// );
-// const rewarded = RewardedAd.createForAdRequest(
-//   getAdUnitId(TestIds.REWARDED, admobConfig.rewardedAdUnitId)
-// );
-// const appOpenAd = AppOpenAd.createForAdRequest(
-//   getAdUnitId(TestIds.APP_OPEN, admobConfig.appOpenAdUnitId)
-// );
+const interstitial = InterstitialAd.createForAdRequest(
+  getAdUnitId(TestIds.INTERSTITIAL, admobConfig.interstitialAdUnitId)
+);
+const rewarded = RewardedAd.createForAdRequest(
+  getAdUnitId(TestIds.REWARDED, admobConfig.rewardedAdUnitId)
+);
+const appOpenAd = AppOpenAd.createForAdRequest(
+  getAdUnitId(TestIds.APP_OPEN, admobConfig.appOpenAdUnitId)
+);
 
 export const useAdmob = () => {
   const dispatch = useDispatch<AppDispatch>();
   const admobState = useSelector((state: RootState) => state.admob);
+  const [pendingAdType, setPendingAdType] = useState<'interstitial' | 'rewarded' | 'appOpen' | null>(null);
 
   const initializeAdmobService = useCallback(() => {
-    // initializeAdmob(dispatch);
+    initializeAdmob(dispatch);
   }, [dispatch]);
 
   const hideStatusBar = () => {
@@ -46,107 +47,125 @@ export const useAdmob = () => {
 
   const loadInterstitial = useCallback(() => {
     dispatch(setAdLoading({ adType: 'interstitial', isLoading: true }));
-    // interstitial.load();
+    interstitial.load();
   }, [dispatch]);
 
   const loadRewarded = useCallback(() => {
     dispatch(setAdLoading({ adType: 'rewarded', isLoading: true }));
-    // rewarded.load();
+    rewarded.load();
   }, [dispatch]);
 
   const loadAppOpen = useCallback(() => {
     dispatch(setAdLoading({ adType: 'appOpen', isLoading: true }));
-    // appOpenAd.load();
+    appOpenAd.load();
   }, [dispatch]);
 
   useEffect(() => {
-    // const interstitialListener = interstitial.addAdEventListener(
-    //   AdEventType.LOADED,
-    //   () => {
-    //     dispatch(setAdLoaded({ adType: 'interstitial', isLoaded: true }));
-    //   dispatch(setAdLoading({ adType: 'interstitial', isLoading: false }));
-    // }
-    // );
+    const interstitialListener = interstitial.addAdEventListener(
+      AdEventType.LOADED,
+      () => {
+        dispatch(setAdLoaded({ adType: 'interstitial', isLoaded: true }));
+        dispatch(setAdLoading({ adType: 'interstitial', isLoading: false }));
+        if (pendingAdType === 'interstitial') {
+          showInterstitialNow();
+        }
+      }
+    );
 
-    // const rewardedListener = rewarded.addAdEventListener(
-    //   RewardedAdEventType.LOADED,
-    //   () => {
-    //     dispatch(setAdLoaded({ adType: 'rewarded', isLoaded: true }));
-    //     dispatch(setAdLoading({ adType: 'rewarded', isLoading: false }));
-    //   }
-    // );
+    const rewardedListener = rewarded.addAdEventListener(
+      RewardedAdEventType.LOADED,
+      () => {
+        dispatch(setAdLoaded({ adType: 'rewarded', isLoaded: true }));
+        dispatch(setAdLoading({ adType: 'rewarded', isLoading: false }));
+        if (pendingAdType === 'rewarded') {
+          showRewardedNow();
+        }
+      }
+    );
 
-    // const appOpenListener = appOpenAd.addAdEventListener(
-    //   AdEventType.LOADED,
-    //   () => {
-    //     dispatch(setAdLoaded({ adType: 'appOpen', isLoaded: true }));
-    //     dispatch(setAdLoading({ adType: 'appOpen', isLoading: false }));
-    //   }
-    // );
+    const appOpenListener = appOpenAd.addAdEventListener(
+      AdEventType.LOADED,
+      () => {
+        dispatch(setAdLoaded({ adType: 'appOpen', isLoaded: true }));
+        dispatch(setAdLoading({ adType: 'appOpen', isLoading: false }));
+        if (pendingAdType === 'appOpen') {
+          showAppOpenNow();
+        }
+      }
+    );
 
     loadInterstitial();
     loadRewarded();
     loadAppOpen();
 
     return () => {
-      // interstitialListener();
-      // rewardedListener();
-      // appOpenListener();
+      interstitialListener();
+      rewardedListener();
+      appOpenListener();
     };
-  }, [dispatch, loadAppOpen, loadInterstitial, loadRewarded]);
+  }, [dispatch, loadAppOpen, loadInterstitial, loadRewarded, pendingAdType]);
 
   const showInterstitial = () => {
-    loadInterstitial();
     if (admobState.interstitial.isLoaded) {
-      hideStatusBar();
-      // const adClosedListener = interstitial.addAdEventListener(
-      //   AdEventType.CLOSED,
-      //   () => {
-      //     showStatusBar();
-      //     adClosedListener();
-      //   }
-      // );
-      // interstitial.show();
-      dispatch(setAdLoaded({ adType: 'interstitial', isLoaded: false }));
+      showInterstitialNow();
     } else {
-      console.log('Interstitial ad is not loaded');
+      setPendingAdType('interstitial');
+      loadInterstitial();
     }
   };
 
   const showRewarded = () => {
-    loadRewarded();
     if (admobState.rewarded.isLoaded) {
-      hideStatusBar();
-      // const adClosedListener = rewarded.addAdEventListener(
-      //   AdEventType.CLOSED,
-      //   () => {
-      //     showStatusBar();
-      //     adClosedListener();
-      //   }
-      // );
-      // rewarded.show();
-      dispatch(setAdLoaded({ adType: 'rewarded', isLoaded: false }));
+      showRewardedNow();
     } else {
-      console.log('Rewarded ad is not loaded');
+      setPendingAdType('rewarded');
+      loadRewarded();
     }
   };
 
   const showAppOpen = () => {
-    loadAppOpen();
     if (admobState.appOpen.isLoaded) {
-      hideStatusBar();
-      // const adClosedListener = appOpenAd.addAdEventListener(
-      //   AdEventType.CLOSED,
-      //   () => {
-      //     showStatusBar();
-      //     adClosedListener();
-      //   }
-      // );
-      // appOpenAd.show();
-      dispatch(setAdLoaded({ adType: 'appOpen', isLoaded: false }));
+      showAppOpenNow();
     } else {
-      console.log('App open ad is not loaded');
+      setPendingAdType('appOpen');
+      loadAppOpen();
     }
+  };
+
+  const showInterstitialNow = () => {
+    hideStatusBar();
+    const adClosedListener = interstitial.addAdEventListener(AdEventType.CLOSED, () => {
+      showStatusBar();
+      loadInterstitial(); // Reload for next time
+      adClosedListener();
+    });
+    interstitial.show();
+    dispatch(setAdLoaded({ adType: 'interstitial', isLoaded: false }));
+    setPendingAdType(null);
+  };
+
+  const showRewardedNow = () => {
+    hideStatusBar();
+    const adClosedListener = rewarded.addAdEventListener(AdEventType.CLOSED, () => {
+      showStatusBar();
+      loadRewarded();
+      adClosedListener();
+    });
+    rewarded.show();
+    dispatch(setAdLoaded({ adType: 'rewarded', isLoaded: false }));
+    setPendingAdType(null);
+  };
+
+  const showAppOpenNow = () => {
+    hideStatusBar();
+    const adClosedListener = appOpenAd.addAdEventListener(AdEventType.CLOSED, () => {
+      showStatusBar();
+      loadAppOpen();
+      adClosedListener();
+    });
+    appOpenAd.show();
+    dispatch(setAdLoaded({ adType: 'appOpen', isLoaded: false }));
+    setPendingAdType(null);
   };
 
   return {

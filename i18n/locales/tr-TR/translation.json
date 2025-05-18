@@ -270,7 +270,12 @@
       "confirmMessage": "karşılığında balığı beslemek istiyor musunuz?",
       "needPoints": "Balığı beslemek için en az",
       "pointsRequired": "puana ihtiyacınız var.",
-      "feed": "Besle"
+      "watchAdOption": "25",
+      "watchAdOptionText": "karşılığında reklam izleyebilirsiniz",
+      "feed": "Besle",
+      "watchAd": "İzle",
+      "adLimitTitle": "Reklam İzleme Sınırı",
+      "adLimitMessage": "Bugün zaten reklam izlediniz. Yarın tekrar deneyebilirsiniz."
     }
   },
   "flashcards": {

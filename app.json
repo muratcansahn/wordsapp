@@ -33,7 +33,8 @@
           "instagram-stories",
           "facebook",
           "facebook-stories"
-        ]
+        ],
+        "GADApplicationIdentifier": "ca-app-pub-2920147810768385~3189350636"
       }
     },
     "android": {
@@ -56,6 +57,14 @@
             "profile",
             "email"
           ]
+        }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-2920147810768385~2869786438",
+          "iosAppId": "ca-app-pub-2920147810768385~3189350636"
+          
         }
       ]
     ],

@@ -254,7 +254,12 @@
       "confirmMessage": "Möchtest du den Fisch füttern für ?",
       "needPoints": "Du benötigst mindestens",
       "pointsRequired": "Punkte, um den Fisch zu füttern.",
-      "feed": "Füttern"
+      "watchAdOption": "25",
+      "watchAdOptionText": "kannst du eine Werbung ansehen für",
+      "feed": "Füttern",
+      "watchAd": "Anzeigen",
+      "adLimitTitle": "Werbungslimit",
+      "adLimitMessage": "Du hast heute bereits eine Werbung angesehen. Versuche es morgen erneut."
     }
   },
   "writing": {

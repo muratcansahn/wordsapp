@@ -15,7 +15,7 @@ export const admobConfig: AdmobPlatformConfig =
   Platform.select<AdmobPlatformConfig>({
     ios: {
       interstitialAdUnitId: 'ca-app-pub-...',
-      rewardedAdUnitId: 'ca-app-pub-...',
+      rewardedAdUnitId: 'ca-app-pub-2920147810768385/3996818238',
       appOpenAdUnitId: 'ca-app-pub-...',
       bannerAdUnitId: 'ca-app-pub-...',
     },

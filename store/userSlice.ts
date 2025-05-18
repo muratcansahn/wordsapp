@@ -44,8 +44,11 @@ const userSlice = createSlice({
     incrementPoint: (state) => {
       return { ...state, point: state.point + 1 };
     },
+    incrementByAmount: (state, action: PayloadAction<number>) => {
+      state.point += action.payload;
+    },
   }
 });
 
-export const { setReduxUser, clearReduxUser, updateUserStats, incrementWordStatusCounter, incrementPoint } = userSlice.actions;
+export const { setReduxUser, clearReduxUser, updateUserStats, incrementWordStatusCounter, incrementPoint, incrementByAmount } = userSlice.actions;
 export default userSlice.reducer;

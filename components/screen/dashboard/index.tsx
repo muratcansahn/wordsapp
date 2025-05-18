@@ -8,7 +8,9 @@ import {
   ScrollView,
   Animated, 
   Easing,
+  Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Audio } from 'expo-av';
 import { useSelector, useDispatch } from 'react-redux';
 import { ThemedText } from '@/components/common/typography';
@@ -38,6 +40,9 @@ import { fetchWordStatuses } from '@/services/userService';
 
 
 import { Aquarium } from './Aquarium';
+import { useAdmob } from '@/hooks/useAdmob';
+import { useAdmobRewarded } from '@/hooks/useAdmobRewarded';
+
 
 // Kelime istatistikleri - Redux ile değiştirildi
 const getWordStats = (learnedCount: number, unknownCount: number, streakCount: number) => [
@@ -430,6 +435,8 @@ sectionTitle: {
   miniPointIconWrapper: {
     justifyContent: 'center',
     alignItems: 'center',
+    width: 24,
+    height: 24,
   },
   miniPointText: {
     color: '#FFFFFF',
@@ -449,8 +456,8 @@ sectionTitle: {
     fontSize: FONT_SIZE.lg,
     color: mode === 'dark' ? Colors.dark.text : Colors.light.text,
     flexShrink: 1,
-    textAlign: 'center',
-    marginBottom: MARGIN.xxxl,
+    marginBottom: MARGIN.lg,
+   
   },
   // Modal stilleri (React Native Modal için)
   modalOverlay: {
@@ -536,6 +543,8 @@ export default function DashboardScreen() {
   const { t } = useTranslation() ;
   const router = useRouter();
   const dispatch = useDispatch();
+  const { showRewarded } = useAdmobRewarded();
+
 
   // Redux'tan kullanıcı bilgilerini al
   const { id, full_name, point, streak_count, wordStatusUpdateCounter } = useSelector((state: RootState) => state.user);
@@ -550,7 +559,22 @@ export default function DashboardScreen() {
     clickable: boolean;
   }>>([]);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [lastAdWatchDate, setLastAdWatchDate] = useState<string | null>(null);
   
+  // AsyncStorage'dan son reklam izleme tarihini yükle
+  useEffect(() => {
+    const loadLastAdWatchDate = async () => {
+      try {
+        const lastDate = await AsyncStorage.getItem('lastAdWatchDate');
+        setLastAdWatchDate(lastDate);
+      } catch (error) {
+        console.error('Son reklam izleme tarihi yüklenirken hata oluştu:', error);
+      }
+    };
+    
+    loadLastAdWatchDate();
+  }, []);
+
   // UserWordStatuses tablosundan kelime durumunu çek
   useEffect(() => {
     const getWordStatuses = async () => {
@@ -580,6 +604,28 @@ export default function DashboardScreen() {
   const [showDirectAnimation, setShowDirectAnimation] = useState(false); // Ekranda doğrudan animasyon göstermek için
   const foodAnimation = useRef(new Animated.Value(0)).current;
   const mouthAnimation = useRef(new Animated.Value(0)).current;
+
+  // Reklam izleme sınırlamasını kontrol et
+  const checkAdWatchLimit = (): boolean => {
+    if (!lastAdWatchDate) return true; // Daha önce hiç reklam izlenmemiş
+    
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD formatında bugünün tarihi
+    const lastWatchDate = lastAdWatchDate.split('T')[0];
+    
+    // Eğer son izleme tarihi bugünse, limit aşılmış demektir
+    return today !== lastWatchDate;
+  };
+  
+  // Reklam izleme tarihini güncelle
+  const updateAdWatchDate = async () => {
+    try {
+      const now = new Date().toISOString();
+      await AsyncStorage.setItem('lastAdWatchDate', now);
+      setLastAdWatchDate(now);
+    } catch (error) {
+      console.error('Reklam izleme tarihi güncellenirken hata oluştu:', error);
+    }
+  };
 
   async function playSound() {
     try {
@@ -922,7 +968,7 @@ export default function DashboardScreen() {
           : (
             <View style={styles.dialogMessageContainer}>
               <Text style={styles.dialogMessageText}>{t('dashboard.fishFeeding.needPoints') || "Balığı beslemek için en az "}</Text>
-              <View style={[styles.miniPointContainer, { marginHorizontal: 3 }]}>
+              <View style={[styles.miniPointContainer, { marginHorizontal: 10 }]}>
                 <View style={styles.miniPointIconWrapper}>
                   <Ionicons
                     name="water-outline"
@@ -932,20 +978,47 @@ export default function DashboardScreen() {
                 </View>
                 <Text style={styles.miniPointText}>50</Text>
               </View>
-              <Text style={styles.dialogMessageText}> {t('dashboard.fishFeeding.pointsRequired') || " puana ihtiyacınız var."}</Text>
+              <Text style={styles.dialogMessageText}> {t('dashboard.fishFeeding.pointsRequired') }</Text>
+              <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: MARGIN.sm, flexWrap: 'wrap'}}>
+                <View style={[styles.miniPointContainer, { marginHorizontal: 10 }]}>
+                  <View style={styles.miniPointIconWrapper}>
+                    <Ionicons
+                      name="water-outline"
+                      size={20}
+                      color="#FFFFFF"
+                    />
+                  </View>
+                  <Text style={styles.miniPointText}>25</Text>
+                </View>
+                <Text style={styles.dialogMessageText}>{t('dashboard.fishFeeding.watchAdOptionText')}</Text>
+              </View>
             </View>
           )}
-        confirmText={point >= 50 ? t('dashboard.fishFeeding.feed') || "Besle" : t('common.ok') || "Tamam"}
+        confirmText={point >= 50 ? t('dashboard.fishFeeding.feed') || "Besle" : t('dashboard.fishFeeding.watchAd') || "İzle"}
         cancelText={point >= 50 ? t('buttons.cancel') || "İptal" : undefined}
         iconColor={point >= 50 ? "#1890FF" : "#EF4444"}
-        confirmButtonColor={point >= 50 ? "#1890FF" : undefined}
+        confirmButtonColor={point >= 50 ? "#1890FF" : "#4CAF50"}
         isLoading={isFeeding}
         onConfirm={() => {
           if (point >= 50) {
             setConfirmDialogVisible(false);
             startFeedingProcess();
           } else {
-            setConfirmDialogVisible(false);
+            // Reklam izleme sınırlamasını kontrol et
+            if (checkAdWatchLimit()) {
+              showRewarded().then(() => {
+                setConfirmDialogVisible(false);
+                // Reklam izleme tarihini güncelle
+                updateAdWatchDate();
+              });
+            } else {
+              // Kullanıcı bugün zaten reklam izlemiş
+              setConfirmDialogVisible(false);
+              Alert.alert(
+                t('dashboard.fishFeeding.adLimitTitle') || 'Günlük Limit',
+                t('dashboard.fishFeeding.adLimitMessage') || 'Bugün zaten reklam izlediniz. Yarın tekrar deneyebilirsiniz.'
+              );
+            }
           }
         }}
         onCancel={() => {

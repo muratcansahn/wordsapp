@@ -92,7 +92,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 const createStyles = (mode: 'light' | 'dark', confirmButtonColor?: string) => StyleSheet.create({
   container: {
     alignItems: 'center',
-    padding: PADDING.md,
+    padding: PADDING.sm,
   },
   iconContainer: {
     width: 60,
