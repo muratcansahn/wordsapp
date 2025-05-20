@@ -37,10 +37,7 @@ import { FishTypes } from '@/assets/svg/fish';
 import { FishComponent } from '@/components/fish/FishComponent';
 import DailyActivitiesSection from './DailyActivitiesSection';
 import { fetchWordStatuses } from '@/services/userService';
-
-
 import { Aquarium } from './Aquarium';
-import { useAdmob } from '@/hooks/useAdmob';
 import { useAdmobRewarded } from '@/hooks/useAdmobRewarded';
 
 
@@ -543,7 +540,7 @@ export default function DashboardScreen() {
   const { t } = useTranslation() ;
   const router = useRouter();
   const dispatch = useDispatch();
-  const { showRewarded } = useAdmobRewarded();
+  const { showRewarded } = useAdmobRewarded(0); // Birinci reklam ID'sini kullanmak için adIndex=0 olarak ayarlandı
 
 
   // Redux'tan kullanıcı bilgilerini al

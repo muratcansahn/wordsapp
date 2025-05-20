@@ -9,9 +9,11 @@ import { ThemedText } from '@/components/common/typography';
 import { useMemo, useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/SupabaseProvider';
-import Dialog from '@/components/common/modal/dialog';
+import { ConfirmationDialog } from '@/components/common/ConfirmationDialog';
 import { Colors } from '@/constants/Colors';
 import { updateGameRequestAndTimestamp, type GameType } from '@/services/gameRequestServices';
+import { useAdmobRewarded } from '@/hooks/useAdmobRewarded';
+
 
 interface GameStatus {
     remaining: number;
@@ -26,7 +28,10 @@ const DailyActivitiesSection = () => {
     const [gameStatus, setGameStatus] = useState<Record<string, GameStatus>>({});
     const [countdown, setCountdown] = useState<Record<string, string>>({});
     const [dialogVisible, setDialogVisible] = useState(false);
+    const [adDialogVisible, setAdDialogVisible] = useState(false);
     const [selectedGame, setSelectedGame] = useState<string>('');
+      const { showRewarded } = useAdmobRewarded(1); // İkinci reklam ID'sini kullanmak için adIndex=1 olarak ayarlandı
+    
 
     // Sayfa fokuslandığında oyun haklarını güncelle
     useFocusEffect(
@@ -165,9 +170,9 @@ const DailyActivitiesSection = () => {
 
     const handleGamePress = useCallback(async (route: string, gameType: string) => {
         const status = gameStatus[gameType];
-        if (status && status.remaining === 0 && countdown[gameType]) {
+        if (status && status.remaining === 0) {
             setSelectedGame(gameType);
-            setDialogVisible(true);
+            setAdDialogVisible(true); // Oyun hakkı kalmadığında reklam izleme dialogunu göster
         } else {
             const userId = user?.id;
             if (!userId) return;
@@ -181,6 +186,8 @@ const DailyActivitiesSection = () => {
             }
         }
     }, [gameStatus, countdown, router, user]);
+    
+ 
 
     const renderDailyCard = useMemo(() => (item: typeof dailyContent[0]) => {
         const status = gameStatus[item.gameType];
@@ -245,18 +252,37 @@ const DailyActivitiesSection = () => {
                     {dailyContent.map(renderDailyCard)}
                 </View>
             </View>
-            <Dialog
+            <ConfirmationDialog
                 visible={dialogVisible}
-                setVisible={setDialogVisible}
                 title={t('dashboard.noGameRightTitle')}
-                description={t('dashboard.noGameRightDesc', { time: countdown[selectedGame] || '' })}
-                bgColor={Colors[mode].background}
-                rightButton={t('dashboard.okButton')}
+                message={t('dashboard.noGameRightDesc', { time: countdown[selectedGame] || '' })}
+                confirmText={t('dashboard.okButton')}
                 onConfirm={() => setDialogVisible(false)}
-                showCancel={false}
-            >
-                <></>
-            </Dialog>
+                onCancel={() => setDialogVisible(false)}
+            />
+            
+            <ConfirmationDialog
+                visible={adDialogVisible}
+                title="Hiç hakkın kalmadı"
+                message="Yeni oyun hakkı karşılığı reklam izlemek ister misin?"
+                confirmText="Reklam İzle"
+                cancelText="Vazgeç"
+                icon="videocam-outline"
+                iconColor={Colors[mode].primary}
+                onConfirm={() => {
+                    showRewarded().then(() => {
+                        setAdDialogVisible(false);
+                        
+                        // Reklam izlendikten sonra direkt olarak oyunu aç
+                        const gameInfo = dailyContent.find(item => item.gameType === selectedGame);
+                        if (gameInfo && user?.id) {
+                            // Oyunu direkt olarak aç, hak kontrolü yapmadan
+                            router.push(gameInfo.action);
+                        }
+                    });
+                }}
+                onCancel={() => setAdDialogVisible(false)}
+            />
         </>
     );
 };

@@ -13,15 +13,30 @@ import type { AppDispatch, RootState } from '@/store';
 import { incrementUserPointByAmount } from '@/services/userService';
 import { supabase } from '@/lib/supabase';
 
-const getAdUnitId = (testId: string, prodId: string): string =>
-  __DEV__ ? testId : prodId;
+const getAdUnitId = (testId: string, prodId: any, adIndex: number = 0): string => {
+  if (__DEV__) return testId;
+  
+  // prodId bir dizi ise ve adIndex geçerli bir indeks ise, o indeksteki ID'yi kullan
+  if (Array.isArray(prodId) && prodId.length > adIndex) {
+    return prodId[adIndex];
+  }
+  
+  // prodId bir dizi ise ama adIndex geçersizse, ilk ID'yi kullan
+  if (Array.isArray(prodId)) {
+    return prodId[0];
+  }
+  
+  // prodId bir dizi değilse, doğrudan kullan
+  return prodId;
+};
 
-const adUnitId = getAdUnitId(
-  TestIds.REWARDED,
-  admobConfig.rewardedAdUnitId
-);
-
-export const useAdmobRewarded = () => {
+export const useAdmobRewarded = (adIndex: number = 0) => {
+  // adIndex parametresi ile hangi reklam ID'sinin kullanılacağını belirliyoruz
+  const adUnitId = getAdUnitId(
+    TestIds.REWARDED,
+    admobConfig.rewardedAdUnitId,
+    adIndex
+  );
   const rewardedRef = useRef<RewardedAd | null>(null);
   const isLoadedRef = useRef<boolean>(false);
   const dispatch = useDispatch<AppDispatch>();
@@ -42,7 +57,11 @@ export const useAdmobRewarded = () => {
     const rewardListener = rewarded.addAdEventListener(
       RewardedAdEventType.EARNED_REWARD,
       async reward => {
-        console.log('[Rewarded] User earned reward:', reward);
+        
+        // Eğer adIndex 1 ise (ikinci reklam ID'si) puan ekleme
+        if (adIndex === 1) {
+          return;
+        }
         
         // Önce Redux'tan kullanıcı ID'sini kontrol et
         let userId = userIdFromRedux;
@@ -107,6 +126,11 @@ export const useAdmobRewarded = () => {
       if (ad && isLoadedRef.current) {
         // Reklam kapandığında resolve et
         const closeListener = ad.addAdEventListener(AdEventType.CLOSED, () => {
+          // adIndex 1 olduğunda (ikinci reklam ID'si) özel işlem
+          if (adIndex === 1) {
+            console.log('[Rewarded] adIndex 1 için özel işlem tamamlandı');
+          }
+          
           resolve();
           closeListener(); // listener'ı kaldır
         });
@@ -118,7 +142,7 @@ export const useAdmobRewarded = () => {
         resolve(); // Reklam yoksa hemen resolve et
       }
     });
-  }, []);
+  }, [adIndex]); // adIndex'i dependency olarak ekledim
 
   return {
     showRewarded,

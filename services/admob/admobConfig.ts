@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 
 type AdmobPlatformConfig = {
   interstitialAdUnitId: string;
-  rewardedAdUnitId: string;
+  rewardedAdUnitId: any;
   appOpenAdUnitId: string;
   bannerAdUnitId: string;
 };
@@ -15,13 +15,13 @@ export const admobConfig: AdmobPlatformConfig =
   Platform.select<AdmobPlatformConfig>({
     ios: {
       interstitialAdUnitId: 'ca-app-pub-...',
-      rewardedAdUnitId: 'ca-app-pub-2920147810768385/3996818238',
+      rewardedAdUnitId:['ca-app-pub-2920147810768385/3996818238',"ca-app-pub-2920147810768385/4141439846"],
       appOpenAdUnitId: 'ca-app-pub-...',
       bannerAdUnitId: 'ca-app-pub-...',
     },
     android: {
       interstitialAdUnitId: 'ca-app-pub-...',
-      rewardedAdUnitId: 'ca-app-pub-...',
+      rewardedAdUnitId: ["ca-app-pub-2920147810768385/7072755326","ca-app-pub-2920147810768385/5172037219"],
       appOpenAdUnitId: 'ca-app-pub-...',
       bannerAdUnitId: 'ca-app-pub-...',
     },
