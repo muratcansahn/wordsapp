@@ -25,5 +25,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: MARGIN.lg,
     marginHorizontal: MARGIN.xl,
+    color: 'rgba(255, 255, 255, 0.8)',
   },
 });

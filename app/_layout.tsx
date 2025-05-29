@@ -22,11 +22,10 @@ import { AuthProvider, useAuth } from '@/context/SupabaseProvider';
 import { FLEX } from '@/constants/AppConstants';
 
 
-//* If you want to use RevenueCat, uncomment the following lines 👇
-// import {
-//   RevenueCatProvider,
-//   useRevenueCat,
-// } from '@/context/RevenueCatProvider';
+import {
+  RevenueCatProvider,
+  useRevenueCat,
+} from '@/context/RevenueCatProvider';
 
 //* If you want to use Admob, uncomment the following lines 👇
 import { useAdmob } from '@/hooks/useAdmob';
@@ -42,7 +41,7 @@ function MainLayout() {
   const { statusBarStyle, statusBarBackgroundColor, theme } = useTheme();
 
   //* If you want to use RevenueCat, uncomment the following lines 👇
-  // const { initializeRevenueCat } = useRevenueCat();
+  const { initializeRevenueCat } = useRevenueCat();
   //* If you want to use Admob, uncomment the following lines 👇
   const { admobState, initializeAdmobService } = useAdmob();
 
@@ -63,7 +62,7 @@ function MainLayout() {
     // You should configure this function according to your needs.
     getUserTrackingPermission();
     //* If you want to use RevenueCat, uncomment the following lines 👇
-    // initializeRevenueCat();
+    initializeRevenueCat();
   }, []);
 
   useEffect(() => {
@@ -109,7 +108,7 @@ const RootLayout = () => {
     <Provider store={store}>
       {/* <PostHogProvider client={posthog}> */}
       <AuthProvider>
-        {/* <RevenueCatProvider> */}
+        <RevenueCatProvider>
         <GestureHandlerRootView style={{ flex: FLEX.one }}>
           <BottomSheetModalProvider>
             <RootSiblingParent>
@@ -117,7 +116,7 @@ const RootLayout = () => {
             </RootSiblingParent>
           </BottomSheetModalProvider>
         </GestureHandlerRootView>
-        {/* </RevenueCatProvider> */}
+        </RevenueCatProvider>
       </AuthProvider>
       {/* </PostHogProvider> */}
     </Provider>

@@ -29,5 +29,6 @@ const styles = StyleSheet.create({
   text: {
     textAlign: 'center',
     opacity: 0.7,
+    color: '#FFFFFF',
   },
 });

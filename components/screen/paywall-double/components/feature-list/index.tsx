@@ -4,7 +4,7 @@ import { FeatureItem } from '@/components/screen/paywall-double/components/featu
 import { ICON_SIZE, MARGIN } from '@/constants/AppConstants';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
-import { Check } from 'lucide-react-native';
+import { Ban, Calendar, BookOpen, BarChart2, Headphones, WifiOff, Palette, Save } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 
 export const FeatureList: React.FC = () => {
@@ -14,28 +14,20 @@ export const FeatureList: React.FC = () => {
     {
       title: t('inAppPurchases.cards.feature1.title'),
       description: t('inAppPurchases.cards.feature1.description'),
-      icon: <Check size={ICON_SIZE.sm} color={Colors[mode].text} />,
+      icon: <Ban size={ICON_SIZE.sm} color="#FFFFFF" />,
     },
     {
       title: t('inAppPurchases.cards.feature2.title'),
       description: t('inAppPurchases.cards.feature2.description'),
-      icon: <Check size={ICON_SIZE.sm} color={Colors[mode].text} />,
+      icon: <Calendar size={ICON_SIZE.sm} color="#FFFFFF" />,
     },
     {
       title: t('inAppPurchases.cards.feature3.title'),
       description: t('inAppPurchases.cards.feature3.description'),
-      icon: <Check size={ICON_SIZE.sm} color={Colors[mode].text} />,
+      icon: <BookOpen size={ICON_SIZE.sm} color="#FFFFFF" />,
     },
-    {
-      title: t('inAppPurchases.cards.feature4.title'),
-      description: t('inAppPurchases.cards.feature4.description'),
-      icon: <Check size={ICON_SIZE.sm} color={Colors[mode].text} />,
-    },
-    {
-      title: t('inAppPurchases.cards.feature5.title'),
-      description: t('inAppPurchases.cards.feature5.description'),
-      icon: <Check size={ICON_SIZE.sm} color={Colors[mode].text} />,
-    },
+
+  
   ];
 
   return (

@@ -150,24 +150,36 @@
     "autoRenew": "İstediğiniz zaman iptal edin. Plan otomatik olarak yenilenecektir.",
     "cards": {
       "feature1": {
-        "title": "Özellik 1",
-        "description": "Özellik Açıklaması 1"
+        "title": "Reklamsız Deneyim",
+        "description": "Tüm reklamlardan kurtulun ve kesintisiz öğrenme deneyimi yaşayın"
       },
       "feature2": {
-        "title": "Özellik 2",
-        "description": "Özellik Açıklaması 2"
+        "title": "Günlük Ekstra Oyun Hakkı",
+        "description": "Her gün ekstra bir oyun hakkı ile daha fazla pratik yapın"
       },
       "feature3": {
-        "title": "Özellik 3",
-        "description": "Özellik Açıklaması 3"
+        "title": "Sınırsız Kelime Listesi",
+        "description": "Tüm kelime listelerini sınırsız kullanın ve öğrenmenizi hızlandırın"
       },
       "feature4": {
-        "title": "Özellik 4",
-        "description": "Özellik Açıklaması 4"
+        "title": "Gelişmiş İstatistikler",
+        "description": "Detaylı öğrenme istatistikleri ile ilerlemenizi takip edin"
       },
       "feature5": {
-        "title": "Özellik 5",
-        "description": "Özellik Açıklaması 5"
+        "title": "Öncelikli Destek",
+        "description": "Sorularınıza ve sorunlarınıza öncelikli destek alın"
+      },
+      "feature6": {
+        "title": "Çevrimdışı Erişim",
+        "description": "İnternet olmadan da kelime listelerinize erişin ve çalışın"
+      },
+      "feature7": {
+        "title": "Özel Temalar",
+        "description": "Premium kullanıcılara özel tema seçenekleri ile uygulamayı kişiselleştirin"
+      },
+      "feature8": {
+        "title": "Sınırsız Kelime Kaydetme",
+        "description": "İstediğiniz kadar kelimeyi kişisel listenize ekleyin"
       }
     }
   },

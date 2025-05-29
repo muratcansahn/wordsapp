@@ -44,6 +44,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flex: FLEX.one,
     alignItems: 'center',
+    
   },
   featureIcon: {
     marginRight: MARGIN.lg,
@@ -53,11 +54,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   featureTitle: {
-    fontSize: FONT_SIZE.md,
+    fontSize: FONT_SIZE.lg,
     fontWeight: 'bold',
+    color: '#FFFFFF',
   },
   featureDescription: {
-    fontSize: FONT_SIZE.sm,
+    fontSize: FONT_SIZE.md,
     marginTop: MARGIN.sm,
+    color: 'rgba(255, 255, 255, 0.9)',
   },
 });

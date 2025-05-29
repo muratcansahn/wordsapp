@@ -73,10 +73,7 @@ interface FishDataInterface {
 type FishDataType = FishDataInterface[];
 
 const createStyles = (mode: 'light' | 'dark') => StyleSheet.create({
-  modalTestButton: {
-    marginHorizontal: 16,
-    marginVertical: 8,
-  },
+
   container: {
     flex: FLEX.one,
     backgroundColor: mode === 'dark' ? '#001529' : '#E6F7FF',
@@ -808,9 +805,6 @@ export default function DashboardScreen() {
     }, 300);
   };
   
-  const goToModalTest = () => {
-    router.push('/modal-test');
-  };
 
   if (isLoading || !initialized) {
     return null;
@@ -830,13 +824,8 @@ export default function DashboardScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Button
-          onPress={goToModalTest}
-          bgColor={Colors.light.primary}
-          style={styles.modalTestButton}
-        >
-          <Text>Modal Test Ekranı</Text>
-        </Button>
+        <View style={{ marginTop: 30 }} />
+
         {/* Butonlar */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity

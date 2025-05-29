@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { StyleSheet, ScrollView, View } from 'react-native';
+import React, { useState ,useMemo,useCallback} from 'react';
+import { StyleSheet, ScrollView, View, TouchableOpacity, Text, StatusBar } from 'react-native';
 import Container from '@/components/common/container';
 import {
   BORDER_RADIUS,
@@ -19,94 +19,110 @@ import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
 
 // 1. Uncomment: 👇
-// import { ThemedText } from '@/components/common/typography';
-// import { useRevenueCat } from '@/context/RevenueCatProvider';
-// import PressableOpacity from '@/components/common/buttons/pressable-opacity';
+import { ThemedText } from '@/components/common/typography';
+import { useRevenueCat } from '@/context/RevenueCatProvider';
+import PressableOpacity from '@/components/common/buttons/pressable-opacity';
+import WaveBackground from '@/components/screen/paywall-double/components/wave-background';
 
 export default function IOSInAppPurchases() {
   const { mode } = useTheme();
   const [selectedPlan, setSelectedPlan] = useState<
-    '$rc_monthly' | '$rc_annual'
+    '$rc_monthly' | '$rc_annual' | '$rc_lifetime'
   >('$rc_annual');
 
   // 2. Uncomment: 👇
-  // const { packages, purchasePackage } = useRevenueCat();
+  const { packages, purchasePackage } = useRevenueCat();
+  console.log(packages);
 
   // // 3. Uncomment plans: 👇
-  // const plans = useMemo(() => {
-  //   const monthlyPackage = packages.find(
-  //     (pkg) => pkg.identifier === '$rc_monthly'
-  //   );
-  //   const yearlyPackage = packages.find(
-  //     (pkg) => pkg.identifier === '$rc_annual'
-  //   );
+  const plans = useMemo(() => {
+    const monthlyPackage = packages.find(
+      (pkg) => pkg.identifier === '$rc_monthly'
+    );
+    const yearlyPackage = packages.find(
+      (pkg) => pkg.identifier === '$rc_annual'
+    );
+    const lifetimePackage = packages.find(
+      (pkg) => pkg.identifier === '$rc_lifetime'
+    );
 
   //   // Early return if packages are not available
-  //   if (!monthlyPackage || !yearlyPackage) {
-  //     return {
-  //       $rc_monthly: {},
-  //       $rc_annual: {},
-  //     };
-  //   }
+    if (!monthlyPackage || !yearlyPackage) {
+      return {
+        $rc_monthly: {},
+        $rc_annual: {},
+        $rc_lifetime: {},
+      };
+    }
 
   //   // Safely calculate savings percentage
-  //   const calculateSavings = () => {
-  //     const monthlyPricePerYear = monthlyPackage.product.pricePerYear ?? 0;
-  //     const yearlyPrice = yearlyPackage.product.price ?? 0;
+    const calculateSavings = () => {
+      const monthlyPricePerYear = monthlyPackage.product.pricePerYear ?? 0;
+      const yearlyPrice = yearlyPackage.product.price ?? 0;
 
-  //     if (monthlyPricePerYear === 0 || yearlyPrice === 0) {
-  //       return null;
-  //     }
+      if (monthlyPricePerYear === 0 || yearlyPrice === 0) {
+        return null;
+      }
 
-  //     const savingsPercentage = Math.round(
-  //       ((monthlyPricePerYear - yearlyPrice) / monthlyPricePerYear) * 100
-  //     );
+      const savingsPercentage = Math.round(
+        ((monthlyPricePerYear - yearlyPrice) / monthlyPricePerYear) * 100
+      );
 
-  //     return savingsPercentage > 0 ? `Save ${savingsPercentage}%` : null;
-  //   };
+      return savingsPercentage > 0 ? `Save ${savingsPercentage}%` : null;
+    };
 
-  //   return {
-  //     $rc_monthly: {
-  //       price: monthlyPackage.product.priceString,
-  //       period: 'month',
-  //       id: monthlyPackage.identifier,
-  //       package: monthlyPackage,
-  //       pricePerMonth: monthlyPackage.product.pricePerMonthString,
-  //     },
-  //     $rc_annual: {
-  //       price: yearlyPackage.product.priceString,
-  //       period: 'year',
-  //       id: yearlyPackage.identifier,
-  //       package: yearlyPackage,
-  //       pricePerMonth: yearlyPackage.product.pricePerMonthString,
-  //       savings: calculateSavings(),
-  //     },
-  //   };
-  // }, [packages]);
+    return {
+      $rc_monthly: {
+        price: monthlyPackage.product.priceString || "$9.99",
+        period: 'month',
+        id: monthlyPackage.identifier,
+        package: monthlyPackage,
+        pricePerMonth: monthlyPackage.product.pricePerMonthString || "$9.99",
+        days: 30,
+      },
+      $rc_annual: {
+        price: yearlyPackage.product.priceString || "$69.99",
+        period: 'year',
+        id: yearlyPackage.identifier,
+        package: yearlyPackage,
+        pricePerMonth: yearlyPackage.product.pricePerMonthString || "$5.83",
+        savings: calculateSavings(),
+        months: 12,
+      },
+      $rc_lifetime: {
+        price: lifetimePackage?.product.priceString || "$119.99",
+        period: 'lifetime',
+        id: lifetimePackage?.identifier || "$rc_lifetime",
+        package: lifetimePackage,
+        pricePerMonth: "",
+        lifetime: true,
+      },
+    };
+  }, [packages]);
 
   // TODO: Uncomment this 👇:
-  // const handlePurchase = useCallback(async () => {
-  //   const selectedPackage = plans[selectedPlan]?.package;
+  const handlePurchase = useCallback(async () => {
+    const selectedPackage = plans[selectedPlan]?.package;
 
-  //   if (!selectedPackage) {
-  //     console.error('Selected package not available');
-  //     return;
-  //   }
+    if (!selectedPackage) {
+      console.error('Selected package not available');
+      return;
+    }
 
-  //   try {
-  //     await purchasePackage(selectedPackage);
-  //   } catch (error) {
-  //     console.error('Purchase failed:', error);
-  //   }
-  // }, [selectedPlan, plans, purchasePackage]);
+    try {
+      await purchasePackage(selectedPackage);
+    } catch (error) {
+      console.error('Purchase failed:', error);
+    }
+  }, [selectedPlan, plans, purchasePackage]);
 
   // Delete this function 👇:
-  const handlePurchase = () => {
-    console.log('Purchase');
-  };
+  // const handlePurchase = () => {
+  //   console.log('Purchase');
+  // };
 
   return (
-    <Container edges={['bottom', 'top']} bgColor={Colors[mode].background}>
+    <WaveBackground edges={['top', 'bottom', 'left', 'right']}>
       <View style={styles.container}>
         <Header />
         <ScrollView
@@ -116,46 +132,58 @@ export default function IOSInAppPurchases() {
           <FeatureList />
         </ScrollView>
         <View style={styles.pricingContainer}>
-          <RadioButton
-            selected={selectedPlan === '$rc_monthly'}
-            onSelect={() => setSelectedPlan('$rc_monthly')}
-            label="Monthly Plan"
-            // TODO: Remove this 👇:
-            value="$7.99" // TODO: Remove this
-            description="Billed monthly ($7.99/mo)" // TODO: Remove this
-            // TODO: Uncomment this 👇:
-            // value={plans['$rc_monthly'].price}
-            // description={`Billed monthly (${plans['$rc_monthly'].pricePerMonth}/mo)`}
-            style={styles.radioButton}
-            color={Colors[mode].primary}
-            height={BUTTON_HEIGHT.lg}
-          />
-          <View style={styles.savingsContainer}>
-            {/* TODO: Uncomment this 👇: */}
-            {/* {plans['$rc_annual'].savings && (
-              <PressableOpacity
-                style={styles.savingsView}
-                variant="active"
-                onPress={() => setSelectedPlan('$rc_annual')}
-              >
-                <ThemedText type="defaultSemiBold" style={styles.savingsText}>
-                  {plans['$rc_annual'].savings}
-                </ThemedText>
-              </PressableOpacity>
-            )} */}
-            <RadioButton
-              selected={selectedPlan === '$rc_annual'}
-              onSelect={() => setSelectedPlan('$rc_annual')}
-              label="Yearly Plan"
-              // TODO: Remove this 👇:
-              value="$79.99" // TODO: Remove this
-              description="Billed yearly ($6.66/mo)" // TODO: Remove this
-              // TODO: Uncomment this 👇:
-              // value={plans['$rc_annual'].price}
-              // description={`Billed yearly (${plans['$rc_annual'].pricePerMonth}/mo)`}
-              color={Colors[mode].primary}
-              height={BUTTON_HEIGHT.lg}
-            />
+          <View style={styles.subscriptionOptionsContainer}>
+            <TouchableOpacity 
+              style={[styles.subscriptionOption, selectedPlan === '$rc_monthly' && styles.selectedOption]}
+              onPress={() => setSelectedPlan('$rc_monthly')}
+            >
+              <Text style={[styles.daysText, selectedPlan === '$rc_monthly' && styles.selectedText]}>
+                30
+              </Text>
+              <Text style={[styles.periodText, selectedPlan === '$rc_monthly' && styles.selectedText]}>
+                DAYS
+              </Text>
+              <Text style={[styles.priceText, selectedPlan === '$rc_monthly' && styles.selectedText]}>
+                {plans['$rc_monthly'].price || "$9.99"}
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.subscriptionOption, selectedPlan === '$rc_annual' && styles.selectedOption]}
+              onPress={() => setSelectedPlan('$rc_annual')}
+            >
+              <Text style={[styles.daysText, selectedPlan === '$rc_annual' && styles.selectedText]}>
+                12
+              </Text>
+              <Text style={[styles.periodText, selectedPlan === '$rc_annual' && styles.selectedText]}>
+                MONTHS
+              </Text>
+              <Text style={[styles.priceText, selectedPlan === '$rc_annual' && styles.selectedText]}>
+                {plans['$rc_annual'].price || "$69.99"}
+              </Text>
+              {plans['$rc_annual'].savings && (
+                <View style={styles.savingsBadge}>
+                  <Text style={styles.savingsBadgeText}>
+                    ✓
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.subscriptionOption, selectedPlan === '$rc_lifetime' && styles.selectedOption]}
+              onPress={() => setSelectedPlan('$rc_lifetime')}
+            >
+              <Text style={[styles.daysText, selectedPlan === '$rc_lifetime' && styles.selectedText]}>
+                ∞
+              </Text>
+              <Text style={[styles.periodText, selectedPlan === '$rc_lifetime' && styles.selectedText]}>
+                LIFETIME
+              </Text>
+              <Text style={[styles.priceText, selectedPlan === '$rc_lifetime' && styles.selectedText]}>
+                {plans['$rc_lifetime'].price || "$119.99"}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
         <View style={styles.purchaseButtonContainer}>
@@ -170,7 +198,7 @@ export default function IOSInAppPurchases() {
           //   period={plans[selectedPlan]?.period ?? ''}
         />
       </View>
-    </Container>
+    </WaveBackground>
   );
 }
 
@@ -190,10 +218,65 @@ const styles = StyleSheet.create({
     marginBottom: MARGIN.xl,
     marginHorizontal: MARGIN.xl,
   },
+  subscriptionOptionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: MARGIN.lg,
+  },
+  subscriptionOption: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: BORDER_RADIUS.md,
+    padding: PADDING.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 5,
+    height: 130,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  selectedOption: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: '#F7A943',
+    borderWidth: 2,
+  },
+  daysText: {
+    fontSize: FONT_SIZE.xxl,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  periodText: {
+    fontSize: FONT_SIZE.xs,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginVertical: 5,
+  },
+  priceText: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  selectedText: {
+    color: '#FFF',
+  },
+  savingsBadge: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    backgroundColor: '#4CAF50',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  savingsBadgeText: {
+    color: '#FFF',
+    fontSize: FONT_SIZE.xs,
+    fontWeight: 'bold',
+  },
   radioButton: {
     marginVertical: MARGIN.md,
   },
-
   savingsContainer: {
     position: 'relative',
   },

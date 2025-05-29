@@ -15,31 +15,7 @@ const ModalTestScreen = () => {
       route: '/(auth)/(modals)/paywall-double',
       description: 'İki abonelik seçeneği sunan ödeme duvarı'
     },
-    {
-      title: 'Paywall Lava Lamp',
-      route: '/(auth)/(modals)/paywall-double-lavalamp',
-      description: 'Lava lamp efektli ödeme duvarı'
-    },
-    {
-      title: 'Paywall (Tek Seçenek)',
-      route: '/(auth)/(modals)/paywall-single',
-      description: 'Tek abonelik seçeneği sunan ödeme duvarı'
-    },
-    {
-      title: 'Spotify Entegrasyonu',
-      route: '/(auth)/(modals)/spotify',
-      description: 'Spotify bağlantı modalı'
-    },
-    {
-      title: 'Cuul Entegrasyonu',
-      route: '/(auth)/(modals)/cuul',
-      description: 'Cuul bağlantı modalı'
-    },
-    {
-      title: 'Kroko Entegrasyonu',
-      route: '/(auth)/(modals)/kroko',
-      description: 'Kroko bağlantı modalı'
-    }
+
   ];
 
   return (

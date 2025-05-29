@@ -14,7 +14,7 @@ export const Header: React.FC = () => {
 
   return (
     <View style={styles.header}>
-      <Image source={require('@/assets/images/logo.png')} style={styles.logo} />
+      <Image source={require('@/assets/images/game-screen-fish.png')} style={styles.logo} />
       <ThemedText style={styles.title}>{t('inAppPurchases.title')}</ThemedText>
     </View>
   );
@@ -24,10 +24,11 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: MARGIN.lg,
+    marginTop: MARGIN.xxxl * 2,
   },
   logo: {
-    width: LOGO_SIZE.md,
-    height: LOGO_SIZE.md,
+    width: LOGO_SIZE.xxl, // Logoyu büyüttük
+    height: LOGO_SIZE.xxl, // Logoyu büyüttük
     marginBottom: MARGIN.md,
   },
   title: {
@@ -36,5 +37,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: PADDING.lg,
     fontWeight: '900',
     lineHeight: 30,
+    color: '#FFFFFF', // Yazı rengini beyaz yaptık
   },
 });

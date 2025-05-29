@@ -15,6 +15,7 @@ const ModalsLayout = () => {
           presentation: 'fullScreenModal',
           headerShadowVisible: false,
           headerBackVisible: false,
+          headerTransparent: true,
           animation: 'slide_from_bottom',
         }}
       />

@@ -33,11 +33,11 @@ export const PurchaseButton: React.FC<PurchaseButtonProps> = ({ onPress }) => {
         onPress={onPress}
         width={'100%'}
         colors={[
-          `${Colors[mode].background}05`,
-          Colors[mode].primary,
-          `${Colors[mode].background}05`,
+          '#FFF9C4',
+          '#FFF176',
+          '#FFEE58',
         ]}
-        bgColor={Colors[mode].backgroundOpacity}
+        bgColor={'#FFEB3B'}
         // disabled={isLoading}
         borderRadius={BORDER_RADIUS.rounded}
       >
@@ -51,7 +51,7 @@ export const PurchaseButton: React.FC<PurchaseButtonProps> = ({ onPress }) => {
             {t('buttons.continue')}
           </ThemedText>
         )} */}
-        <ThemedText type="defaultSemiBold" style={{ color: Colors[mode].text }}>
+        <ThemedText type="defaultSemiBold" style={{ color: '#333333' }}>
           {t('buttons.continue')}
         </ThemedText>
       </GlowButton>
