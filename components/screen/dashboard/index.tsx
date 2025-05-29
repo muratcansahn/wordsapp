@@ -594,6 +594,7 @@ export default function DashboardScreen() {
   const [isEating, setIsEating] = useState<boolean | false>(false);
   const [feedingSuccess, setFeedingSuccess] = useState(false);
   const [fishData, setFishData] = useState<FishDataType | null>(null);
+  const [isFishDataLoading, setIsFishDataLoading] = useState(false); // Balık verilerinin yükleme durumunu takip etmek için
   const [confirmDialogVisible, setConfirmDialogVisible] = useState(false);
   const [showDirectAnimation, setShowDirectAnimation] = useState(false); // Ekranda doğrudan animasyon göstermek için
   const foodAnimation = useRef(new Animated.Value(0)).current;
@@ -644,7 +645,13 @@ export default function DashboardScreen() {
 
   useEffect(() => {
     const fetchUserFishes = async () => {
+      // id değeri yoksa işlem yapma
+      if (!id) return;
+      
       try {
+        setIsFishDataLoading(true); // Yükleme başladı
+        console.log('Balık verileri yükleniyor, kullanıcı ID:', id);
+        
         const { data: userFishes, error } = await supabase
           .from('UserFishes')
           .select('*')
@@ -654,15 +661,22 @@ export default function DashboardScreen() {
           console.error('Supabase hatası:', error);
           return;
         }
+        
+        console.log('Balık verileri alındı:', userFishes?.length || 0);
+        
         if (userFishes && userFishes.length > 0) {
           setFishData(userFishes);
+        } else {
+          console.log('Kullanıcıya ait balık verisi bulunamadı');
         }
       } catch (error) {
         console.error('Balık verilerini getirirken hata:', error);
       } finally {
+        setIsFishDataLoading(false); // Yükleme bitti
       }
     };
     
+    // id değeri varsa ve değişirse verileri yeniden yükle
     if (id) {
       fetchUserFishes();
     }
@@ -810,13 +824,25 @@ export default function DashboardScreen() {
     return null;
   }
 
+  // Yükleme durumunu veya veri yokluğunu kontrol et
+  if (isFishDataLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={Colors.light.primary} />
+        <Text style={{ marginTop: 10, color: Colors.light.text }}>Balık verileri yükleniyor...</Text>
+      </View>
+    );
+  }
+  
   if (fishData === null) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color={Colors.light.primary} />
+        <Text style={{ marginTop: 10, color: Colors.light.text }}>Balık verileri bulunamadı</Text>
       </View>
     );
   }
+
 
   return (
     <ThemedView style={styles.container}>
