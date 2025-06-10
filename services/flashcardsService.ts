@@ -29,7 +29,7 @@ export const fetchWordListItems = async (listId: string, languageCode?: string):
     // Önce kelime listesinin detaylarını çek
     const { data: wordList, error: wordListError } = await supabase
       .from('WordLists')
-      .select('id, name, image, desc_tr, desc_de, desc_es')
+      .select('id,image, desc_tr, desc_de, desc_es')
       .eq('id', listId)
       .single();
 
@@ -54,7 +54,7 @@ export const fetchWordListItems = async (listId: string, languageCode?: string):
     if (!wordIds || wordIds.length === 0) {
       return {
         id: listId,
-        title: wordList.name,
+        // title: wordList.name,
         subtitle: wordList.desc_tr,
         image: wordList.image,
         desc_tr: wordList.desc_tr,
@@ -77,7 +77,7 @@ export const fetchWordListItems = async (listId: string, languageCode?: string):
     if (!words || words.length === 0) {
       return {
         id: listId,
-        title: wordList.name,
+        // title: wordList.name,
         subtitle: wordList.desc_tr,
         image: wordList.image,
         desc_tr: wordList.desc_tr,
@@ -137,7 +137,7 @@ export const fetchWordListItems = async (listId: string, languageCode?: string):
     
     return {
       id: listId,
-      title: wordList.name,
+      // title: wordList.name,
       subtitle: wordList.desc_tr,
       image: wordList.image,
       desc_tr: wordList.desc_tr,

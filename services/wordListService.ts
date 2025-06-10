@@ -18,7 +18,6 @@ export const getWordLists = async (): Promise<ApiWordList[]> => {
       .from('WordLists')
       .select(`
         id,
-        name,
         desc_tr,
         image,
         WordListItems(count)
@@ -32,7 +31,6 @@ export const getWordLists = async (): Promise<ApiWordList[]> => {
     // Gelen veriyi ApiWordList arayüzüne map edelim
     const mappedData = data.map(item => ({
       id: item.id,
-      name: item.name,
       description: item.desc_tr, // desc_tr'yi description'a atayalım
       image: item.image,
       // Supabase'den gelen count yapısı { count: number }[] şeklindedir.

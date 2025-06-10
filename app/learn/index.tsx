@@ -1,8 +1,8 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, StyleProp, ViewStyle, TextStyle, StatusBar, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, StyleProp, ViewStyle, TextStyle, StatusBar, Image, ActivityIndicator } from 'react-native';
 import { BORDER_RADIUS, PADDING, MARGIN } from '@/constants/AppConstants';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp, interpolate, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
-import { useEffect ,useState} from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getWordLists } from '@/services/wordListService';
 import { useRouter } from 'expo-router';
@@ -10,7 +10,6 @@ import { fetchKnownUnknownCounts } from '@/services/userService';
 import { useAuth } from '@/context/SupabaseProvider';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-
 
 type MaterialIconName = 'book-open-page-variant' | 'briefcase' | 'airplane' | 'check-circle' | 'chevron-right' | 'star';
 
@@ -35,60 +34,105 @@ const defaultGradients: { [key: number]: readonly [string, string] } = {
   3: ['#F59E0B', '#FCD34D'] as const,
 };
 
-
+const ITEMS_PER_PAGE = 5;
 
 export default function LearnPage() {
   const { t } = useTranslation();
   const router = useRouter();
   const scrollY = useSharedValue(0);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [wordLists, setWordLists] = useState<WordList[]>([]);
   const [knownUnknownMap, setKnownUnknownMap] = useState<Record<number, { biliyorum: number; bilmiyorum: number }>>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [allWordLists, setAllWordLists] = useState<ApiWordList[]>([]);
   const { user } = useAuth();
   const wordStatusUpdateCounter = useSelector((state: RootState) => state.user.wordStatusUpdateCounter);
 
+  // İlk sayfa yükleme
   useEffect(() => {
-    const fetchWordList = async () => {
+    const fetchInitialWordLists = async () => {
       setLoading(true);
       try {
-        const lists: ApiWordList[] = await getWordLists();
-
-        let formattedLists: WordList[] = lists.map((list): WordList => ({
-          ...list,
-          wordCount: list.total_words,
-          learnedCount: 0,
-          gradient: defaultGradients[list.id] || defaultGradients[1],
-          icon: 'book-open-page-variant' as MaterialIconName
-        }));
-
-        if (user?.id) {
-          const statsPromises = formattedLists.map(list =>
-            fetchKnownUnknownCounts(user.id, list.id).then(stats => ({ listId: list.id, stats }))
-          );
-          const statsResults = await Promise.all(statsPromises);
-          const statsMap: Record<number, { biliyorum: number; bilmiyorum: number }> = {};
-          statsResults.forEach(result => {
-            statsMap[result.listId] = result.stats;
-          });
-
-          formattedLists = formattedLists.map(list => ({
-            ...list,
-            learnedCount: statsMap[list.id]?.biliyorum || 0
-          }));
-
-          setKnownUnknownMap(statsMap);
-        }
-
-        setWordLists(formattedLists);
-
+        const allLists: ApiWordList[] = await getWordLists();
+        setAllWordLists(allLists);
+        
+        // İlk 6 item'ı al
+        const initialLists = allLists.slice(0, ITEMS_PER_PAGE);
+        await loadWordListsWithStats(initialLists, true);
+        
+        setHasMore(allLists.length > ITEMS_PER_PAGE);
       } catch (error) {
-        console.error('Error fetching word list:', error);
+        console.error('Error fetching initial word lists:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchWordList();
-  }, [user, wordStatusUpdateCounter]); // wordStatusUpdateCounter'ı dependency array'e ekledik
+    
+    fetchInitialWordLists();
+  }, [user, wordStatusUpdateCounter]);
+
+  // Word listlerini stats ile birlikte yükle
+  const loadWordListsWithStats = async (listsToLoad: ApiWordList[], isInitial: boolean = false) => {
+    let formattedLists: WordList[] = listsToLoad.map((list): WordList => ({
+      ...list,
+      wordCount: list.total_words,
+      learnedCount: 0,
+      gradient: defaultGradients[list.id % Object.keys(defaultGradients).length + 1] || defaultGradients[1],
+      icon: 'book-open-page-variant' as MaterialIconName
+    }));
+
+    if (user?.id) {
+      const statsPromises = formattedLists.map(list =>
+        fetchKnownUnknownCounts(user.id, list.id).then(stats => ({ listId: list.id, stats }))
+      );
+      const statsResults = await Promise.all(statsPromises);
+      const statsMap: Record<number, { biliyorum: number; bilmiyorum: number }> = {};
+      
+      statsResults.forEach(result => {
+        statsMap[result.listId] = result.stats;
+      });
+
+      formattedLists = formattedLists.map(list => ({
+        ...list,
+        learnedCount: statsMap[list.id]?.biliyorum || 0
+      }));
+
+      // Mevcut stats map'i güncelle
+      setKnownUnknownMap(prev => ({ ...prev, ...statsMap }));
+    }
+
+    if (isInitial) {
+      setWordLists(formattedLists);
+    } else {
+      setWordLists(prev => [...prev, ...formattedLists]);
+    }
+  };
+
+  // Daha fazla item yükle
+  const loadMoreItems = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+
+    setLoadingMore(true);
+    try {
+      const startIndex = currentPage * ITEMS_PER_PAGE;
+      const endIndex = startIndex + ITEMS_PER_PAGE;
+      const nextItems = allWordLists.slice(startIndex, endIndex);
+
+      if (nextItems.length > 0) {
+        await loadWordListsWithStats(nextItems);
+        setCurrentPage(prev => prev + 1);
+        setHasMore(endIndex < allWordLists.length);
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Error loading more items:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, hasMore, currentPage, allWordLists, user]);
 
   const handleListSelect = (listId: number) => {
     console.log("listId", listId);
@@ -123,6 +167,36 @@ export default function LearnPage() {
     };
   });
 
+  // Scroll sonuna yaklaşınca yeni itemları yükle
+  const handleScroll = useCallback((event: any) => {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const paddingToBottom = 30;
+    
+    if (contentOffset.y >= contentSize.height - layoutMeasurement.height - paddingToBottom) {
+      loadMoreItems();
+    }
+  }, [loadMoreItems]);
+
+  const renderLoadingIndicator = () => {
+    if (!loadingMore) return null;
+    
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#6366F1" />
+        <Text style={styles.loadingText}>{t('common.loading')}</Text>
+      </View>
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color="#6366F1" />
+        <Text style={styles.loadingText}>{t('common.loading')}</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
@@ -136,6 +210,7 @@ export default function LearnPage() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         onScroll={scrollHandler}
+        onMomentumScrollEnd={handleScroll}
         scrollEventThrottle={16}
       >
         <View style={styles.listContainer}>
@@ -189,10 +264,6 @@ export default function LearnPage() {
                             padding: 2,
                             borderRadius: 25,
                             shadowColor: '#000',
-                            // shadowOffset: { width: 0, height: 1 },
-                            // shadowOpacity: 0.2,
-                            // shadowRadius: 3,
-                            // elevation: 2
                           }}>
                             <Text style={{ 
                               fontSize: 12, 
@@ -238,6 +309,7 @@ export default function LearnPage() {
               </Animated.View>
             );
           })}
+          {renderLoadingIndicator()}
         </View>
       </Animated.ScrollView>
     </View>
@@ -249,6 +321,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingTop: PADDING.lg,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     paddingHorizontal: PADDING.lg,
@@ -325,24 +401,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: MARGIN.xs,
   },
-  badgeRow: {
-    flexDirection: 'row',
-    marginTop: 4,
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 8,
-  },
-  badgeNumber: {
-    color: '#222',
-    fontSize: 15,
-    fontWeight: '700',
-    marginLeft: 6,
-  },
   progressInfo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -369,5 +427,16 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#FFFFFF',
     borderRadius: BORDER_RADIUS.md,
+  },
+  loadingContainer: {
+    paddingVertical: PADDING.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: MARGIN.sm,
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
   },
 });

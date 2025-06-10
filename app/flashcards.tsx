@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Audio } from 'expo-av';
 import { 
   View, 
@@ -9,11 +9,10 @@ import {
   Share, 
   ScrollView,
   Animated as RNAnimated,
-  PanResponder,
-  PanResponderGestureState,
   Image,
   SafeAreaView,
-  Modal
+  Modal,
+  InteractionManager
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -25,162 +24,421 @@ import Loader from '@/components/common/loader/native-loader';
 import { FlashCard, WordListWithItems, fetchWordListItems } from '@/services/flashcardsService';
 import { updateWordStatus } from '@/services/userWordStatusService';
 import { useDispatch, useSelector } from 'react-redux';
-import { incrementWordStatusCounter, incrementPoint } from '@/store/userSlice';
+import { incrementWordStatusCounter } from '@/store/userSlice';
 import { incrementUserPointWithRedux } from '@/services/userService';
 import { RootState } from '@/store';
-import { ThemedText } from '@/components/common/typography';
 import { useTheme } from '@/hooks/theme/useTheme';
 import { PointContainer } from '@/components/common/point-container';
-import Animated, { 
-  useAnimatedStyle,
-  withSpring,
-  withSequence,
-  useSharedValue,
-  withTiming,
-  AnimatedProps
-} from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const SWIPE_THRESHOLD = 0.1 * SCREEN_WIDTH;
 
-import { useTranslation } from 'react-i18next';
+// Ses havuzu için tip tanımları
+interface SoundPool {
+  knownSound: Audio.Sound | null;
+  unknownSound: Audio.Sound | null;
+  successSound: Audio.Sound | null;
+}
+
+// Oyun state'i için tip tanımı
+interface GameState {
+  currentIndex: number;
+  showTranslation: boolean;
+  knownWordCount: number;
+  unknownWordCount: number;
+  allWordsMarked: boolean;
+  successSoundPlayed: boolean;
+}
+
+// Tamamlanma görünümü bileşeni
+const CompletionView = React.memo(({ 
+  knownWordCount, 
+  unknownWordCount, 
+  t 
+}: {
+  knownWordCount: number;
+  unknownWordCount: number;
+  t: any;
+}) => (
+  <View style={[styles.container, {backgroundColor: '#f6fafd'}]}>
+    <LinearGradient
+      colors={["#e0ffe8", "#f6fafd"]}
+      style={styles.completionGradient}
+    >
+      <View style={styles.completionCard}>
+        <View style={styles.completionIconCircle}>
+          <Icon name="check-circle" size={64} color="#4CAF50" />
+        </View>
+        <Text style={styles.noMoreCards}>{t('flashcards.allMarked')}</Text>
+        <Text style={styles.completionStats}>
+          {knownWordCount} {t('flashcards.knownWords')}, {unknownWordCount} {t('flashcards.unknownWords')}
+        </Text>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.replace('/')}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.backButtonText}>{t('flashcards.backToHome')}</Text>
+        </TouchableOpacity>
+      </View>
+    </LinearGradient>
+  </View>
+));
+
+// İstatistik konteyner bileşeni
+const StatsContainer = React.memo(({ 
+  knownWordCount, 
+  unknownWordCount, 
+  t 
+}: {
+  knownWordCount: number;
+  unknownWordCount: number;
+  t: any;
+}) => (
+  <View style={styles.statsContainer}>
+    <View style={styles.statItem}>
+      <View style={[styles.statIconContainer, { backgroundColor: '#4CD964' }]}>
+        <Icon name="check" size={24} color="#FFFFFF" />
+      </View>
+      <View style={styles.statTextContainer}>
+        <Text style={styles.statValue}>{knownWordCount}</Text>
+        <Text style={styles.statLabel}>{t('flashcards.known')}</Text>
+      </View>
+    </View>
+    <View style={[styles.statDivider, { backgroundColor: '#FFFFFF', opacity: 0.3 }]} />
+    <View style={styles.statItem}>
+      <View style={[styles.statIconContainer, { backgroundColor: '#FF3B30' }]}>
+        <Icon name="close" size={24} color="#FFFFFF" />
+      </View>
+      <View style={styles.statTextContainer}>
+        <Text style={styles.statValue}>{unknownWordCount}</Text>
+        <Text style={styles.statLabel}>{t('flashcards.unknown')}</Text>
+      </View>
+    </View>
+  </View>
+));
+
+// Flash kart bileşeni
+const FlashCardComponent = React.memo(({ 
+  card, 
+  showTranslation, 
+  translationAnim, 
+  cardOpacity,
+  t 
+}: {
+  card: FlashCard;
+  showTranslation: boolean;
+  translationAnim: RNAnimated.Value;
+  cardOpacity: RNAnimated.Value;
+  t: any;
+}) => (
+  <View style={styles.cardContainer}>
+    <RNAnimated.View
+      style={[styles.card, { opacity: cardOpacity }]}
+    >
+      <LinearGradient
+        colors={['#6366F1', '#A5B4FC']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradientContainer}
+      >
+        <View style={styles.cardContent}>
+          <Text style={styles.wordText}>
+            {card.word.charAt(0).toUpperCase() + card.word.slice(1).toLowerCase()}
+          </Text>
+          {showTranslation && (
+            <RNAnimated.View
+              style={[
+                styles.translationWrapper,
+                {
+                  opacity: translationAnim,
+                  transform: [
+                    {
+                      scale: translationAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.95, 1]
+                      })
+                    }
+                  ]
+                }
+              ]}
+            >
+              <Text style={styles.translationText}>{card.translation}</Text>
+              <Text style={styles.exampleText}>{card.example_original}</Text>
+              <Text style={styles.exampleText}>{card.example_translated}</Text>
+            </RNAnimated.View>
+          )}
+        </View>
+      </LinearGradient>
+    </RNAnimated.View>
+  </View>
+));
 
 export default function FlashcardsScreen() {
   const { t } = useTranslation();
   const params = useLocalSearchParams();
-  const [selectedList, setSelectedList] = useState<WordListWithItems | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [showTranslation, setShowTranslation] = useState(false);
-const translationAnim = useRef(new RNAnimated.Value(0)).current; // 0: gizli, 1: görünür
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [knownWordCount, setKnownWordCount] = useState(0);
-  const [unknownWordCount, setUnknownWordCount] = useState(0);
-  const [allWordsMarked, setAllWordsMarked] = useState(false);
-  const [successSoundPlayed, setSuccessSoundPlayed] = useState(false);
-  const [showInfoModal, setShowInfoModal] = useState(false); // Bilgilendirme modalı için state
-  const position = useRef(new RNAnimated.ValueXY()).current;
-  const newCardAnimation = useRef(new RNAnimated.Value(0)).current;
   const dispatch = useDispatch();
   const { mode } = useTheme();
   const userPoint = useSelector((state: RootState) => state.user.point);
-  // Puan konteynerı için referans
-  const pointContainerRef = React.useRef<any>(null);
-
-  // Ses state'leri
-  const [knownSound, setKnownSound] = useState<Audio.Sound | null>(null);
-  const [unknownSound, setUnknownSound] = useState<Audio.Sound | null>(null);
-  const [successSound, setSuccessSound] = useState<Audio.Sound | null>(null);
-
   
+  // Birleştirilmiş state
+  const [gameState, setGameState] = useState<GameState>({
+    currentIndex: 0,
+    showTranslation: false,
+    knownWordCount: 0,
+    unknownWordCount: 0,
+    allWordsMarked: false,
+    successSoundPlayed: false
+  });
+  
+  // Diğer state'ler
+  const [selectedList, setSelectedList] = useState<WordListWithItems | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Animation refs
+  const translationAnim = useRef(new RNAnimated.Value(0)).current;
+  const cardOpacity = useRef(new RNAnimated.Value(1)).current;
+  const pointContainerRef = useRef<any>(null);
+  
+  // Ses havuzu
+  const soundPoolRef = useRef<SoundPool>({
+    knownSound: null,
+    unknownSound: null,
+    successSound: null
+  });
 
-  // allWordsMarked true olduğunda başarı sesi sadece bir kere çalınsın
-  useEffect(() => {
-    if (allWordsMarked && !successSoundPlayed && successSound !== null) {
-      playSound('success');
-      setSuccessSoundPlayed(true);
+  // Ses çalma fonksiyonu - optimize edildi
+  const playSound = useCallback(async (soundType: 'known' | 'unknown' | 'success') => {
+    try {
+      const soundObject = soundPoolRef.current[`${soundType}Sound`];
+      if (soundObject) {
+        await soundObject.setPositionAsync(0);
+        await soundObject.playAsync();
+      }
+    } catch (error) {
+      console.error(`Ses çalma hatası (${soundType}):`, error);
     }
-  }, [allWordsMarked, successSoundPlayed, successSound]);
+  }, []);
 
-  // Yeni oyun başladığında veya kelime listesi değiştiğinde başarı sesi sıfırlansın
-  useEffect(() => {
-    setSuccessSoundPlayed(false);
-  }, [selectedList, allWordsMarked]);
+  // Puan animasyonu
+  const animatePoint = useCallback(() => {
+    if (pointContainerRef.current?.animatePoint) {
+      pointContainerRef.current.animatePoint();
+    }
+  }, []);
 
-  // Sesleri yükleme ve boşaltma useEffect'i
+  // Kart geçiş animasyonu
+  const animateCardTransition = useCallback((onFadeOut?: () => void) => {
+    return new Promise<void>((resolve) => {
+      // Kartı kaybet
+      RNAnimated.timing(cardOpacity, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }).start(() => {
+        // Fade-out tamamlandığında callback'i çağır
+        if (onFadeOut) onFadeOut();
+        
+        // Yeni kartı göster
+        RNAnimated.timing(cardOpacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }).start(() => {
+          resolve();
+        });
+      });
+    });
+  }, [cardOpacity]);
+
+  // Buton tıklama işlemi - optimize edildi
+  const onButtonPress = useCallback(async (isKnown: boolean) => {
+    if (isProcessing) return;
+    
+    setIsProcessing(true);
+    
+    const item = selectedList?.cards[gameState.currentIndex];
+    if (!item) {
+      setIsProcessing(false);
+      return;
+    }
+
+    const newStatus = isKnown ? 1 : 2;
+    const currentCardIndex = gameState.currentIndex;
+    const nextIndex = gameState.currentIndex + 1;
+    
+    // İstatistik güncellemeleri
+    let newKnownCount = gameState.knownWordCount;
+    let newUnknownCount = gameState.unknownWordCount;
+    
+    if (isKnown) {
+      newKnownCount += 1;
+      if (item.status === 2) newUnknownCount = Math.max(0, newUnknownCount - 1);
+    } else {
+      newUnknownCount += 1;
+      if (item.status === 1) newKnownCount = Math.max(0, newKnownCount - 1);
+    }
+    
+    // Ses çalma
+    playSound(isKnown ? 'known' : 'unknown');
+    
+    // Önce kart güncellemesi yap
+    if (selectedList) {
+      const updatedCards = [...selectedList.cards];
+      updatedCards[currentCardIndex] = {
+        ...updatedCards[currentCardIndex],
+        status: newStatus
+      };
+      
+      // Liste güncellemesi
+      setSelectedList({
+        ...selectedList,
+        cards: updatedCards
+      });
+    }
+    
+    // Kart geçiş animasyonunu başlat ve fade-out tamamlandığında kelimeyi değiştir
+    await animateCardTransition(() => {
+      // Çeviriyi gizle ve kelimeyi değiştir (fade-out tamamlandığında)
+      setGameState(prev => ({
+        ...prev,
+        currentIndex: nextIndex,
+        showTranslation: false,
+        knownWordCount: newKnownCount,
+        unknownWordCount: newUnknownCount
+      }));
+      
+      // Çeviri animasyonunu sıfırla
+      translationAnim.setValue(0);
+    });
+    
+    // Backend güncelleme - arka planda
+    InteractionManager.runAfterInteractions(async () => {
+      try {
+        const user = await supabase.auth.getUser();
+        if (user.data?.user && item.id) {
+          const success = await updateWordStatus(parseInt(item.id), user.data.user.id, newStatus);
+          if (success) {
+            dispatch(incrementWordStatusCounter());
+            await incrementUserPointWithRedux(user.data.user.id, dispatch);
+            animatePoint();
+          }
+        }
+      } catch (error) {
+        console.error('Backend güncelleme hatası:', error);
+      }
+    });
+    
+    setIsProcessing(false);
+  }, [gameState.currentIndex, selectedList, dispatch, playSound, animateCardTransition, translationAnim, isProcessing, animatePoint]);
+
+  // Çeviri gösterme/gizleme
+  const toggleTranslation = useCallback(() => {
+    if (!gameState.showTranslation) {
+      setGameState(prev => ({ ...prev, showTranslation: true }));
+      RNAnimated.timing(translationAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      RNAnimated.timing(translationAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start(() => setGameState(prev => ({ ...prev, showTranslation: false })));
+    }
+  }, [gameState.showTranslation, translationAnim]);
+
+  // Ses yükleme ve temizleme
   useEffect(() => {
+    let isMounted = true;
+    
     const loadSounds = async () => {
       try {
-        const { sound: known } = await Audio.Sound.createAsync(
-          require('@/assets/audio/known.mp3')
-        );
-        setKnownSound(known);
-
-        const { sound: unknown } = await Audio.Sound.createAsync(
-          require('@/assets/audio/unknown.mp3')
-        );
-        setUnknownSound(unknown);
-
-        const { sound: success } = await Audio.Sound.createAsync(
-           require('@/assets/audio/success-end.mp3') // Başarı sesini yükle
-        );
-        setSuccessSound(success);
-
-        console.log('Flashcard sesleri yüklendi');
+        const [knownResult, unknownResult, successResult] = await Promise.all([
+          Audio.Sound.createAsync(require('@/assets/audio/known.mp3')),
+          Audio.Sound.createAsync(require('@/assets/audio/unknown.mp3')),
+          Audio.Sound.createAsync(require('@/assets/audio/success-end.mp3'))
+        ]);
+        
+        if (isMounted) {
+          soundPoolRef.current = {
+            knownSound: knownResult.sound,
+            unknownSound: unknownResult.sound,
+            successSound: successResult.sound
+          };
+        }
       } catch (error) {
-        console.error('Flashcard ses yükleme hatası:', error);
+        console.error('Ses yükleme hatası:', error);
       }
     };
 
-    loadSounds();
+    InteractionManager.runAfterInteractions(loadSounds);
 
-    // Cleanup function
     return () => {
-      knownSound?.unloadAsync();
-      unknownSound?.unloadAsync();
-      successSound?.unloadAsync();
-      console.log('Flashcard sesleri boşaltıldı');
+      isMounted = false;
+      Object.values(soundPoolRef.current).forEach(sound => {
+        sound?.unloadAsync();
+      });
     };
-  }, []); // Boş bağımlılık dizisi ile sadece mount/unmount'ta çalışır
+  }, []);
 
-  
-
-  const animatePoint = () => {
-    // PointContainer bileşenindeki animatePoint fonksiyonunu çağır
-    if (pointContainerRef.current && pointContainerRef.current.animatePoint) {
-      pointContainerRef.current.animatePoint();
-    }
-  };
-
+  // Başarı sesi çalma
   useEffect(() => {
+    if (gameState.allWordsMarked && !gameState.successSoundPlayed && soundPoolRef.current.successSound) {
+      InteractionManager.runAfterInteractions(() => {
+        playSound('success');
+        setGameState(prev => ({ ...prev, successSoundPlayed: true }));
+      });
+    }
+  }, [gameState.allWordsMarked, gameState.successSoundPlayed, playSound]);
+
+  // Veri yükleme
+  useEffect(() => {
+    if (isInitialized) return;
+
     const loadData = async () => {
       try {
         setIsLoading(true);
         setError(null);
         
-        if (params.listId) {
-          const listId = String(params.listId);
-          const wordList = await fetchWordListItems(listId);
-          
-          if (wordList.cards && wordList.cards.length > 0) {
-            // Sadece işaretlenmemiş kelimeleri filtrele (status=0)
-            const unmarkedWords = wordList.cards.filter((word: FlashCard) => word.status !== 1 && word.status !== 2);
-            
-            if (unmarkedWords.length === 0) {
-              // Tüm kelimeler işaretlenmiş, tebrik mesajı göster
-              const known = wordList.cards.filter((word: FlashCard) => word.status === 1).length;
-              const unknown = wordList.cards.filter((word: FlashCard) => word.status === 2).length;
-              setKnownWordCount(known);
-              setUnknownWordCount(unknown);
-              setAllWordsMarked(true);
-              // playSound('success'); // <-- BAŞARI SESİNİ ÇAL (artık burada değil)
-              
-              setSelectedList({
-                ...wordList,
-                cards: []
-              });
-              
-              setIsLoading(false);
-              setIsInitialized(true);
-              return;
-            }
-            
-            setSelectedList({
-              ...wordList,
-              cards: unmarkedWords
-            });
-
-            const known = wordList.cards.filter((word: FlashCard) => word.status === 1).length;
-            const unknown = wordList.cards.filter((word: FlashCard) => word.status === 2).length;
-            setKnownWordCount(known);
-            setUnknownWordCount(unknown);
-          } else {
-            setError("Bu listede kelime bulunamadı.");
-          }
-        } else {
+        if (!params.listId) {
           setError("Liste ID'si belirtilmedi.");
+          return;
         }
+
+        const listId = String(params.listId);
+        const wordList = await fetchWordListItems(listId);
+        
+        if (!wordList.cards || wordList.cards.length === 0) {
+          setError("Bu listede kelime bulunamadı.");
+          return;
+        }
+
+        const unmarkedWords = wordList.cards.filter((word: FlashCard) => 
+          word.status !== 1 && word.status !== 2
+        );
+        
+        const known = wordList.cards.filter((word: FlashCard) => word.status === 1).length;
+        const unknown = wordList.cards.filter((word: FlashCard) => word.status === 2).length;
+        
+        setGameState(prev => ({
+          ...prev,
+          knownWordCount: known,
+          unknownWordCount: unknown,
+          allWordsMarked: unmarkedWords.length === 0
+        }));
+
+        setSelectedList({
+          ...wordList,
+          cards: unmarkedWords
+        });
+
       } catch (err) {
         setError("Veri yüklenirken bir hata oluştu.");
         console.error(err);
@@ -190,192 +448,30 @@ const translationAnim = useRef(new RNAnimated.Value(0)).current; // 0: gizli, 1:
       }
     };
     
-    if (!isInitialized) {
-      loadData();
-    }
-    
-    // Kullanıcının daha önce info modalı görüp görmediğini kontrol et
-    const checkInfoModalShown = async () => {
+    loadData();
+
+    // Info modal kontrolü
+    const checkInfoModal = async () => {
       try {
         const hasSeenInfoModal = await AsyncStorage.getItem('hasSeenFlashcardsInfoModal');
-        
-        // Eğer kullanıcı daha önce modalı görmemişse göster
         if (hasSeenInfoModal === null) {
-          setTimeout(() => {
-            setShowInfoModal(true);
-          }, 500);
+          setTimeout(() => setShowInfoModal(true), 500);
         }
       } catch (error) {
-        console.error('AsyncStorage okuma hatası:', error);
-        // Hata durumunda modalı göster
-        setTimeout(() => {
-          setShowInfoModal(true);
-        }, 500);
+        setTimeout(() => setShowInfoModal(true), 500);
       }
     };
     
-    checkInfoModalShown();
+    checkInfoModal();
   }, [params, isInitialized]);
 
-  useEffect(() => {
-    resetNewCard();
-  }, []);
-
-  const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onPanResponderMove: (_: any, gesture: PanResponderGestureState) => {
-      position.setValue({ x: gesture.dx, y: 0 }); 
-    },
-    onPanResponderRelease: async (_: any, gesture: PanResponderGestureState) => {
-      if (gesture.dx > SWIPE_THRESHOLD) {
-        forceSwipe('right');
-      } else if (gesture.dx < -SWIPE_THRESHOLD) {
-        forceSwipe('left');
-      } else {
-        resetPosition();
-      }
-    },
-  });
-
-  const forceSwipe = (direction: 'right' | 'left') => {
-    const x = direction === 'right' ? SCREEN_WIDTH * 1.5 : -SCREEN_WIDTH * 1.5;
-    RNAnimated.timing(position, {
-      toValue: { x, y: 0 },
-      duration: 500,
-      useNativeDriver: false,
-    }).start(() => onSwipeComplete(direction));
-  };
-
-  // Ses dosyası çalma fonksiyonu (Güncellenmiş)
-  const playSound = async (soundType: 'known' | 'unknown' | 'success') => {
-    try {
-      console.log(`playSound called with type: ${soundType}`);
-      let soundObject: Audio.Sound | null = null;
-
-      if (soundType === 'known') {
-        soundObject = knownSound;
-      } else if (soundType === 'unknown') {
-        soundObject = unknownSound;
-      } else if (soundType === 'success') {
-        soundObject = successSound;
-      }
-
-      if (soundObject) {
-        console.log(`Attempting to play ${soundType} sound object.`);
-        await soundObject.setPositionAsync(0); // Başa sar
-        await soundObject.playAsync();
-        console.log(`${soundType} sesi çalındı`);
-      } else {
-        console.log(`${soundType} ses nesnesi bulunamadı veya yüklenmedi.`);
-      }
-    } catch (error) {
-      console.error(`Ses çalma hatası (${soundType}):`, error);
-    }
-  };
-
-  const onSwipeComplete = async (direction: 'right' | 'left') => {
-    const item = selectedList?.cards[currentIndex];
-    
-    if (!item) return;
-    
-    let newStatus = 0;
-    if (direction === 'right') {
-      newStatus = 1; // Bilinen
-      
-      // Bilinen kelime sayısını artır
-      setKnownWordCount(prevCount => prevCount + 1);
-      
-      // Eğer daha önce bilinmeyen olarak işaretlendiyse, bilinmeyen sayısını azalt
-      if (item.status === 2) {
-        setUnknownWordCount(prevCount => Math.max(0, prevCount - 1));
-      }
-      
-      // Bilinen kelime sesini çal
-      playSound('known');
-    } else {
-      newStatus = 2; // Bilinmeyen
-      
-      // Bilinmeyen kelime sayısını artır
-      setUnknownWordCount(prevCount => prevCount + 1);
-      
-      // Eğer daha önce bilinen olarak işaretlendiyse, bilinen sayısını azalt
-      if (item.status === 1) {
-        setKnownWordCount(prevCount => Math.max(0, prevCount - 1));
-      }
-      
-      // Bilinmeyen kelime sesini çal
-      playSound('unknown');
+  // Kart render fonksiyonu - memoized ve optimize edildi
+  const renderCard = useCallback(() => {
+    if (!selectedList?.cards) {
+      return null;
     }
     
-    // Kullanıcı giriş yapmışsa kelime durumunu güncelle
-    const user = await supabase.auth.getUser();
-    if (user.data?.user && item.id) {
-      const success = await updateWordStatus(parseInt(item.id), user.data.user.id, newStatus);
-      
-      if (success) {
-        // Redux'taki wordStatusUpdateCounter'ı artır
-        dispatch(incrementWordStatusCounter());
-        
-        // Kullanıcının point değerini artır ve animasyonu başlat
-        await incrementUserPointWithRedux(user.data.user.id, dispatch);
-        animatePoint(); // Animasyonu başlat
-        
-        // Kartın statüsünü güncelle
-        if (selectedList) {
-          const updatedCards = [...selectedList.cards];
-          updatedCards[currentIndex] = {
-            ...updatedCards[currentIndex],
-            status: newStatus
-          };
-          
-          setSelectedList({
-            ...selectedList,
-            cards: updatedCards
-          });
-        }
-      }
-    }
-    
-    position.setValue({ x: 0, y: 0 });
-    setCurrentIndex(currentIndex + 1);
-    setShowTranslation(false);
-    resetNewCard();
-  };
-
-  const resetPosition = () => {
-    RNAnimated.spring(position, {
-      toValue: { x: 0, y: 0 },
-      friction: 4,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const resetNewCard = () => {
-    position.setValue({ x: 0, y: 0 });
-    newCardAnimation.setValue(0);
-    RNAnimated.timing(newCardAnimation, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const cardStyle = {
-    ...position.getLayout(),
-    opacity: newCardAnimation,
-    transform: [
-      ...position.getTranslateTransform(),
-      {
-        scale: newCardAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0.8, 1]
-        })
-      }
-    ]
-  };
-
-  const renderCard = () => {
-    if (!selectedList || !selectedList.cards || selectedList.cards.length === 0) {
+    if (selectedList.cards.length === 0) {
       return (
         <View style={styles.noCardsContainer}>
           <Text style={styles.noCardsText}>{t('flashcards.noCards')}</Text>
@@ -383,66 +479,27 @@ const translationAnim = useRef(new RNAnimated.Value(0)).current; // 0: gizli, 1:
       );
     }
 
-    const rightOpacity = position.x.interpolate({
-      inputRange: [0, SCREEN_WIDTH * 0.3],
-      outputRange: [0, 1]
-    });
+    // Geçerli indeks kontrolü
+    if (gameState.currentIndex >= selectedList.cards.length) {
+      // Tüm kartlar tamamlandı
+      return null;
+    }
 
-    const leftOpacity = position.x.interpolate({
-      inputRange: [-SCREEN_WIDTH * 0.3, 0],
-      outputRange: [1, 0]
-    });
+    const currentCard = selectedList.cards[gameState.currentIndex];
+    if (!currentCard) return null;
+
     return (
-      <View style={styles.cardContainer}>
-        <RNAnimated.View
-          style={[styles.card, cardStyle]}
-          {...panResponder.panHandlers}
-        >
-          <RNAnimated.View style={[styles.statusOverlay, styles.knowOverlay, { opacity: rightOpacity }]}>
-            <Text style={styles.statusText}>{t('flashcards.know')}</Text>
-          </RNAnimated.View>
-          <RNAnimated.View style={[styles.statusOverlay, styles.dontKnowOverlay, { opacity: leftOpacity }]}>
-            <Text style={styles.statusText}>{t('flashcards.dontKnow')}</Text>
-          </RNAnimated.View>
-          <LinearGradient
-            colors={['#6366F1', '#A5B4FC']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.gradientContainer}
-          >
-            <View style={styles.cardContent}>
-            <Text style={styles.wordText}>
-  {selectedList.cards[currentIndex].word.charAt(0).toUpperCase() + selectedList.cards[currentIndex].word.slice(1).toLowerCase()}
-</Text>
-              {showTranslation && (
-  <RNAnimated.View
-    style={[
-      styles.translationWrapper,
-      {
-        opacity: translationAnim,
-        transform: [
-          {
-            scale: translationAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0.95, 1]
-            })
-          }
-        ]
-      }
-    ]}
-  >
-    <Text style={styles.translationText}>{selectedList.cards[currentIndex].translation}</Text>
-    <Text style={styles.exampleText}>{selectedList.cards[currentIndex].example_original}</Text>
-    <Text style={styles.exampleText}>{selectedList.cards[currentIndex].example_translated}</Text>
-  </RNAnimated.View>
-)}
-            </View>
-          </LinearGradient>
-        </RNAnimated.View>
-      </View>
+      <FlashCardComponent
+        card={currentCard}
+        showTranslation={gameState.showTranslation}
+        translationAnim={translationAnim}
+        cardOpacity={cardOpacity}
+        t={t}
+      />
     );
-  };
+  }, [selectedList, gameState.currentIndex, gameState.showTranslation, translationAnim, cardOpacity, t]);
 
+  // Loading state
   if (isLoading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
@@ -452,6 +509,7 @@ const translationAnim = useRef(new RNAnimated.Value(0)).current; // 0: gizli, 1:
     );
   }
 
+  // Error state
   if (error) {
     return (
       <View style={[styles.container, styles.centerContent]}>
@@ -461,6 +519,7 @@ const translationAnim = useRef(new RNAnimated.Value(0)).current; // 0: gizli, 1:
     );
   }
 
+  // List not found
   if (!selectedList) {
     return (
       <View style={[styles.container, styles.centerContent]}>
@@ -470,66 +529,18 @@ const translationAnim = useRef(new RNAnimated.Value(0)).current; // 0: gizli, 1:
     );
   }
 
-  // Profesyonel tamamlanma ekranı fonksiyonu
-  const CompletionView = () => (
-    <View style={[styles.container, {backgroundColor: '#f6fafd'}]}>
-      <LinearGradient
-        colors={["#e0ffe8", "#f6fafd"]}
-        style={styles.completionGradient}
-      >
-        <View style={styles.completionCard}>
-          <View style={styles.completionIconCircle}>
-            <Icon name="check-circle" size={64} color="#4CAF50" />
-          </View>
-          <Text style={styles.noMoreCards}>{t('flashcards.allMarked')}</Text>
-          <Text style={styles.completionStats}>
-            {knownWordCount} {t('flashcards.knownWords')}, {unknownWordCount} {t('flashcards.unknownWords')}
-          </Text>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => {
-              router.replace('/');
-            }}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.backButtonText}>{t('flashcards.backToHome')}</Text>
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
-    </View>
-  );
-
-  if (allWordsMarked) {
-    return <CompletionView />;
-  }
-
-  if (currentIndex >= selectedList.cards.length) {
-    const totalWords = knownWordCount + unknownWordCount;
-    const allWordsMarked = totalWords === selectedList.cards.length;
-    if (allWordsMarked) {
-      return <CompletionView />;
-    }
+  // Completion state
+  if (gameState.allWordsMarked || gameState.currentIndex >= selectedList.cards.length) {
     return (
-      <View style={styles.container}>
-        <View style={styles.completionContainer}>
-          <Icon name="check-circle" size={80} color="#4CAF50" />
-          <Text style={styles.noMoreCards}>{t('flashcards.allCardsCompleted')}</Text>
-          <Text style={styles.completionStats}>
-            {knownWordCount} {t('flashcards.known')}, {unknownWordCount} {t('flashcards.unknown')}
-          </Text>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => {
-              router.replace('/');
-            }}
-          >
-            <Text style={styles.backButtonText}>{t('flashcards.backToHome')}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <CompletionView 
+        knownWordCount={gameState.knownWordCount}
+        unknownWordCount={gameState.unknownWordCount}
+        t={t}
+      />
     );
   }
 
+  // Main render
   return (
     <View style={styles.container}>
       <Image
@@ -539,102 +550,83 @@ const translationAnim = useRef(new RNAnimated.Value(0)).current; // 0: gizli, 1:
       />
       <SafeAreaView style={styles.contentContainer}>
         <View style={styles.header}>
-        <TouchableOpacity style={styles.headerBackButton} onPress={() => {
-          router.replace('/');
-        }}>
-          <Icon name="arrow-left" size={22} color="#FFFFFF" />
-        </TouchableOpacity>
-        
-        <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">
-          {selectedList.title}
-        </Text>
-        
-        <View style={styles.headerRightContainer}>
           <TouchableOpacity 
-            style={styles.infoButton} 
-            onPress={() => setShowInfoModal(true)}
+            style={styles.headerBackButton} 
+            onPress={() => router.replace('/')}
           >
-            <Icon name="information-outline" size={22} color="#FFFFFF" />
+            <Icon name="arrow-left" size={22} color="#FFFFFF" />
           </TouchableOpacity>
           
-          <PointContainer ref={pointContainerRef} />
-        </View>
-      </View>
-
-      <View style={styles.statsContainer}>
-        <View style={styles.statItem}>
-          <View style={[styles.statIconContainer, { backgroundColor: '#4CD964' }]}>
-            <Icon name="check" size={24} color="#FFFFFF" />
-          </View>
-          <View style={styles.statTextContainer}>
-            <Text style={styles.statValue}>{knownWordCount}</Text>
-            <Text style={styles.statLabel}>{t('flashcards.known')}</Text>
-          </View>
-        </View>
-        <View style={[styles.statDivider, { backgroundColor: '#FFFFFF', opacity: 0.3 }]} />
-        <View style={styles.statItem}>
-          <View style={[styles.statIconContainer, { backgroundColor: '#FF3B30' }]}>
-            <Icon name="close" size={24} color="#FFFFFF" />
-          </View>
-          <View style={styles.statTextContainer}>
-            <Text style={styles.statValue}>{unknownWordCount}</Text>
-            <Text style={styles.statLabel}>{t('flashcards.unknown')}</Text>
+          <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">
+            {selectedList.title}
+          </Text>
+          
+          <View style={styles.headerRightContainer}>
+            <TouchableOpacity 
+              style={styles.infoButton} 
+              onPress={() => setShowInfoModal(true)}
+            >
+              <Icon name="information-outline" size={22} color="#FFFFFF" />
+            </TouchableOpacity>
+            
+            <PointContainer ref={pointContainerRef} />
           </View>
         </View>
-      </View>
 
-      <View style={styles.cardControlsContainer}>
-        <View style={styles.counterCircle}>
-  <Text style={styles.counterText}>{currentIndex + 1} / {selectedList.cards.length}</Text>
-</View>
-        <TouchableOpacity 
-          style={styles.controlButton}
-          onPress={() => {
-  if (!showTranslation) {
-    setShowTranslation(true);
-    RNAnimated.timing(translationAnim, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  } else {
-    RNAnimated.timing(translationAnim, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => setShowTranslation(false));
-  }
-}
-          }
-        >
-          <Icon name={showTranslation ? 'eye-off' : 'eye'} size={22} color="#FFFFFF" />
-          <Text style={styles.controlButtonText}>{t('flashcards.show')}</Text>
-        </TouchableOpacity>
-      </View>
+        <StatsContainer 
+          knownWordCount={gameState.knownWordCount}
+          unknownWordCount={gameState.unknownWordCount}
+          t={t}
+        />
 
-      <View style={styles.cardWrapper}>
-        {renderCard()}
-      </View>
+        <View style={styles.cardControlsContainer}>
+          <View style={styles.counterCircle}>
+            <Text style={styles.counterText}>
+              {gameState.currentIndex + 1} / {selectedList.cards.length}
+            </Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.controlButton}
+            onPress={toggleTranslation}
+          >
+            <Icon name={gameState.showTranslation ? 'eye-off' : 'eye'} size={22} color="#FFFFFF" />
+            <Text style={styles.controlButtonText}>{t('flashcards.show')}</Text>
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.dontKnowButton]}
-          onPress={() => forceSwipe('left')}
-        >
-          <Icon name="close" size={24} color="#fff" />
-          <Text style={styles.actionButtonText}>{t('flashcards.dontKnow')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.knowButton]}
-          onPress={() => forceSwipe('right')}
-        >
-          <Icon name="check" size={24} color="#fff" />
-          <Text style={styles.actionButtonText}>{t('flashcards.know')}</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.cardWrapper}>
+          {renderCard()}
+        </View>
+
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity 
+            style={[
+              styles.actionButton, 
+              styles.dontKnowButton,
+              isProcessing && styles.disabledButton
+            ]}
+            onPress={() => onButtonPress(false)}
+            disabled={isProcessing}
+          >
+            <Icon name="close" size={24} color="#fff" />
+            <Text style={styles.actionButtonText}>{t('flashcards.dontKnow')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[
+              styles.actionButton, 
+              styles.knowButton,
+              isProcessing && styles.disabledButton
+            ]}
+            onPress={() => onButtonPress(true)}
+            disabled={isProcessing}
+          >
+            <Icon name="check" size={24} color="#fff" />
+            <Text style={styles.actionButtonText}>{t('flashcards.know')}</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
       
-      {/* Bilgilendirme Modalı */}
+      {/* Info Modal */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -644,24 +636,27 @@ const translationAnim = useRef(new RNAnimated.Value(0)).current; // 0: gizli, 1:
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{t('flashcards.infoTitle') || "Kelime Kartı Oyunu"}</Text>
+              <Text style={styles.modalTitle}>
+                {t('flashcards.infoTitle') || "Kelime Kartı Oyunu"}
+              </Text>
             </View>
             <View style={styles.modalBody}>
-              <Text style={styles.modalDescription}>{t('flashcards.infoDescription') || "Kelimeleri sağa kaydırırsanız bildiğinizi, sola kaydırırsanız bilmediğinizi belirtmiş olursunuz. Göz ikonuna basarak kelimenin çevirisini görebilirsiniz. Bol şans!"}</Text>
+              <Text style={styles.modalDescription}>
+                {t('flashcards.infoDescription') || "Alttaki butonları kullanarak kelimeleri biliyorum/bilmiyorum olarak işaretleyebilirsiniz. Göz ikonuna basarak kelimenin çevirisini görebilirsiniz. Bol şans!"}
+              </Text>
             </View>
             <View style={styles.modalFooter}>
               <TouchableOpacity 
                 style={styles.modalButton} 
                 onPress={() => {
-                  // Modalı kapat
                   setShowInfoModal(false);
-                  
-                  // AsyncStorage'a kullanıcının modalı gördüğünü kaydet
                   AsyncStorage.setItem('hasSeenFlashcardsInfoModal', 'true')
                     .catch(error => console.error('AsyncStorage yazma hatası:', error));
                 }}
               >
-                <Text style={styles.modalButtonText}>{t('buttons.okay') || "Anladım"}</Text>
+                <Text style={styles.modalButtonText}>
+                  {t('buttons.okay') || "Anladım"}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -671,6 +666,7 @@ const translationAnim = useRef(new RNAnimated.Value(0)).current; // 0: gizli, 1:
   );
 }
 
+// Styles - sürükleme ile ilgili stiller kaldırıldı
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -680,7 +676,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // Modal stilleri
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -765,10 +760,6 @@ const styles = StyleSheet.create({
     marginBottom: MARGIN.sm,
     width: '100%',
   },
-  headerLeftContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   headerRightContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -803,45 +794,6 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
     flex: 1,
     marginHorizontal: 8,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#F0F0F0',
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: {width: 1, height: 1},
-    textShadowRadius: 3,
-  },
-
-  pointContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(73, 151, 229, 0.8)',
-    borderRadius: 20,
-    padding: 8,
-    paddingHorizontal: 12,
-    marginLeft: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  pointIconWrapper: {
-    backgroundColor: 'rgba(59, 130, 200, 0.8)',
-    borderRadius: 16,
-    padding: 5,
-    marginRight: 8,
-  },
-  pointText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    minWidth: 30,
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
   },
   statsContainer: {
     flexDirection: 'row',

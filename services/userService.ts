@@ -12,6 +12,43 @@ interface WordStatusResult {
  * @param listId Kelime listesi ID'si
  * @returns Bilinen ve bilinmeyen kelime sayılarını içeren nesne
  */
+/**
+ * Tüm kelime listelerinin biliyorum/bilmiyorum istatistiklerini tek sorguda getirir
+ * @param userId Kullanıcı ID'si
+ * @returns Her liste için biliyorum/bilmiyorum sayılarını içeren nesne
+ */
+export const fetchAllListStats = async (
+  userId: string
+): Promise<Record<number, { biliyorum: number; bilmiyorum: number }>> => {
+  if (!userId) {
+    return {};
+  }
+  
+  try {
+    const { data, error } = await supabase.rpc('get_all_list_stats', { user_id: userId });
+    
+    if (error) {
+      console.error('Tüm liste istatistikleri alınırken hata:', error);
+      return {};
+    }
+    
+    // Sonuçları list_id'ye göre bir nesneye dönüştür
+    const statsMap: Record<number, { biliyorum: number; bilmiyorum: number }> = {};
+    
+    data.forEach((item: { list_id: number, biliyorum: any, bilmiyorum: any }) => {
+      statsMap[item.list_id] = {
+        biliyorum: Number(item.biliyorum) || 0,
+        bilmiyorum: Number(item.bilmiyorum) || 0
+      };
+    });
+    
+    return statsMap;
+  } catch (error) {
+    console.error('Liste istatistikleri işlenirken hata:', error);
+    return {};
+  }
+};
+
 export const fetchKnownUnknownCounts = async (
   userId: string,
   listId: number
