@@ -206,19 +206,19 @@ export const getWordListsPaginatedWithGroupBy = async (
     // 2. Dil parametresine göre uygun RPC fonksiyonunu çağır
     let rpcName = '';
     
+    // Desteklenen diller
+    const supportedLanguages = ['tr', 'de', 'es'];
+    
+    // Dil parametresini normalize et (tr-TR -> tr)
+    const normalizedLanguage = language.split('-')[0].toLowerCase();
+    
     // Dil parametresine göre uygun RPC fonksiyonunu belirle
-    switch (language) {
-      case 'tr':
-        rpcName = 'get_word_lists_with_counts_tr';
-        break;
-      case 'de':
-        rpcName = 'get_word_lists_with_counts_de';
-        break;
-      case 'es':
-        rpcName = 'get_word_lists_with_counts_es';
-        break;
-      default:
-        rpcName = 'get_word_lists_with_counts_tr'; // Varsayılan olarak Türkçe
+    if (supportedLanguages.includes(normalizedLanguage)) {
+      rpcName = `get_word_lists_with_counts_${normalizedLanguage}`;
+    } else {
+      // Desteklenmeyen dil için varsayılan olarak Türkçe kullan
+      console.warn(`Desteklenmeyen dil: ${language}, varsayılan olarak 'tr' kullanılıyor`);
+      rpcName = 'get_word_lists_with_counts_tr';
     }
     
     // Seçilen RPC fonksiyonunu çağır

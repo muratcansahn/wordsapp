@@ -3,6 +3,7 @@ import React, { memo, useEffect, useRef } from 'react';
 import { BORDER_RADIUS, PADDING, MARGIN } from '@/constants/AppConstants';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState, useCallback } from 'react';
+import i18n from '@/i18n';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/SupabaseProvider';
@@ -132,7 +133,9 @@ export default function LearnPage() {
     setUserWordStatusesLoading(true);
     
     try {
-      const result = await getWordListsPaginatedWithGroupBy(1, ITEMS_PER_PAGE, 'tr');
+      // Mevcut dili i18n'den al
+      const currentLanguage = i18n.language.split('-')[0]; // 'tr-TR' -> 'tr'
+      const result = await getWordListsPaginatedWithGroupBy(1, ITEMS_PER_PAGE, currentLanguage);
       
       if (result.data && result.data.length > 0) {
         setWordLists(result.data);
@@ -160,7 +163,9 @@ export default function LearnPage() {
     
     try {
       const nextPage = currentPage + 1;
-      const result = await getWordListsPaginatedWithGroupBy(nextPage, ITEMS_PER_PAGE, 'tr');
+      // Mevcut dili i18n'den al
+      const currentLanguage = i18n.language.split('-')[0]; // 'tr-TR' -> 'tr'
+      const result = await getWordListsPaginatedWithGroupBy(nextPage, ITEMS_PER_PAGE, currentLanguage);
       
       if (result.data && result.data.length > 0) {
         setWordLists(prevLists => [...prevLists, ...result.data]);
