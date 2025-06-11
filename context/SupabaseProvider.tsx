@@ -244,7 +244,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         setInitialized(true)
         if (session?.user) {
           // Önce veritabanına kaydet
-          console.log("session.user", session.user)
           await saveUserToDatabase(session.user);
           
           // Sonra güncel verileri çek
