@@ -14,15 +14,15 @@ type AdmobPlatformConfig = {
 export const admobConfig: AdmobPlatformConfig =
   Platform.select<AdmobPlatformConfig>({
     ios: {
-      interstitialAdUnitId: 'ca-app-pub-...',
-      rewardedAdUnitId:['ca-app-pub-2920147810768385/3996818238',"ca-app-pub-2920147810768385/4141439846"],
-      appOpenAdUnitId: 'ca-app-pub-...',
-      bannerAdUnitId: 'ca-app-pub-...',
+      interstitialAdUnitId: 'ca-app-pub-3940256099942544/4411468910', // Test ID
+      rewardedAdUnitId:['ca-app-pub-3940256099942544/1712485313', 'ca-app-pub-3940256099942544/5224354917'], // Test IDs
+      appOpenAdUnitId: 'ca-app-pub-3940256099942544/5572853029', // Test ID
+      bannerAdUnitId: 'ca-app-pub-3940256099942544/2934735716', // Test ID
     },
     android: {
-      interstitialAdUnitId: 'ca-app-pub-...',
-      rewardedAdUnitId: ["ca-app-pub-2920147810768385/7072755326","ca-app-pub-2920147810768385/5172037219"],
-      appOpenAdUnitId: 'ca-app-pub-...',
-      bannerAdUnitId: 'ca-app-pub-...',
+      interstitialAdUnitId: 'ca-app-pub-3940256099942544/1033173712', // Test ID
+      rewardedAdUnitId: ["ca-app-pub-3940256099942544/5224354917","ca-app-pub-3940256099942544/5354046379"], // Test IDs
+      appOpenAdUnitId: 'ca-app-pub-3940256099942544/3419835294', // Test ID
+      bannerAdUnitId: 'ca-app-pub-3940256099942544/6300978111', // Test ID
     },
   })!;

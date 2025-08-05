@@ -213,8 +213,10 @@ export default function QuizPage() {
   const generateQuizQuestions = (cards: FlashCard[]): QuizQuestion[] => {
     // Her kelime için bir soru oluştur
     return cards.map(card => {
-      // Doğru cevap
+      // Doğru cevap (hedef dilde çeviri)
       const correctAnswer = card.translation;
+      
+      console.log('Kelime:', card.word, 'Doğru cevap:', correctAnswer);
       
       // Yanlış cevaplar için diğer kelimelerin çevirilerinden rastgele 3 tane seç
       const otherTranslations = cards
@@ -244,9 +246,11 @@ export default function QuizPage() {
       // Tüm şıkları birleştir ve karıştır
       const allOptions = [correctAnswer, ...wrongAnswers].sort(() => 0.5 - Math.random());
       
+      console.log('Tüm şıklar:', allOptions);
+      
       return {
         id: card.id,
-        word: card.word,
+        word: card.word, // Soru kısmında İngilizce kelimeyi göster
         correctAnswer,
         options: allOptions
       };
@@ -278,6 +282,10 @@ export default function QuizPage() {
 
   const handleAnswerSelect = async (answer: string) => {
     if (selectedAnswer !== null) return; // Prevent multiple selections
+    
+    console.log('Seçilen cevap:', answer);
+    console.log('Doğru cevap:', currentQuestion.correctAnswer);
+    console.log('Cevap eşleşiyor mu:', answer === currentQuestion.correctAnswer);
     
     setSelectedAnswer(answer);
     const correct = answer === currentQuestion.correctAnswer;

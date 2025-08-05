@@ -65,6 +65,13 @@ export const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL as string;
 export const supabaseAnonKey = process.env
   .EXPO_PUBLIC_SUPABASE_ANON_KEY as string;
 
+// Environment variables kontrolü
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Supabase environment variables are missing!');
+  console.error('EXPO_PUBLIC_SUPABASE_URL:', supabaseUrl);
+  console.error('EXPO_PUBLIC_SUPABASE_ANON_KEY:', supabaseAnonKey);
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: new LargeSecureStore(),

@@ -34,6 +34,8 @@ import { Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
+import { updateGameTimestamp } from '@/services/gameRequestServices';
+import { useAuth } from '@/context/SupabaseProvider';
 
 // Arka plan resmini import et
 import gameBackgroundImage from '../assets/images/game-background.png';
@@ -56,6 +58,7 @@ export default function WordMatchingScreen() {
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
   const userState = useSelector((state: RootState) => state.user);
+  const { user } = useAuth();
   
   // Durum çubuğu yüksekliği
   
@@ -89,6 +92,10 @@ export default function WordMatchingScreen() {
   useEffect(() => {
     // Sayfa yüklendiğinde otomatik olarak oyunu başlat
     startNewGame();
+    // Timestamp güncelle
+    if (user?.id) {
+      updateGameTimestamp(user.id, 'wordmatching');
+    }
     
     // Kullanıcının daha önce info modalı görüp görmediğini kontrol et
     const checkInfoModalShown = async () => {
@@ -111,7 +118,13 @@ export default function WordMatchingScreen() {
     };
     
     checkInfoModalShown();
-  }, []);
+    // Unmount'ta da timestamp güncelle
+    return () => {
+      if (user?.id) {
+        updateGameTimestamp(user.id, 'wordmatching');
+      }
+    };
+  }, [user]);
   
   // Oyun tamamlandığında sesi çalmak için useEffect
   useEffect(() => {

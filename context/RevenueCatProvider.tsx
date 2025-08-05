@@ -11,6 +11,15 @@ const APIKeys = {
   google: process.env.EXPO_PUBLIC_RC_GOOGLE_KEY as string,
 };
 
+// Environment variables kontrolü
+if (!APIKeys.apple || !APIKeys.google) {
+  console.error('RevenueCat API keys are missing!');
+  console.error('EXPO_PUBLIC_RC_APPLE_KEY:', APIKeys.apple);
+  console.error('EXPO_PUBLIC_RC_GOOGLE_KEY:', APIKeys.google);
+}
+
+console.log("APIKeys", APIKeys)
+
 interface RevenueCatContextType {
   packages: PurchasesPackage[];
   isReady: boolean;
@@ -35,6 +44,11 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
 
   const initializeRevenueCat = async () => {
     try {
+      // API keys kontrolü
+      if (!APIKeys.apple || !APIKeys.google) {
+        throw new Error('RevenueCat API keys are not configured');
+      }
+
       if (Platform.OS === 'android') {
         Purchases.configure({ apiKey: APIKeys.google });
       } else {
@@ -42,14 +56,20 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
       }
 
       const offerings = await Purchases.getOfferings();
+      console.log("offerings", offerings)
 
       const availablePackages = offerings.current?.availablePackages || [];
       setPackages(availablePackages);
       Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
       setIsReady(true);
       setError(null);
+      console.log("packages", packages)
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error('RevenueCat initialization error:', errorMessage);
+      setError(errorMessage);
+      // Hata durumunda da isReady'yi true yap ki uygulama çökmesin
+      setIsReady(true);
     }
   };
 
@@ -60,7 +80,8 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
       setError(null);
       return purchase.productIdentifier;
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(errorMessage);
       throw err;
     } finally {
       setIsLoading(false);
@@ -74,7 +95,8 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
       setError(null);
       return customer;
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(errorMessage);
       throw err;
     } finally {
       setIsLoading(false);

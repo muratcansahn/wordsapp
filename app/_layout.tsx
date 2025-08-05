@@ -41,7 +41,7 @@ function MainLayout() {
   const { statusBarStyle, statusBarBackgroundColor, theme } = useTheme();
 
   //* If you want to use RevenueCat, uncomment the following lines 👇
-  const { initializeRevenueCat } = useRevenueCat();
+  const { initializeRevenueCat, isReady: revenueCatReady } = useRevenueCat();
   //* If you want to use Admob, uncomment the following lines 👇
   const { admobState, initializeAdmobService } = useAdmob();
 
@@ -56,20 +56,26 @@ function MainLayout() {
   useEffect(() => {
     // Get user tracking permission
     // This function is important for compliance with privacy regulations
-    //* If you want to use Admob, uncomment the following lines 👇
-    initializeAdmobService();
-    // Dont remove it , because Apple will reject the app if this is not implemented
-    // You should configure this function according to your needs.
-    getUserTrackingPermission();
-    //* If you want to use RevenueCat, uncomment the following lines 👇
-    initializeRevenueCat();
+    try {
+      //* If you want to use Admob, uncomment the following lines 👇
+      initializeAdmobService();
+      // Dont remove it , because Apple will reject the app if this is not implemented
+      // You should configure this function according to your needs.
+      getUserTrackingPermission();
+      //* If you want to use RevenueCat, uncomment the following lines 👇
+      initializeRevenueCat();
+    } catch (error) {
+      console.error('Initialization error:', error);
+    }
   }, []);
 
   useEffect(() => {
-    if (loaded && initialized && admobState.admobReady.isLoaded) {
-        SplashScreen.hideAsync();
+    // Daha güvenli splash screen kontrolü
+    const isReady = loaded && initialized && (admobState.admobReady.isLoaded || !admobState.admobReady.isLoaded);
+    if (isReady) {
+      SplashScreen.hideAsync().catch(console.error);
     }
-}, [loaded, initialized, admobState.admobReady.isLoaded]); 
+  }, [loaded, initialized, admobState.admobReady.isLoaded]); 
 
   useEffect(() => {
     if (!session && segments[0] !== '(no-auth)') {
@@ -79,7 +85,8 @@ function MainLayout() {
     }
   }, [segments, router, session]);
 
-  if (!loaded || !initialized || !admobState.admobReady.isLoaded ) {
+  // Daha güvenli loading kontrolü
+  if (!loaded || !initialized) {
     return <Slot />;
   }
 

@@ -1,28 +1,23 @@
 import { supabase } from '@/lib/supabase';
 import { format } from 'date-fns';
 
-export type GameType = 'dailywords' | 'wordguess' | 'wordmatching';
+export type GameType = 'wordguess' | 'wordmatching';
 
 interface GameRequestUpdate {
-  dailywords_remaining: number;
   wordguess_remaining: number;
   wordmatching_remaining: number;
 }
 
 interface GameRequestFields {
-  dailywords: string | null;
   wordguess: string | null;
   wordmatching: string | null;
-  dailywords_remaining: number;
   wordguess_remaining: number;
   wordmatching_remaining: number;
 }
 
 interface UserGameRequestDates {
-  dailywords: string | null;
   wordguess: string | null;
   wordmatching: string | null;
-  dailywords_remaining: number;
   wordguess_remaining: number;
   wordmatching_remaining: number;
   skipped_wordlist_ids?: string[];
@@ -83,7 +78,7 @@ export const checkAndUpdateGameRequests = async (userId: string) => {
 
     const { data: lastRequests, error } = await supabase
       .from('UserGameRequestDates')
-      .select('dailywords, wordguess, wordmatching, dailywords_remaining, wordguess_remaining, wordmatching_remaining')
+      .select('wordguess, wordmatching, wordguess_remaining, wordmatching_remaining')
       .eq('user_id', userId)
       .maybeSingle(); // single yerine maybeSingle kullanıyoruz
 
@@ -122,10 +117,8 @@ export const checkAndUpdateGameRequests = async (userId: string) => {
           .insert([
             {
               user_id: userId,
-              dailywords: currentDate,
               wordguess: currentDate,
               wordmatching: currentDate,
-              dailywords_remaining: 2,
               wordguess_remaining: 2,
               wordmatching_remaining: 2,
               skipped_wordlist_ids: [] // Boş array olarak başlat
@@ -147,7 +140,7 @@ export const checkAndUpdateGameRequests = async (userId: string) => {
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const now = new Date();
     const updates: Partial<GameRequestUpdate> = {};
-    const gameTypes: GameType[] = ['dailywords', 'wordguess', 'wordmatching'];
+    const gameTypes: GameType[] = ['wordguess', 'wordmatching'];
 
     console.log(`🌍 Kullanıcı zaman dilimi: ${timeZone}`);
 
@@ -266,6 +259,32 @@ export const updateGameRequestAndTimestamp = async (userId: string, gameType: Ga
     return { success: true, remaining: remaining - 1 };
   } catch (error) {
     console.error('Oyun hakkı güncellenirken hata:', error);
+    return { success: false, error };
+  }
+};
+
+/**
+ * Sadece oyunun timestamp'ini günceller
+ * @param userId Kullanıcı ID'si
+ * @param gameType Oyun türü ('wordguess' | 'wordmatching')
+ */
+export const updateGameTimestamp = async (userId: string, gameType: GameType) => {
+  try {
+    const timestampField = gameType;
+    const updates: Partial<GameRequestFields> = {
+      [timestampField]: new Date().toISOString(),
+    };
+    const { error } = await supabase
+      .from('UserGameRequestDates')
+      .update(updates)
+      .eq('user_id', userId);
+    if (error) {
+      console.error('Timestamp güncellenemedi:', error);
+      return { success: false, error };
+    }
+    return { success: true };
+  } catch (error) {
+    console.error('updateGameTimestamp hata:', error);
     return { success: false, error };
   }
 };

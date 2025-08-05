@@ -54,7 +54,7 @@ export const fetchWordListItems = async (listId: string, languageCode?: string):
     if (!wordIds || wordIds.length === 0) {
       return {
         id: listId,
-        // title: wordList.name,
+        title: wordList.desc_tr || 'Kelime Listesi',
         subtitle: wordList.desc_tr,
         image: wordList.image,
         desc_tr: wordList.desc_tr,
@@ -77,7 +77,7 @@ export const fetchWordListItems = async (listId: string, languageCode?: string):
     if (!words || words.length === 0) {
       return {
         id: listId,
-        // title: wordList.name,
+        title: wordList.desc_tr || 'Kelime Listesi',
         subtitle: wordList.desc_tr,
         image: wordList.image,
         desc_tr: wordList.desc_tr,
@@ -92,7 +92,7 @@ export const fetchWordListItems = async (listId: string, languageCode?: string):
     // Kelimelerin çevirilerini çek (sadece seçili dile göre)
     const { data: translations, error: translationsError } = await supabase
       .from('WordTranslations')
-      .select('word_id, mean, example_mean, example_original, example_translated')
+      .select('word_id, mean, example_original, example_translated')
       .in('word_id', wordIds)
       .eq('language_code', selectedLanguage);
     
@@ -127,7 +127,7 @@ export const fetchWordListItems = async (listId: string, languageCode?: string):
         id: word.id.toString(),
         word: word.name,
         translation: wordTranslation?.mean || '',
-        example: wordTranslation?.example_mean || '',
+        example: wordTranslation?.example_original || '',
         example_original: wordTranslation?.example_original || '',
         example_translated: wordTranslation?.example_translated ,
         status: wordStatus?.status || 0
@@ -137,7 +137,7 @@ export const fetchWordListItems = async (listId: string, languageCode?: string):
     
     return {
       id: listId,
-      // title: wordList.name,
+      title: wordList.desc_tr || 'Kelime Listesi',
       subtitle: wordList.desc_tr,
       image: wordList.image,
       desc_tr: wordList.desc_tr,

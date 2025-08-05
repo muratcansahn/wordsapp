@@ -41,16 +41,12 @@ const DailyActivitiesSection = () => {
                 
                 const { data: lastRequests } = await supabase
                     .from('UserGameRequestDates')
-                    .select('dailywords_remaining, wordguess_remaining, wordmatching_remaining, dailywords, wordguess, wordmatching')
+                    .select('wordguess_remaining, wordmatching_remaining, wordguess, wordmatching')
                     .eq('user_id', user.id)
                     .single();
 
                 if (lastRequests) {
                     setGameStatus({
-                        dailywords: { 
-                            remaining: lastRequests.dailywords_remaining,
-                            lastPlayed: lastRequests.dailywords
-                        },
                         wordguess: { 
                             remaining: lastRequests.wordguess_remaining,
                             lastPlayed: lastRequests.wordguess
@@ -73,7 +69,7 @@ const DailyActivitiesSection = () => {
 
             const { data, error } = await supabase
                 .from('UserGameRequestDates')
-                .select('dailywords, wordguess, wordmatching, dailywords_remaining, wordguess_remaining, wordmatching_remaining')
+                .select('wordguess, wordmatching, wordguess_remaining, wordmatching_remaining')
                 .eq('user_id', user.id)
                 .single();
 
@@ -83,10 +79,6 @@ const DailyActivitiesSection = () => {
             }
 
             setGameStatus({
-                dailywords: {
-                    remaining: data.dailywords_remaining || 0,
-                    lastPlayed: data.dailywords
-                },
                 wordguess: {
                     remaining: data.wordguess_remaining || 0,
                     lastPlayed: data.wordguess
@@ -111,22 +103,24 @@ const DailyActivitiesSection = () => {
             Object.entries(gameStatus).forEach(([gameType, status]) => {
                 if (!status?.lastPlayed) return;
 
-                // ISO string'i local tarihe çevir
                 const lastPlayedUTC = new Date(status.lastPlayed);
                 const lastPlayedLocal = new Date(lastPlayedUTC.getTime() - (lastPlayedUTC.getTimezoneOffset() * 60000));
                 const nextRewardTime = new Date(lastPlayedLocal.getTime() + (4 * 60 * 60 * 1000));
                 const diffMs = nextRewardTime.getTime() - now.getTime();
 
-                if (diffMs > 0 && status.remaining < 2) {
-                    const totalMinutes = Math.floor(diffMs / (1000 * 60));
-                    const hours = Math.floor(totalMinutes / 60);
-                    const minutes = totalMinutes % 60;
-                    
-                    if (hours > 0) {
-    newCountdown[gameType] = t('dailyActivities.countdownHours', { hours, minutes });
-} else {
-    newCountdown[gameType] = t('dailyActivities.countdownMinutes', { minutes });
-}
+                if (status.remaining <= 1) {
+                    if (diffMs > 0) {
+                        const totalMinutes = Math.floor(diffMs / (1000 * 60));
+                        const hours = Math.floor(totalMinutes / 60);
+                        const minutes = totalMinutes % 60;
+                        if (hours > 0) {
+                            newCountdown[gameType] = t('dailyActivities.countdownHours', { hours, minutes });
+                        } else {
+                            newCountdown[gameType] = t('dailyActivities.countdownMinutes', { minutes });
+                        }
+                    } else {
+                        newCountdown[gameType] = "Süre doldu";
+                    }
                 }
             });
             
@@ -139,15 +133,6 @@ const DailyActivitiesSection = () => {
     }, [gameStatus]);
 
     const dailyContent = useMemo(() => [
-        // {
-        //   id: '1',
-        //   title: t('dailyActivities.dailyContent.1.title'),
-        //   description: t('dailyActivities.dailyContent.1.description'),
-        //   icon: 'calendar',
-        //   gradient: ['#FF9A9E', '#FAD0C4'] as readonly [string, string],
-        //   action: 'flashcards',
-        //   gameType: 'dailywords'
-        // },
         {
           id: '3',
           title: t('dailyActivities.dailyContent.3.title'),
@@ -191,7 +176,11 @@ const DailyActivitiesSection = () => {
 
     const renderDailyCard = useMemo(() => (item: typeof dailyContent[0]) => {
         const status = gameStatus[item.gameType];
-        const timeLeft = status?.remaining < 2 ? countdown[item.gameType] : null;
+        const timeLeft = status?.remaining !== undefined && status.remaining <= 1
+          ? (countdown[item.gameType] ?? "Süre doldu")
+          : null;
+        console.log("status", status);
+        console.log("countdown", countdown);
 
         return (
             <TouchableOpacity 

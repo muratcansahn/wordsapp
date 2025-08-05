@@ -15,6 +15,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { updateUserStats, incrementWordStatusCounter } from '@/store/userSlice';
+import { updateGameTimestamp } from '@/services/gameRequestServices';
+import { useAuth } from '@/context/SupabaseProvider';
 
 
 interface FlashCard {
@@ -52,6 +54,7 @@ const HangmanGame = () => {
   const userState = useSelector((state: RootState) => state.user);
   const { id: userId, point: currentPoint = 0 } = userState;
   const dispatch = useDispatch();
+  const { user } = useAuth();
 
   const selectRandomWord = async () => {
     try {
@@ -66,21 +69,20 @@ const HangmanGame = () => {
       }).start();
       
       const randomWord = await getRandomWord();
+      console.log('randomWord', randomWord);
       
       if (randomWord) {
         // Mevcut kültüre göre çeviriyi filtrele
-        const wordTranslation = randomWord.WordTranslations.filter(
-          translation => (
-            translation.language_code === i18n.language
-          )
-        )[0]
+        const wordTranslation = randomWord.WordTranslations.find(
+          translation => translation.language_code === i18n.language
+        );
         
         const newCard: FlashCard = {
           id: randomWord.id.toString(),
           word: randomWord.name,
-          translation: wordTranslation.mean || '',
-          description: wordTranslation.example_translated || '',
-          example: wordTranslation.example_original || '',
+          translation: Array.isArray(wordTranslation?.mean) ? wordTranslation.mean[0] || '' : wordTranslation?.mean || '',
+          description: Array.isArray(wordTranslation?.example_translated) ? wordTranslation.example_translated[0] || '' : wordTranslation?.example_translated || '',
+          example: Array.isArray(wordTranslation?.example_original) ? wordTranslation.example_original[0] || '' : wordTranslation?.example_original || '',
         };
         setCurrentWord(newCard);
         console.log('Yeni kelime:', newCard);
@@ -136,6 +138,22 @@ const HangmanGame = () => {
     
     checkInfoModalShown();
   }, []);
+
+  useEffect(() => {
+    // Timestamp güncelle
+    if (user?.id) {
+      updateGameTimestamp(user.id, 'wordguess');
+    }
+  }, [user]);
+
+  useEffect(() => {
+    // Unmount'ta da timestamp güncelle
+    return () => {
+      if (user?.id) {
+        updateGameTimestamp(user.id, 'wordguess');
+      }
+    };
+  }, [user]);
 
   const getMaskedWord = () => {
     if (!currentWord) return '';

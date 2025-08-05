@@ -132,10 +132,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
                 .insert([
                   {
                     user_id: userData.id,
-                    dailywords: currentDate,
                     wordguess: currentDate,
                     wordmatching: currentDate,
-                    dailywords_remaining: 2,
                     wordguess_remaining: 2,
                     wordmatching_remaining: 2,
                     skipped_wordlist_ids: [] // Boş array olarak başlat

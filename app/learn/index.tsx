@@ -27,11 +27,20 @@ interface WordList extends ApiWordList {
   gradient: readonly [string, string];
 }
 
-const defaultGradients: { [key: number]: readonly [string, string] } = {
-  1: ['#6366F1', '#A5B4FC'] as const,
-  2: ['#EC4899', '#F9A8D4'] as const,
-  3: ['#F59E0B', '#FCD34D'] as const,
-};
+const defaultGradients: readonly [string, string][] = [
+  ['#6366F1', '#A5B4FC'], // Mavi-Mor
+  ['#EC4899', '#F9A8D4'], // Pembe
+  ['#F59E0B', '#FCD34D'], // Turuncu-Sarı
+  ['#10B981', '#6EE7B7'], // Yeşil
+  ['#8B5CF6', '#C4B5FD'], // Mor
+  ['#EF4444', '#FCA5A5'], // Kırmızı
+  ['#06B6D4', '#67E8F9'], // Cyan
+  ['#84CC16', '#BEF264'], // Lime
+  ['#F97316', '#FDBA74'], // Turuncu
+  ['#6B7280', '#D1D5DB'], // Gri
+  ['#DC2626', '#FEE2E2'], // Koyu Kırmızı
+  ['#7C3AED', '#DDD6FE'], // İndigo
+] as const;
 
 const ITEMS_PER_PAGE = 10;
 
@@ -138,7 +147,11 @@ export default function LearnPage() {
       const result = await getWordListsPaginatedWithGroupBy(1, ITEMS_PER_PAGE, currentLanguage);
       
       if (result.data && result.data.length > 0) {
-        setWordLists(result.data);
+        setWordLists(result.data.map((list: ApiWordList, index: number) => ({ 
+          ...list, 
+          icon: 'book-open-page-variant' as MaterialIconName,
+          gradient: defaultGradients[index % defaultGradients.length] 
+        })));
         setCurrentPage(1);
         setHasMore(result.page < result.totalPages);
         
@@ -168,12 +181,28 @@ export default function LearnPage() {
       const result = await getWordListsPaginatedWithGroupBy(nextPage, ITEMS_PER_PAGE, currentLanguage);
       
       if (result.data && result.data.length > 0) {
-        setWordLists(prevLists => [...prevLists, ...result.data]);
+        let newLists: ApiWordList[] = [];
+        setWordLists(prevLists => {
+          // Mevcut ID'leri al
+          const existingIds = new Set(prevLists.map(list => list.id));
+          // Sadece yeni ID'lere sahip öğeleri filtrele
+          newLists = result.data.filter((list: ApiWordList) => !existingIds.has(list.id));
+          // Yeni öğelere renk gradyanı ekle
+          const listsWithGradients = newLists.map((list: ApiWordList, index: number) => ({ 
+            ...list, 
+            icon: 'book-open-page-variant' as MaterialIconName,
+            gradient: defaultGradients[(prevLists.length + index) % defaultGradients.length] 
+          }));
+          return [...prevLists, ...listsWithGradients];
+        });
         setCurrentPage(nextPage);
         setHasMore(result.page < result.totalPages);
         
-        const wordListIds = result.data.map((list: WordList) => list.id);
-        await getUserWordListProgress(user.id, wordListIds);
+        // Sadece yeni eklenen listelerin ID'lerini kullan
+        if (newLists.length > 0) {
+          const wordListIds = newLists.map((list: ApiWordList) => list.id);
+          await getUserWordListProgress(user.id, wordListIds);
+        }
       } else {
         setHasMore(false);
       }
@@ -265,7 +294,6 @@ export default function LearnPage() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="small" color="#6366F1" />
-        <Text style={styles.loadingText}>{t('common.loadingMore')}</Text>
       </View>
     );
   };
@@ -274,14 +302,13 @@ export default function LearnPage() {
     if (!hasMore && wordLists.length > 0) {
       return (
         <View style={styles.endOfListContainer}>
-          <Text style={styles.endOfListText}>{t('common.noMoreItems')}</Text>
         </View>
       );
     }
     return null;
   };
 
-  if (loading && wordLists.length === 0) {
+  if (loading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
         <ActivityIndicator size="large" color="#6366F1" />
@@ -364,7 +391,7 @@ const WordListItem = memo(({ list, knownUnknownMap, onPress, t }: {
         onPress={handlePress}
       >
         <LinearGradient
-          colors={list.gradient || defaultGradients[1]}
+          colors={list.gradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.gradientContainer}

@@ -113,9 +113,9 @@ export default function WordListScreen() {
       // WordTranslations tablosundan çevirileri çek
       const { data: translationsData, error: translationsError } = await supabase
       .from('WordTranslations')
-      .select('word_id, mean, example_mean, example_original')
+      .select('word_id, mean, example_translated, example_original')
       .in('word_id', wordIds)
-      .eq('culture', i18n.language)
+      .eq('language_code', i18n.language)
       
       if (translationsError) {
         console.error('Çeviriler çekilirken hata:', translationsError);
@@ -127,7 +127,7 @@ export default function WordListScreen() {
       const combinedWords: WordItem[] = wordsData.map(word => {
         // Kelimeye ait çeviriyi bul
         const translation = translationsData.find(t => t.word_id === word.id)?.mean || '';
-        const example = translationsData.find(t => t.word_id === word.id)?.example_mean || '';
+        const example = translationsData.find(t => t.word_id === word.id)?.example_translated || '';
         const example_original = translationsData.find(t => t.word_id === word.id)?.example_original || '';
         
         // Kelimeye ait durumu bul
