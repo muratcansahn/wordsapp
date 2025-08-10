@@ -6,6 +6,7 @@
     "owner": "muratcansahindev",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
+    "scheme": "com.muratcansahn.aqualingua.app",
     "userInterfaceStyle": "automatic",
     "warnings": false,
     "splash": {
@@ -44,7 +45,22 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.langlearnpro.app"
+      "package": "com.langlearnpro.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "com.muratcansahn.aqualingua.app"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
