@@ -49,7 +49,6 @@ export const useAdmobRewarded = (adIndex: number = 0) => {
 
     rewardedRef.current = rewarded;
     const loadListener = rewarded.addAdEventListener(RewardedAdEventType.LOADED, () => {
-        console.log('[Rewarded] Ad loaded');
         isLoadedRef.current = true;
       });
       

@@ -527,6 +527,38 @@ sectionTitle: {
   closeButton: {
     padding: 4,
   },
+  // Premium Logo Styles
+  premiumLogoContainer: {
+    backgroundColor: 'rgba(255, 215, 0, 0.15)',
+    borderRadius: BORDER_RADIUS.lg,
+    paddingVertical: PADDING.sm,
+    paddingHorizontal: PADDING.md,
+    marginBottom: MARGIN.md,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.4)',
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  premiumLogoContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  premiumIcon: {
+    marginRight: MARGIN.sm,
+  },
+  premiumText: {
+    flex: 1,
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
+    color: '#B8860B',
+  },
+  premiumArrow: {
+    marginLeft: MARGIN.xs,
+  },
 });
 
 import { useAuth } from '@/context/SupabaseProvider';
@@ -874,6 +906,30 @@ export default function DashboardScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={{ marginTop: 30 }} />
+
+        {/* Premium Logo */}
+        <TouchableOpacity
+          style={styles.premiumLogoContainer}
+          onPress={() => {
+            router.push('/paywall-double');
+          }}
+        >
+          <View style={styles.premiumLogoContent}>
+            <Ionicons
+              name="diamond"
+              size={24}
+              color="#FFD700"
+              style={styles.premiumIcon}
+            />
+            <Text style={styles.premiumText}>Premium</Text>
+            <Ionicons
+              name="chevron-forward"
+              size={16}
+              color="#001529"
+              style={styles.premiumArrow}
+            />
+          </View>
+        </TouchableOpacity>
 
         {/* Butonlar */}
         <View style={styles.buttonContainer}>

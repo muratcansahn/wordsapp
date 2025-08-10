@@ -11,14 +11,14 @@ const APIKeys = {
   google: process.env.EXPO_PUBLIC_RC_GOOGLE_KEY as string,
 };
 
+import { useAuth } from '@/context/SupabaseProvider';
+
 // Environment variables kontrolü
 if (!APIKeys.apple || !APIKeys.google) {
   console.error('RevenueCat API keys are missing!');
   console.error('EXPO_PUBLIC_RC_APPLE_KEY:', APIKeys.apple);
   console.error('EXPO_PUBLIC_RC_GOOGLE_KEY:', APIKeys.google);
 }
-
-console.log("APIKeys", APIKeys)
 
 interface RevenueCatContextType {
   packages: PurchasesPackage[];
@@ -27,6 +27,7 @@ interface RevenueCatContextType {
   initializeRevenueCat: () => Promise<void>;
   purchasePackage: (pack: PurchasesPackage) => Promise<string>;
   restorePurchases: () => Promise<CustomerInfo>;
+  checkPremium: () => Promise<boolean>;
   isLoading: boolean;
 }
 
@@ -41,6 +42,26 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null | undefined>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
+  
+  const checkPremium = async () => {
+    try {
+      const customerInfo = await Purchases.getCustomerInfo();
+
+      if (typeof customerInfo.entitlements.active.premium !== "undefined") {
+        console.log("Premium aktif!");
+        return true;
+      } else {
+        console.log("Premium değil.");
+        return false;
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error('Premium check error:', errorMessage);
+      setError(errorMessage);
+      return false;
+    }
+  };
 
   const initializeRevenueCat = async () => {
     try {
@@ -56,17 +77,17 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
       }
 
       const offerings = await Purchases.getOfferings();
-      console.log("offerings", offerings)
 
       const availablePackages = offerings.current?.availablePackages || [];
       setPackages(availablePackages);
       Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
       setIsReady(true);
       setError(null);
-      console.log("packages", packages)
+      
+      // checkPremium'u initialize'dan sonra çağır
+      await checkPremium();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      console.error('RevenueCat initialization error:', errorMessage);
       setError(errorMessage);
       // Hata durumunda da isReady'yi true yap ki uygulama çökmesin
       setIsReady(true);
@@ -105,7 +126,7 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
 
   useEffect(() => {
     initializeRevenueCat();
-  }, []);
+  }, [user]);
 
   const value: RevenueCatContextType = {
     packages,
@@ -114,6 +135,7 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
     initializeRevenueCat,
     purchasePackage,
     restorePurchases,
+    checkPremium,
     isLoading,
   };
 

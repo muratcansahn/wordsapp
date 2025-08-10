@@ -179,8 +179,6 @@ const DailyActivitiesSection = () => {
         const timeLeft = status?.remaining !== undefined && status.remaining <= 1
           ? (countdown[item.gameType] ?? "Süre doldu")
           : null;
-        console.log("status", status);
-        console.log("countdown", countdown);
 
         return (
             <TouchableOpacity 

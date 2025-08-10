@@ -32,7 +32,6 @@ export default function IOSInAppPurchases() {
 
   // 2. Uncomment: 👇
   const { packages, purchasePackage } = useRevenueCat();
-  console.log(packages);
 
   // // 3. Uncomment plans: 👇
   const plans = useMemo(() => {

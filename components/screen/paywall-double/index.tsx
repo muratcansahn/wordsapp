@@ -11,7 +11,6 @@ import {
   Z_INDEX,
 } from '@/constants/AppConstants';
 import { Header } from '@/components/screen/paywall-double/components/header';
-import { FeatureList } from '@/components/screen/paywall-double/components/feature-list';
 import { TermsText } from '@/components/screen/paywall-double/components/terms-text';
 import { PurchaseButton } from '@/components/screen/paywall-double/components/purchase-button';
 import RadioButton from '@/components/common/buttons/radio-button';
@@ -29,7 +28,6 @@ export default function AndroidInAppPurchases() {
   >('$rc_annual');
 
   const { packages, purchasePackage } = useRevenueCat();
-  console.log(packages);
 
   const plans = useMemo(() => {
     const monthlyPackage = packages.find(
