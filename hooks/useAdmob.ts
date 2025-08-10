@@ -14,8 +14,15 @@ import { StatusBar } from 'react-native';
 import { admobConfig } from '@/services/admob/admobConfig';
 import { initializeAdmob } from '@/services/admob/admobService';
 
-const getAdUnitId = (testId: string, prodId: string): string => {
-  return __DEV__ ? testId : prodId;
+const getAdUnitId = (testId: string, prodId: string | string[]): string => {
+  if (__DEV__) return testId;
+  
+  // If prodId is an array, return the first element
+  if (Array.isArray(prodId)) {
+    return prodId[0] || testId; // Fallback to testId if array is empty
+  }
+  
+  return prodId;
 };
 
 const interstitial = InterstitialAd.createForAdRequest(

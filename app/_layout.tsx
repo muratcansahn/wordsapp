@@ -21,6 +21,43 @@ import { RootSiblingParent } from 'react-native-root-siblings';
 import { AuthProvider, useAuth } from '@/context/SupabaseProvider';
 import { FLEX } from '@/constants/AppConstants';
 
+// Add built-in error handling
+import { View, Text } from 'react-native';
+
+// Simple error boundary using React's built-in error handling
+class AppErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.log('Error caught by boundary:', error);
+    console.log('Error info:', errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <Text style={{ fontSize: 18, marginBottom: 10, textAlign: 'center' }}>Something went wrong</Text>
+          <Text style={{ color: 'red', marginBottom: 20, textAlign: 'center' }}>
+            {this.state.error?.message || 'Unknown error'}
+          </Text>
+        </View>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 import {
   RevenueCatProvider,
@@ -112,21 +149,23 @@ function MainLayout() {
 
 const RootLayout = () => {
   return (
-    <Provider store={store}>
-      {/* <PostHogProvider client={posthog}> */}
-      <AuthProvider>
-        <RevenueCatProvider>
-        <GestureHandlerRootView style={{ flex: FLEX.one }}>
-          <BottomSheetModalProvider>
-            <RootSiblingParent>
-              <MainLayout />
-            </RootSiblingParent>
-          </BottomSheetModalProvider>
-        </GestureHandlerRootView>
-        </RevenueCatProvider>
-      </AuthProvider>
-      {/* </PostHogProvider> */}
-    </Provider>
+    <AppErrorBoundary>
+      <Provider store={store}>
+        {/* <PostHogProvider client={posthog}> */}
+        <AuthProvider>
+          <RevenueCatProvider>
+          <GestureHandlerRootView style={{ flex: FLEX.one }}>
+            <BottomSheetModalProvider>
+              <RootSiblingParent>
+                <MainLayout />
+              </RootSiblingParent>
+            </BottomSheetModalProvider>
+          </GestureHandlerRootView>
+          </RevenueCatProvider>
+        </AuthProvider>
+        {/* </PostHogProvider> */}
+      </Provider>
+    </AppErrorBoundary>
   );
 };
 

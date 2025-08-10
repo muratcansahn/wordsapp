@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 
 type AdmobPlatformConfig = {
   interstitialAdUnitId: string;
-  rewardedAdUnitId: any;
+  rewardedAdUnitId: string | string[]; // ✅ Allow both string and array
   appOpenAdUnitId: string;
   bannerAdUnitId: string;
 };

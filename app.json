@@ -2,7 +2,7 @@
   "expo": {
     "name": "AquaLingua",
     "slug": "langlearnpro",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "owner": "muratcansahindev",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
@@ -21,6 +21,7 @@
       "bundleIdentifier": "com.muratcansahn.aqualingua.app",
       "usesAppleSignIn": true,
       "displayName": "AquaLingua",
+      "buildNumber": "4",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSMicrophoneUsageDescription": "Bu uygulama ses özellikleri için mikrofon izni ister.",
