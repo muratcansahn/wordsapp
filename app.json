@@ -17,6 +17,9 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "packagerOpts": {
+      "config": "metro.config.js"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.muratcansahn.aqualingua.app",
@@ -63,6 +66,7 @@
       ]
     },
     "web": {
+      "bundler": "metro",
       "favicon": "./assets/favicon.png"
     },
     "plugins": [

@@ -5,19 +5,17 @@ import Purchases, {
   PurchasesPackage,
   CustomerInfo,
 } from 'react-native-purchases';
-
+console.log(process.env.EXPO_PUBLIC_RC_APPLE_KEY)
 const APIKeys = {
   apple: process.env.EXPO_PUBLIC_RC_APPLE_KEY as string,
-  google: process.env.EXPO_PUBLIC_RC_GOOGLE_KEY as string,
 };
 
 import { useAuth } from '@/context/SupabaseProvider';
 
 // Environment variables kontrolü
-if (!APIKeys.apple || !APIKeys.google) {
+if (!APIKeys.apple) {
   console.error('RevenueCat API keys are missing!');
   console.error('EXPO_PUBLIC_RC_APPLE_KEY:', APIKeys.apple);
-  console.error('EXPO_PUBLIC_RC_GOOGLE_KEY:', APIKeys.google);
 }
 
 interface RevenueCatContextType {

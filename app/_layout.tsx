@@ -2,12 +2,12 @@
 // If you want to use Admob, RevenueCat, Google Sign In and Share Social, you need to create a development build.
 // This won't work on Expo Go.
 
+import 'react-native-reanimated'; // ← EN ÜSTE
 import { ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Slot, Stack, useRouter, useSegments } from 'expo-router';
 import { SplashScreen } from 'expo-router';
 import React, { useEffect } from 'react';
-import 'react-native-reanimated';
 import '@/i18n';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Provider } from 'react-redux';
@@ -148,12 +148,16 @@ function MainLayout() {
 }
 
 const RootLayout = () => {
+  console.log('ThemeProvider', ThemeProvider);
+console.log('RevenueCatProvider', RevenueCatProvider);
+console.log('AuthProvider', AuthProvider);
+console.log('SplashScreen', SplashScreen);
   return (
     <AppErrorBoundary>
       <Provider store={store}>
         {/* <PostHogProvider client={posthog}> */}
         <AuthProvider>
-          <RevenueCatProvider>
+          {/* <RevenueCatProvider> */}
           <GestureHandlerRootView style={{ flex: FLEX.one }}>
             <BottomSheetModalProvider>
               <RootSiblingParent>
@@ -161,7 +165,7 @@ const RootLayout = () => {
               </RootSiblingParent>
             </BottomSheetModalProvider>
           </GestureHandlerRootView>
-          </RevenueCatProvider>
+          {/* </RevenueCatProvider> */}
         </AuthProvider>
         {/* </PostHogProvider> */}
       </Provider>

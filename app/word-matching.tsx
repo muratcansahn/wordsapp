@@ -60,7 +60,6 @@ export default function WordMatchingScreen() {
   const userState = useSelector((state: RootState) => state.user);
   const { user } = useAuth();
   
-  // Durum çubuğu yüksekliği
   
   // Oyun durumu
   const [matchingWords, setMatchingWords] = useState<MatchingWord[]>([]);
