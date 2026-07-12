@@ -11,7 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Audio } from 'expo-av';
+import { Audio } from '@/utils/audio';
 import { useSelector, useDispatch } from 'react-redux';
 import { ThemedText } from '@/components/common/typography';
 import { ThemedView } from '@/components/common/view';
@@ -39,7 +39,7 @@ import DailyActivitiesSection from './DailyActivitiesSection';
 import { fetchWordStatuses } from '@/services/userService';
 import { Aquarium } from './Aquarium';
 import { useAdmobRewarded } from '@/hooks/useAdmobRewarded';
-import { useRevenueCat } from '@/context/RevenueCatProvider';
+// import { useRevenueCat } from '@/context/RevenueCatProvider';
 
 
 // Kelime istatistikleri - Redux ile değiştirildi
@@ -564,25 +564,26 @@ sectionTitle: {
 import { useAuth } from '@/context/SupabaseProvider';
 
 const RevenueCatProducts = () => {
-  const { packages, isReady, isLoading, error } = useRevenueCat();
+  // const { packages, isReady, isLoading, error } = useRevenueCat();
+  return null;
 
-  if (isLoading) return <Text>Yükleniyor...</Text>;
-  if (error) return <Text>Hata: {error}</Text>;
-  if (!isReady) return <Text>Hazırlanıyor...</Text>;
-  if (!packages.length) return <Text>Ürün bulunamadı.</Text>;
+  // if (isLoading) return <Text>Yükleniyor...</Text>;
+  // if (error) return <Text>Hata: {error}</Text>;
+  // if (!isReady) return <Text>Hazırlanıyor...</Text>;
+  // if (!packages.length) return <Text>Ürün bulunamadı.</Text>;
 
-  return (
-    <View style={{ marginVertical: 24 }}>
-      <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 8 }}>Satın Alınabilir Ürünler</Text>
-      {packages.map((pack) => (
-        <View key={pack.identifier} style={{ marginBottom: 16, padding: 8, borderWidth: 1, borderColor: '#eee', borderRadius: 8 }}>
-          <Text style={{ fontSize: 16 }}>{pack.product.title}</Text>
-          <Text style={{ color: '#666' }}>{pack.product.description}</Text>
-          <Text style={{ fontWeight: 'bold', marginTop: 4 }}>{pack.product.priceString}</Text>
-        </View>
-      ))}
-    </View>
-  );
+  // return (
+  //   <View style={{ marginVertical: 24 }}>
+  //     <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 8 }}>Satın Alınabilir Ürünler</Text>
+  //     {packages.map((pack) => (
+  //       <View key={pack.identifier} style={{ marginBottom: 16, padding: 8, borderWidth: 1, borderColor: '#eee', borderRadius: 8 }}>
+  //         <Text style={{ fontSize: 16 }}>{pack.product.title}</Text>
+  //         <Text style={{ color: '#666' }}>{pack.product.description}</Text>
+  //         <Text style={{ fontWeight: 'bold', marginTop: 4 }}>{pack.product.priceString}</Text>
+  //       </View>
+  //     ))}
+  //   </View>
+  // );
 };
 
 export default function DashboardScreen() {
@@ -607,7 +608,7 @@ export default function DashboardScreen() {
     color: string;
     clickable: boolean;
   }>>([]);
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [sound, setSound] = useState<any | null>(null);
   const [lastAdWatchDate, setLastAdWatchDate] = useState<string | null>(null);
   
   // AsyncStorage'dan son reklam izleme tarihini yükle

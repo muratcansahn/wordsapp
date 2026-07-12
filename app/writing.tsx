@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Audio } from 'expo-av';
+import { Audio } from '@/utils/audio';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, ScrollView, Dimensions, StatusBar, Platform, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { getRandomWord } from '@/services/wordService';

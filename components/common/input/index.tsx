@@ -11,14 +11,9 @@ import {
   TextInputFocusEventData,
   TextStyle,
 } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { ThemedText } from '@/components/common/typography';
 import {
-  ANIMATION_DURATION,
   BORDER_RADIUS,
   BORDER_WIDTH,
   FLEX,
@@ -72,43 +67,14 @@ const Input = forwardRef<TextInput, InputProps>((props, ref) => {
   } = props;
 
   const { mode } = useTheme();
-  const borderWidthValue = useSharedValue(borderWidth);
-  const borderColorValue = useSharedValue(
-    borderColor || Colors[mode].borderColor
-  );
-  const borderRadiusValue = useSharedValue(borderRadius);
 
   const handleFocus = (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
     onFocus?.(e);
-    borderWidthValue.value = withTiming(BORDER_WIDTH.sm, {
-      duration: ANIMATION_DURATION.D5,
-    });
-    borderColorValue.value = withTiming(borderColor || Colors[mode].primary, {
-      duration: ANIMATION_DURATION.D5,
-    });
-    borderRadiusValue.value = withTiming(BORDER_RADIUS.md, {
-      duration: ANIMATION_DURATION.D5,
-    });
   };
 
   const handleBlur = (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
     onBlur?.(e);
-    borderWidthValue.value = withTiming(borderWidth, {
-      duration: ANIMATION_DURATION.D5,
-    });
-    borderColorValue.value = withTiming(Colors[mode].borderColor, {
-      duration: ANIMATION_DURATION.D5,
-    });
-    borderRadiusValue.value = withTiming(borderRadius, {
-      duration: ANIMATION_DURATION.D5,
-    });
   };
-
-  const animatedBorderStyle = useAnimatedStyle(() => ({
-    borderWidth: borderWidthValue.value,
-    borderColor: borderColorValue.value,
-    borderRadius: borderRadiusValue.value,
-  }));
 
   return (
     <>
@@ -116,8 +82,9 @@ const Input = forwardRef<TextInput, InputProps>((props, ref) => {
         style={[
           styles.inputContainer,
           containerStyle,
-          animatedBorderStyle,
           {
+            borderWidth,
+            borderRadius,
             borderColor: error
               ? Colors.light.error
               : borderColor || Colors[mode].borderColor,

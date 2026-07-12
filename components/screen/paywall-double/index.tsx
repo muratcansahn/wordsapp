@@ -19,7 +19,7 @@ import { useTheme } from '@/hooks/theme/useTheme';
 
 import { ThemedText } from '@/components/common/typography';
 import PressableOpacity from '@/components/common/buttons/pressable-opacity';
-import { useRevenueCat } from '@/context/RevenueCatProvider';
+// import { useRevenueCat } from '@/context/RevenueCatProvider';
 
 export default function AndroidInAppPurchases() {
   const { mode } = useTheme();
@@ -27,7 +27,9 @@ export default function AndroidInAppPurchases() {
     '$rc_monthly' | '$rc_annual'
   >('$rc_annual');
 
-  const { packages, purchasePackage } = useRevenueCat();
+  // const { packages, purchasePackage } = useRevenueCat();
+  const packages: any[] = [];
+  const purchasePackage = async (..._args: any[]) => {};
 
   const plans = useMemo(() => {
     const monthlyPackage = packages.find(

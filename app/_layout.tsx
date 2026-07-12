@@ -3,9 +3,8 @@
 // This won't work on Expo Go.
 
 import 'react-native-reanimated'; // ← EN ÜSTE
-import { ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Slot, Stack, useRouter, useSegments } from 'expo-router';
+import { Slot, Stack, ThemeProvider, useRouter, useSegments } from 'expo-router';
 import { SplashScreen } from 'expo-router';
 import React, { useEffect } from 'react';
 import '@/i18n';
@@ -59,10 +58,10 @@ class AppErrorBoundary extends React.Component<
   }
 }
 
-import {
-  RevenueCatProvider,
-  useRevenueCat,
-} from '@/context/RevenueCatProvider';
+// import {
+//   RevenueCatProvider,
+//   useRevenueCat,
+// } from '@/context/RevenueCatProvider';
 
 //* If you want to use Admob, uncomment the following lines 👇
 import { useAdmob } from '@/hooks/useAdmob';
@@ -78,7 +77,7 @@ function MainLayout() {
   const { statusBarStyle, statusBarBackgroundColor, theme } = useTheme();
 
   //* If you want to use RevenueCat, uncomment the following lines 👇
-  const { initializeRevenueCat, isReady: revenueCatReady } = useRevenueCat();
+  // const { initializeRevenueCat, isReady: revenueCatReady } = useRevenueCat();
   //* If you want to use Admob, uncomment the following lines 👇
   const { admobState, initializeAdmobService } = useAdmob();
 
@@ -100,7 +99,7 @@ function MainLayout() {
       // You should configure this function according to your needs.
       getUserTrackingPermission();
       //* If you want to use RevenueCat, uncomment the following lines 👇
-      initializeRevenueCat();
+      // initializeRevenueCat();
     } catch (error) {
       console.error('Initialization error:', error);
     }
@@ -148,8 +147,8 @@ function MainLayout() {
 }
 
 const RootLayout = () => {
-  console.log('ThemeProvider', ThemeProvider);
-console.log('RevenueCatProvider', RevenueCatProvider);
+console.log('ThemeProvider', ThemeProvider);
+// console.log('RevenueCatProvider', RevenueCatProvider);
 console.log('AuthProvider', AuthProvider);
 console.log('SplashScreen', SplashScreen);
   return (

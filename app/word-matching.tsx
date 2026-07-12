@@ -32,7 +32,7 @@ import { getRandomWordsWithTranslations } from '@/services/wordService';
 import { incrementUserPointByAmountWithRedux } from '@/services/userService';
 import { Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { Audio } from 'expo-av';
+import { Audio } from '@/utils/audio';
 import * as Haptics from 'expo-haptics';
 import { updateGameTimestamp } from '@/services/gameRequestServices';
 import { useAuth } from '@/context/SupabaseProvider';
@@ -73,7 +73,7 @@ export default function WordMatchingScreen() {
   const [showPointModal, setShowPointModal] = useState(false);
   const [earnedPoints, setEarnedPoints] = useState(0);
   const [newTotalPoints, setNewTotalPoints] = useState(0);
-  const [sound, setSound] = useState<Audio.Sound | null>(null); // Ses nesnesi için state
+  const [sound, setSound] = useState<any | null>(null); // Ses nesnesi için state
   const [showInfoModal, setShowInfoModal] = useState(false); // Bilgilendirme modalı için state
   
   // Animasyon değerleri
@@ -127,7 +127,7 @@ export default function WordMatchingScreen() {
   
   // Oyun tamamlandığında sesi çalmak için useEffect
   useEffect(() => {
-    let soundObject: Audio.Sound | null = null;
+    let soundObject: any | null = null;
     let isMounted = true;
 
     const playSuccessSound = async () => {

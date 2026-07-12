@@ -4,7 +4,6 @@ module.exports = function (api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      require.resolve('expo-router/babel'), // Expo Router için
       'react-native-reanimated/plugin',     // DAİMA en sonda olmalı
     ],
   };

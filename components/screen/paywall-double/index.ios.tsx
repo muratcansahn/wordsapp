@@ -20,7 +20,7 @@ import { useTheme } from '@/hooks/theme/useTheme';
 
 // 1. Uncomment: 👇
 import { ThemedText } from '@/components/common/typography';
-import { useRevenueCat } from '@/context/RevenueCatProvider';
+// import { useRevenueCat } from '@/context/RevenueCatProvider';
 import PressableOpacity from '@/components/common/buttons/pressable-opacity';
 import WaveBackground from '@/components/screen/paywall-double/components/wave-background';
 
@@ -31,7 +31,9 @@ export default function IOSInAppPurchases() {
   >('$rc_annual');
 
   // 2. Uncomment: 👇
-  const { packages, purchasePackage } = useRevenueCat();
+  // const { packages, purchasePackage } = useRevenueCat();
+  const packages: any[] = [];
+  const purchasePackage = async (..._args: any[]) => {};
 
   // // 3. Uncomment plans: 👇
   const plans = useMemo(() => {

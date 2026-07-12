@@ -39,9 +39,15 @@ type AuthContextType = {
 
 // TODO: 1.Uncomment GoogleSignin 
 // !! This doesn't work on web and EXPO GO.
+const androidGoogleClientId = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID;
+if (!androidGoogleClientId) {
+  console.warn('EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID is not configured');
+}
+
 GoogleSignin.configure({
   iosClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID,
-  androidClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID,
+  // Keep androidGoogleClientId available for native Android OAuth setup.
+  // @react-native-google-signin/google-signin does not accept androidClientId in configure().
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID,
 });
 

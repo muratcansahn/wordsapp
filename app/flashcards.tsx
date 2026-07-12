@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Audio } from 'expo-av';
+import { Audio } from '@/utils/audio';
 import { 
   View, 
   Text, 
@@ -35,9 +35,9 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 
 // Ses havuzu için tip tanımları
 interface SoundPool {
-  knownSound: Audio.Sound | null;
-  unknownSound: Audio.Sound | null;
-  successSound: Audio.Sound | null;
+  knownSound: any | null;
+  unknownSound: any | null;
+  successSound: any | null;
 }
 
 // Oyun state'i için tip tanımı

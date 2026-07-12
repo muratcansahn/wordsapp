@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Audio } from 'expo-av';
+import { Audio } from '@/utils/audio';
 import * as Haptics from 'expo-haptics';
 import { addSkippedWordListId } from '@/services/gameRequestServices';
 import { useTranslation } from 'react-i18next';
