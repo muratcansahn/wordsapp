@@ -41,6 +41,7 @@ type AuthContextType = {
 // !! This doesn't work on web and EXPO GO.
 GoogleSignin.configure({
   iosClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID,
+  androidClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID,
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID,
 });
 
