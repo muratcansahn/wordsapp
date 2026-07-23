@@ -259,7 +259,9 @@
       "feed": "Alimentar",
       "watchAd": "Ver anuncio",
       "adLimitTitle": "Límite de Anuncios",
-      "adLimitMessage": "Ya has visto un anuncio hoy. Puedes intentarlo de nuevo mañana."
+      "adLimitMessage": "Ya has visto un anuncio hoy. Puedes intentarlo de nuevo mañana.",
+      "adUnavailableTitle": "Anuncio no listo",
+      "adUnavailableMessage": "El anuncio aún no está listo. Inténtalo de nuevo en unos segundos."
     }
   },
   "flashcards": {

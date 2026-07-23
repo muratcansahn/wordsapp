@@ -58,10 +58,10 @@ class AppErrorBoundary extends React.Component<
   }
 }
 
-// import {
-//   RevenueCatProvider,
-//   useRevenueCat,
-// } from '@/context/RevenueCatProvider';
+import {
+  RevenueCatProvider,
+  useRevenueCat,
+} from '@/context/RevenueCatProvider';
 
 //* If you want to use Admob, uncomment the following lines 👇
 import { useAdmob } from '@/hooks/useAdmob';
@@ -76,8 +76,7 @@ function MainLayout() {
   usePushNotification();
   const { statusBarStyle, statusBarBackgroundColor, theme } = useTheme();
 
-  //* If you want to use RevenueCat, uncomment the following lines 👇
-  // const { initializeRevenueCat, isReady: revenueCatReady } = useRevenueCat();
+  const { initializeRevenueCat } = useRevenueCat();
   //* If you want to use Admob, uncomment the following lines 👇
   const { admobState, initializeAdmobService } = useAdmob();
 
@@ -98,8 +97,7 @@ function MainLayout() {
       // Dont remove it , because Apple will reject the app if this is not implemented
       // You should configure this function according to your needs.
       getUserTrackingPermission();
-      //* If you want to use RevenueCat, uncomment the following lines 👇
-      // initializeRevenueCat();
+      initializeRevenueCat();
     } catch (error) {
       console.error('Initialization error:', error);
     }
@@ -147,24 +145,20 @@ function MainLayout() {
 }
 
 const RootLayout = () => {
-console.log('ThemeProvider', ThemeProvider);
-// console.log('RevenueCatProvider', RevenueCatProvider);
-console.log('AuthProvider', AuthProvider);
-console.log('SplashScreen', SplashScreen);
   return (
     <AppErrorBoundary>
       <Provider store={store}>
         {/* <PostHogProvider client={posthog}> */}
         <AuthProvider>
-          {/* <RevenueCatProvider> */}
-          <GestureHandlerRootView style={{ flex: FLEX.one }}>
-            <BottomSheetModalProvider>
-              <RootSiblingParent>
-                <MainLayout />
-              </RootSiblingParent>
-            </BottomSheetModalProvider>
-          </GestureHandlerRootView>
-          {/* </RevenueCatProvider> */}
+          <RevenueCatProvider>
+            <GestureHandlerRootView style={{ flex: FLEX.one }}>
+              <BottomSheetModalProvider>
+                <RootSiblingParent>
+                  <MainLayout />
+                </RootSiblingParent>
+              </BottomSheetModalProvider>
+            </GestureHandlerRootView>
+          </RevenueCatProvider>
         </AuthProvider>
         {/* </PostHogProvider> */}
       </Provider>

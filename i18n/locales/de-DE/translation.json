@@ -259,7 +259,9 @@
       "feed": "Füttern",
       "watchAd": "Anzeigen",
       "adLimitTitle": "Werbungslimit",
-      "adLimitMessage": "Du hast heute bereits eine Werbung angesehen. Versuche es morgen erneut."
+      "adLimitMessage": "Du hast heute bereits eine Werbung angesehen. Versuche es morgen erneut.",
+      "adUnavailableTitle": "Werbung nicht bereit",
+      "adUnavailableMessage": "Die Werbung ist noch nicht bereit. Bitte versuche es in ein paar Sekunden erneut."
     }
   },
   "writing": {

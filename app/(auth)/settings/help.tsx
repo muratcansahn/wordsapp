@@ -17,6 +17,7 @@ import {
 import { GlowButton } from '@/components/common/buttons/glow-button';
 import Container from '@/components/common/container';
 import { Mail } from 'lucide-react-native';
+import { SUPPORT_EMAIL } from '@/constants/Legal';
 
 const HelpScreen = () => {
   const { t } = useTranslation();
@@ -29,7 +30,7 @@ const HelpScreen = () => {
     }[]) || [];
 
   const handleContactSupport = () => {
-    Linking.openURL('mailto:info@shipmobilefast.com');
+    Linking.openURL(`mailto:${SUPPORT_EMAIL}`);
   };
 
   return (

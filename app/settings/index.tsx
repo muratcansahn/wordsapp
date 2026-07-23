@@ -3,14 +3,13 @@ import { StyleSheet, ScrollView, View, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
+import { PRIVACY_POLICY_URL } from '@/constants/Legal';
 
 const SettingsScreen = () => {
   const router = useRouter();
 
   const handlePrivacyPolicy = async () => {
-    await WebBrowser.openBrowserAsync(
-      'https://shipmobilefast.com/privacy-policy'
-    );
+    await WebBrowser.openBrowserAsync(PRIVACY_POLICY_URL);
   };
 
   const settings = [

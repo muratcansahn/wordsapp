@@ -14,6 +14,7 @@ import AuthButton from '@/components/common/buttons/auth';
 import { authStyles } from '@/constants/AuthStyles';
 import PressableOpacity from '@/components/common/buttons/pressable-opacity';
 import { ANIMATION_DURATION } from '@/constants/AppConstants';
+import { PRIVACY_POLICY_URL } from '@/constants/Legal';
 
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
@@ -78,7 +79,7 @@ const SignUpScreen = () => {
         </ThemedView>
         <Animated.View entering={FadeInDown.duration(ANIMATION_DURATION.D6)}>
           <ExternalLink
-            href="https://shipmobilefast.com/privacy-policy"
+            href={PRIVACY_POLICY_URL}
             style={authStyles.termsText}
           >
             <ThemedText

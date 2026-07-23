@@ -24,6 +24,7 @@ import { menuItems } from '@/data/ProfileButtons'; // Profil menüsü
 // Ayarlar menüsü aşağıda tekrar tanımlanıyor.
 import { ChevronRight, LucideIcon } from 'lucide-react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { PRIVACY_POLICY_URL } from '@/constants/Legal';
 
 // Lucide ikonlarını React Element'e çeviren yardımcı fonksiyon
 const convertLucideIconToElement = (IconComponent: LucideIcon, color: string, size: number) => (
@@ -58,7 +59,7 @@ const ProfileScreen = () => {
     // Dynamic import types uyumlu şekilde
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const WebBrowser = require('expo-web-browser');
-    WebBrowser.openBrowserAsync('https://shipmobilefast.com/privacy-policy');
+    WebBrowser.openBrowserAsync(PRIVACY_POLICY_URL);
   };
 
   // Ayarlar menüsündeki öğeler (her biri isLucide: false)

@@ -20,9 +20,6 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSMicrophoneUsageDescription": "Bu uygulama ses özellikleri için mikrofon izni ister.",
         "NSSpeechRecognitionUsageDescription": "Bu uygulama konuşma tanıma özellikleri için izin ister.",
-        "NSCameraUsageDescription": "Bu uygulama profil fotoğrafı çekmek için kamera izni ister.",
-        "NSPhotoLibraryUsageDescription": "Bu uygulama fotoğraf seçmek için fotoğraf kütüphanesine erişim izni ister.",
-        "NSPhotoLibraryAddUsageDescription": "Bu uygulama fotoğrafları kaydetmek için fotoğraf kütüphanesine erişim izni ister.",
         "NSUserTrackingUsageDescription": "Bu tanımlayıcı, size kişiselleştirilmiş içerik sunmak için kullanılacaktır.",
         "LSApplicationQueriesSchemes": [
           "instagram",
@@ -31,6 +28,51 @@
           "facebook-stories"
         ],
         "GADApplicationIdentifier": "ca-app-pub-2920147810768385~3189350636"
+      },
+      "privacyManifests": {
+        "NSPrivacyTracking": true,
+        "NSPrivacyCollectedDataTypes": [
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeEmailAddress",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeUserID",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypePurchaseHistory",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeProductInteraction",
+            "NSPrivacyCollectedDataTypeLinked": false,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAnalytics"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeDeviceID",
+            "NSPrivacyCollectedDataTypeLinked": false,
+            "NSPrivacyCollectedDataTypeTracking": true,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeThirdPartyAdvertising"
+            ]
+          }
+        ]
       }
     },
     "android": {
@@ -90,6 +132,13 @@
             "ndkVersion": "28.0.13004108",
             "useLegacyPackaging": false
           }
+        }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-2920147810768385~2869786438",
+          "iosAppId": "ca-app-pub-2920147810768385~3189350636"
         }
       ]
     ],

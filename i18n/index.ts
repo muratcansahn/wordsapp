@@ -17,6 +17,11 @@ const resources = {
 
 const LANGUAGE_KEY = 'language';
 
+// Kelime içerikleri (WordTranslations, WordLists) sadece bu dillerde var.
+// Words tablosu zaten İngilizce olduğu için 'en' bir çeviri hedefi olamaz.
+const SUPPORTED_LANGUAGES = ['tr', 'de', 'es'];
+const DEFAULT_LANGUAGE = 'tr';
+
 const getStoredLanguage = async (): Promise<string | null> => {
   if (Platform.OS === 'web') {
     return localStorage.getItem(LANGUAGE_KEY);
@@ -44,13 +49,16 @@ const setStoredLanguage = async (language: string): Promise<void> => {
 
 const getDeviceLanguage = (): string => {
   const locales = Localization.getLocales();
-  return locales && locales.length > 0 ? locales[0].languageCode || 'en' : 'en';
+  const deviceLanguage = locales && locales.length > 0 ? locales[0].languageCode : null;
+  return deviceLanguage && SUPPORTED_LANGUAGES.includes(deviceLanguage)
+    ? deviceLanguage
+    : DEFAULT_LANGUAGE;
 };
 
 const initI18n = async (): Promise<void> => {
   try {
     let language = await getStoredLanguage();
-    if (!language) {
+    if (!language || !SUPPORTED_LANGUAGES.includes(language)) {
       language = getDeviceLanguage();
       await setStoredLanguage(language);
     }
@@ -58,7 +66,7 @@ const initI18n = async (): Promise<void> => {
       compatibilityJSON: 'v3',
       resources,
       lng: language,
-      fallbackLng: 'en',
+      fallbackLng: DEFAULT_LANGUAGE,
       interpolation: {
         escapeValue: false,
       },

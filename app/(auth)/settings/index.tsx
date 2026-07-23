@@ -18,6 +18,7 @@ import {
   PADDING,
 } from '@/constants/AppConstants';
 import { useAuth } from '@/context/SupabaseProvider';
+import { PRIVACY_POLICY_URL } from '@/constants/Legal';
 
 const SettingsScreen = () => {
   const { t } = useTranslation();
@@ -30,9 +31,7 @@ const SettingsScreen = () => {
   };
 
   const handlePrivacyPolicy = async () => {
-    await WebBrowser.openBrowserAsync(
-      'https://shipmobilefast.com/privacy-policy'
-    );
+    await WebBrowser.openBrowserAsync(PRIVACY_POLICY_URL);
   };
 
   const settings: {

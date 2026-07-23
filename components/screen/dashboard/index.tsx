@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { 
+import {
   View, 
   Text,
   ActivityIndicator,
@@ -10,7 +10,6 @@ import {
   Easing,
   Alert,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Audio } from '@/utils/audio';
 import { useSelector, useDispatch } from 'react-redux';
 import { ThemedText } from '@/components/common/typography';
@@ -609,21 +608,6 @@ export default function DashboardScreen() {
     clickable: boolean;
   }>>([]);
   const [sound, setSound] = useState<any | null>(null);
-  const [lastAdWatchDate, setLastAdWatchDate] = useState<string | null>(null);
-  
-  // AsyncStorage'dan son reklam izleme tarihini yükle
-  useEffect(() => {
-    const loadLastAdWatchDate = async () => {
-      try {
-        const lastDate = await AsyncStorage.getItem('lastAdWatchDate');
-        setLastAdWatchDate(lastDate);
-      } catch (error) {
-        console.error('Son reklam izleme tarihi yüklenirken hata oluştu:', error);
-      }
-    };
-    
-    loadLastAdWatchDate();
-  }, []);
 
   // UserWordStatuses tablosundan kelime durumunu çek
   useEffect(() => {
@@ -647,6 +631,7 @@ export default function DashboardScreen() {
   
   // Yem animasyonu için değerler
   const [isFeeding, setIsFeeding] = useState(false);
+  const [isAdLoading, setIsAdLoading] = useState(false);
   const [isEating, setIsEating] = useState<boolean | false>(false);
   const [feedingSuccess, setFeedingSuccess] = useState(false);
   const [fishData, setFishData] = useState<FishDataType | null>(null);
@@ -655,28 +640,6 @@ export default function DashboardScreen() {
   const [showDirectAnimation, setShowDirectAnimation] = useState(false); // Ekranda doğrudan animasyon göstermek için
   const foodAnimation = useRef(new Animated.Value(0)).current;
   const mouthAnimation = useRef(new Animated.Value(0)).current;
-
-  // Reklam izleme sınırlamasını kontrol et
-  const checkAdWatchLimit = (): boolean => {
-    if (!lastAdWatchDate) return true; // Daha önce hiç reklam izlenmemiş
-    
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD formatında bugünün tarihi
-    const lastWatchDate = lastAdWatchDate.split('T')[0];
-    
-    // Eğer son izleme tarihi bugünse, limit aşılmış demektir
-    return today !== lastWatchDate;
-  };
-  
-  // Reklam izleme tarihini güncelle
-  const updateAdWatchDate = async () => {
-    try {
-      const now = new Date().toISOString();
-      await AsyncStorage.setItem('lastAdWatchDate', now);
-      setLastAdWatchDate(now);
-    } catch (error) {
-      console.error('Reklam izleme tarihi güncellenirken hata oluştu:', error);
-    }
-  };
 
   async function playSound() {
     try {
@@ -1090,30 +1053,23 @@ export default function DashboardScreen() {
         cancelText={point >= 50 ? t('buttons.cancel') || "İptal" : undefined}
         iconColor={point >= 50 ? "#1890FF" : "#EF4444"}
         confirmButtonColor={point >= 50 ? "#1890FF" : "#4CAF50"}
-        isLoading={isFeeding}
+        isLoading={isFeeding || isAdLoading}
         onConfirm={() => {
           if (point >= 50) {
             setConfirmDialogVisible(false);
             startFeedingProcess();
           } else {
-            // Reklam izleme sınırlamasını kontrol et
-            if (checkAdWatchLimit()) {
-              showRewarded().then(() => {
+            setIsAdLoading(true);
+            showRewarded().then((earnedReward) => {
+              setIsAdLoading(false);
+              if (earnedReward) {
                 setConfirmDialogVisible(false);
-                // Reklam izleme tarihini güncelle
-                updateAdWatchDate();
-              });
-            } else {
-              // Kullanıcı bugün zaten reklam izlemiş
-              setConfirmDialogVisible(false);
-              Alert.alert(
-                t('dashboard.fishFeeding.adLimitTitle') || 'Günlük Limit',
-                t('dashboard.fishFeeding.adLimitMessage') || 'Bugün zaten reklam izlediniz. Yarın tekrar deneyebilirsiniz.'
-              );
-            }
+              }
+            });
           }
         }}
         onCancel={() => {
+          setIsAdLoading(false);
           setConfirmDialogVisible(false);
         }}
       />

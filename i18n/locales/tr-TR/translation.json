@@ -287,7 +287,9 @@
       "feed": "Besle",
       "watchAd": "İzle",
       "adLimitTitle": "Reklam İzleme Sınırı",
-      "adLimitMessage": "Bugün zaten reklam izlediniz. Yarın tekrar deneyebilirsiniz."
+      "adLimitMessage": "Bugün zaten reklam izlediniz. Yarın tekrar deneyebilirsiniz.",
+      "adUnavailableTitle": "Reklam Hazır Değil",
+      "adUnavailableMessage": "Reklam şu anda hazır değil. Lütfen birkaç saniye sonra tekrar deneyin."
     }
   },
   "flashcards": {
