@@ -12,6 +12,7 @@
 export const Colors = {
   light: {
     primary: '#ffce08',
+    tint: '#ffce08',
     secondary: '#1877F2',
     tertiary: '#00ff4e',
     purple: '#6200ff',
@@ -24,6 +25,8 @@ export const Colors = {
     backgroundOpacity: 'rgba(255,255,255, 0.5)',
     dialogBackdrop: 'rgba(255,255,255, 0.7)',
     borderColor: '#eeeeee',
+    tabIconDefault: '#cccccc',
+    tabIconSelected: '#ffce08',
     placeholderColor: '#cccccc',
     button: '#f2f2f2',
     bottomSheetBackground: '#ffffff',
@@ -35,6 +38,7 @@ export const Colors = {
   },
   dark: {
     primary: '#ffce08',
+    tint: '#ffce08',
     secondary: '#1877F2',
     tertiary: '#00ff4e',
     purple: '#6200ff',
@@ -47,6 +51,8 @@ export const Colors = {
     backgroundOpacity: 'rgba(0, 0, 0, 0.5)',
     dialogBackdrop: 'rgba(0, 0, 0, 0.7)',
     borderColor: '#333333',
+    tabIconDefault: '#666666',
+    tabIconSelected: '#ffce08',
     placeholderColor: '#666666',
     button: '#222222',
     bottomSheetBackground: '#222222',
@@ -56,4 +62,6 @@ export const Colors = {
     shinyButtonBackground: '#00000050',
     card: '#222222',
   },
-};
+} as const;
+
+export type ThemeMode = keyof typeof Colors;

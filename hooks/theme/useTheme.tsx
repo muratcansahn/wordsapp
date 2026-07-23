@@ -1,14 +1,16 @@
-import { Colors } from '@/constants/Colors';
+import { Colors, ThemeMode } from '@/constants/Colors';
+
+const mode: ThemeMode = 'light';
 
 const defaultTheme = {
   dark: false,
   colors: {
-    primary: Colors.light.tint,
-    background: Colors.light.background,
-    card: Colors.light.background,
-    text: Colors.light.text,
-    border: Colors.light.tabIconDefault,
-    notification: Colors.light.tint,
+    primary: Colors[mode].tint,
+    background: Colors[mode].background,
+    card: Colors[mode].background,
+    text: Colors[mode].text,
+    border: Colors[mode].tabIconDefault,
+    notification: Colors[mode].tint,
   },
   fonts: {
     regular: {
@@ -30,13 +32,23 @@ const defaultTheme = {
   },
 };
 
-export const useTheme = () => {
+type UseThemeResult = {
+  theme: typeof defaultTheme;
+  mode: ThemeMode;
+  statusBarStyle: 'dark';
+  selectedMode: ThemeMode;
+  statusBarBackgroundColor: string;
+};
+
+export const useTheme = (): UseThemeResult => {
+  const selectedMode: ThemeMode = mode;
+
   // Sadece light mod döndürülüyor
   return {
     theme: defaultTheme,
-    mode: 'light',
+    mode: selectedMode,
     statusBarStyle: 'dark' as const,
-    selectedMode: 'light',
-    statusBarBackgroundColor: Colors.light.background,
+    selectedMode,
+    statusBarBackgroundColor: Colors[selectedMode].background,
   };
 };
