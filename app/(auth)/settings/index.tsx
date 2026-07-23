@@ -20,6 +20,47 @@ import {
 import { useAuth } from '@/context/SupabaseProvider';
 import { PRIVACY_POLICY_URL } from '@/constants/Legal';
 
+const SettingItem = ({
+  icon,
+  title,
+  onPress,
+  color,
+  mode,
+}: {
+  icon: string;
+  title: string;
+  onPress: () => void;
+  color?: string;
+  mode: string;
+}) => (
+  <PressableOpacity style={styles.settingItem} onPress={onPress}>
+    <View style={[styles.iconContainer, { backgroundColor: color }]}>
+      <Ionicons
+        name={icon as keyof typeof Ionicons.glyphMap}
+        size={ICON_SIZE.xs}
+        color={Colors.light.white}
+      />
+    </View>
+    <ThemedText style={styles.settingText}>{title}</ThemedText>
+    <Ionicons
+      name="chevron-forward"
+      size={ICON_SIZE.xs}
+      color={Colors[mode].text}
+      style={styles.chevron}
+    />
+  </PressableOpacity>
+);
+
+const SettingGroup = ({ children }: { children: React.ReactNode }) => (
+  <ThemedView
+    lightColor={Colors.light.white}
+    darkColor={Colors.dark.background}
+    style={styles.settingGroup}
+  >
+    {children}
+  </ThemedView>
+);
+
 const SettingsScreen = () => {
   const { t } = useTranslation();
   const router = useRouter();
@@ -73,45 +114,6 @@ const SettingsScreen = () => {
     },
   ];
 
-  const SettingItem = ({
-    icon,
-    title,
-    onPress,
-    color,
-  }: {
-    icon: string;
-    title: string;
-    onPress: () => void;
-    color?: string;
-  }) => (
-    <PressableOpacity style={styles.settingItem} onPress={onPress}>
-      <View style={[styles.iconContainer, { backgroundColor: color }]}>
-        <Ionicons
-          name={icon as keyof typeof Ionicons.glyphMap}
-          size={ICON_SIZE.xs}
-          color={Colors.light.white}
-        />
-      </View>
-      <ThemedText style={styles.settingText}>{title}</ThemedText>
-      <Ionicons
-        name="chevron-forward"
-        size={ICON_SIZE.xs}
-        color={Colors[mode].text}
-        style={styles.chevron}
-      />
-    </PressableOpacity>
-  );
-
-  const SettingGroup = ({ children }: { children: React.ReactNode }) => (
-    <ThemedView
-      lightColor={Colors.light.white}
-      darkColor={Colors.dark.background}
-      style={styles.settingGroup}
-    >
-      {children}
-    </ThemedView>
-  );
-
   return (
     <ThemedView
       lightColor={Colors.light.backgroundSecondary}
@@ -134,6 +136,7 @@ const SettingsScreen = () => {
                     : () => router.push(setting.route as Href)
                 }
                 color={setting.color}
+                mode={mode}
               />
               {index < settings.length - 1 && (
                 <View
@@ -153,6 +156,7 @@ const SettingsScreen = () => {
             title={t('settings.titles.logout')}
             onPress={signOut}
             color={Colors[mode].placeholderColor}
+            mode={mode}
           />
           <View
             style={[
@@ -165,6 +169,7 @@ const SettingsScreen = () => {
             title={t('settings.titles.deleteAccount')}
             onPress={handleDeleteAccount}
             color={Colors[mode].error}
+            mode={mode}
           />
         </SettingGroup>
       </ScrollView>

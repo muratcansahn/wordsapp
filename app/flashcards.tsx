@@ -174,6 +174,51 @@ const FlashCardComponent = React.memo(({
   </View>
 ));
 
+// Kart alanının render mantığı — önceden bir useCallback fonksiyonu olarak
+// JSX içinde `{renderCard()}` şeklinde çağrılıyordu; bu da içerideki
+// `<PointContainer ref={...}>` kullanımının "render sırasında ref erişimi"
+// olarak işaretlenmesine yol açıyordu. Gerçek bir component olarak
+// `<FlashCardArea ... />` şeklinde render edildiğinde bu belirsizlik ortadan kalkar.
+const FlashCardArea: React.FC<{
+  selectedList: WordListWithItems | null | undefined;
+  currentIndex: number;
+  showTranslation: boolean;
+  translationAnim: RNAnimated.Value;
+  cardOpacity: RNAnimated.Value;
+  t: any;
+}> = ({ selectedList, currentIndex, showTranslation, translationAnim, cardOpacity, t }) => {
+  if (!selectedList?.cards) {
+    return null;
+  }
+
+  if (selectedList.cards.length === 0) {
+    return (
+      <View style={styles.noCardsContainer}>
+        <Text style={styles.noCardsText}>{t('flashcards.noCards')}</Text>
+      </View>
+    );
+  }
+
+  // Geçerli indeks kontrolü
+  if (currentIndex >= selectedList.cards.length) {
+    // Tüm kartlar tamamlandı
+    return null;
+  }
+
+  const currentCard = selectedList.cards[currentIndex];
+  if (!currentCard) return null;
+
+  return (
+    <FlashCardComponent
+      card={currentCard}
+      showTranslation={showTranslation}
+      translationAnim={translationAnim}
+      cardOpacity={cardOpacity}
+      t={t}
+    />
+  );
+};
+
 export default function FlashcardsScreen() {
   const { t } = useTranslation();
   const params = useLocalSearchParams();
@@ -199,9 +244,11 @@ export default function FlashcardsScreen() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   
-  // Animation refs
-  const translationAnim = useRef(new RNAnimated.Value(0)).current;
-  const cardOpacity = useRef(new RNAnimated.Value(1)).current;
+  // Animasyon değerleri — useRef(...).current yerine useState lazy initializer
+  // kullanılıyor: değer FlashCardArea'ya prop olarak geçtiğinden `.current`
+  // render sırasında erişilen bir ref olarak işaretleniyordu.
+  const [translationAnim] = useState(() => new RNAnimated.Value(0));
+  const [cardOpacity] = useState(() => new RNAnimated.Value(1));
   const pointContainerRef = useRef<any>(null);
   const infoModalTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
@@ -471,40 +518,6 @@ export default function FlashcardsScreen() {
     checkInfoModal();
   }, [params, isInitialized]);
 
-  // Kart render fonksiyonu - memoized ve optimize edildi
-  const renderCard = useCallback(() => {
-    if (!selectedList?.cards) {
-      return null;
-    }
-    
-    if (selectedList.cards.length === 0) {
-      return (
-        <View style={styles.noCardsContainer}>
-          <Text style={styles.noCardsText}>{t('flashcards.noCards')}</Text>
-        </View>
-      );
-    }
-
-    // Geçerli indeks kontrolü
-    if (gameState.currentIndex >= selectedList.cards.length) {
-      // Tüm kartlar tamamlandı
-      return null;
-    }
-
-    const currentCard = selectedList.cards[gameState.currentIndex];
-    if (!currentCard) return null;
-
-    return (
-      <FlashCardComponent
-        card={currentCard}
-        showTranslation={gameState.showTranslation}
-        translationAnim={translationAnim}
-        cardOpacity={cardOpacity}
-        t={t}
-      />
-    );
-  }, [selectedList, gameState.currentIndex, gameState.showTranslation, translationAnim, cardOpacity, t]);
-
   // Loading state
   if (isLoading) {
     return (
@@ -601,7 +614,14 @@ export default function FlashcardsScreen() {
         </View>
 
         <View style={styles.cardWrapper}>
-          {renderCard()}
+          <FlashCardArea
+            selectedList={selectedList}
+            currentIndex={gameState.currentIndex}
+            showTranslation={gameState.showTranslation}
+            translationAnim={translationAnim}
+            cardOpacity={cardOpacity}
+            t={t}
+          />
         </View>
 
         <View style={styles.buttonContainer}>

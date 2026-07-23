@@ -37,6 +37,8 @@ export default function PushNotification() {
     }
   };
 
+  // Dış sistemle (push notification listener) senkronizasyon — her yeni
+  // `notification` geldiğinde geçmişe ekleniyor; render sırasında türetilemez.
   useEffect(() => {
     if (notification) {
       const newNotification: NotificationData = {
@@ -45,6 +47,7 @@ export default function PushNotification() {
         message: notification.request.content.body ?? 'No Message',
         receivedAt: new Date(),
       };
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- effect'in amacı zaten harici event'e tepki vermek
       setNotifications((prevNotifications) => [
         ...prevNotifications,
         newNotification,

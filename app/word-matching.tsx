@@ -52,6 +52,62 @@ interface MatchingWord {
 // Ekran genişliğini al
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+// Profesyonel tamamlanma ekranı — component render'ı içinde tanımlanan bir
+// fonksiyon yerine gerçek bir component olarak modül seviyesinde tutuluyor.
+const CompletionView = ({
+  t,
+  earnedPoints,
+  onGoBack,
+}: {
+  t: any;
+  earnedPoints: number;
+  onGoBack: () => void;
+}) => {
+  return (
+    <View style={[styles.container, { backgroundColor: 'transparent' }]}>
+      <Image
+        source={gameBackgroundImage} // Import edilen değişkeni kullan
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      />
+      <LinearGradient
+        colors={["#e0ffe8", "#f6fafd"]}
+        style={styles.completionGradient}
+      >
+        <View style={styles.completionCard}>
+          <View style={styles.completionIconCircle}>
+            <Ionicons name="trophy" size={64} color="#4CAF50" />
+          </View>
+          <Text style={styles.completionTitle}>{t('wordMatching.congratulations')}</Text>
+          <Text style={styles.completionMessage}>{t('wordMatching.allMatched')}</Text>
+
+          {/* Puan göstergesi */}
+          <View style={styles.pointContainerCompletion}>
+            <View style={styles.pointIconWrapper}>
+              <Ionicons
+                name="water-outline"
+                size={ICON_SIZE.sm}
+                color="#FFFFFF"
+              />
+            </View>
+            <Text style={styles.pointText}>+{earnedPoints}</Text>
+          </View>
+
+          <Text style={styles.rewardMessage}>{t('wordMatching.earnedPoints', 'Kazandınız')}</Text>
+
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={onGoBack}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.backButtonText}>{t('common.goBack')}</Text>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
+    </View>
+  );
+};
+
 // Seçim kartlarındaki gradient renkleri her render'da yeniden allocate
 // edilmesin diye modül seviyesinde sabit tutuluyor.
 const SELECTED_WRONG_GRADIENT = ['#ff9aa2', '#ffb7b2', '#ffdac1'] as const;
@@ -86,9 +142,11 @@ export default function WordMatchingScreen() {
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   
-  // Kelime ve çeviri pozisyonlarını tutmak için referanslar
-  const wordPositions = useRef<{[key: string]: {x: number, y: number, width: number, height: number}}>({}).current;
-  const translationPositions = useRef<{[key: string]: {x: number, y: number, width: number, height: number}}>({}).current;
+  // Kelime ve çeviri pozisyonlarını tutmak için state (bağlantı çizgisi
+  // render sırasında bu değerleri okuduğundan ref değil state kullanılıyor —
+  // render body'de mutable ref okumak React'ın concurrent-render kurallarını ihlal eder)
+  const [wordPositions, setWordPositions] = useState<{[key: string]: {x: number, y: number, width: number, height: number}}>({});
+  const [translationPositions, setTranslationPositions] = useState<{[key: string]: {x: number, y: number, width: number, height: number}}>({});
   
   // Eşleşmiş kelime-çeviri çiftlerini tutmak için state
   const [matchedPairs, setMatchedPairs] = useState<{wordId: string, translation: string, word: string}[]>([]);
@@ -120,9 +178,71 @@ export default function WordMatchingScreen() {
     };
   }, []);
 
-  // Sayfa yüklendiğinde oyunu başlat
+  // Yeni oyun başlat — aşağıdaki mount effect'i bunu çağırdığından, effect'in
+  // TDZ (temporal dead zone) hatası vermemesi için tanımı effect'ten önce olmalı.
+  const startNewGame = async () => {
+    setIsLoading(true);
+    try {
+
+      // Rastgele 5 kelime çek
+      const randomWords = await getRandomWordsWithTranslations(i18n.language);
+      if (!randomWords || randomWords.length === 0) {
+        console.error('Kelime bulunamadı veya boş dizi döndü');
+        Alert.alert(t('common.error'), t('wordMatching.wordsLoadError'));
+        setIsLoading(false);
+        return;
+      }
+
+      // Word tipinden MatchingWord tipine dönüştür
+      const selectedWords: MatchingWord[] = randomWords.map(word => {
+        if (!word || !word.WordTranslations || word.WordTranslations.length === 0) {
+          console.error('Kelime veya çevirisi eksik:', word);
+          return {
+            id: word?.id?.toString() || Math.random().toString(),
+            text: word?.name || 'Bilinmeyen kelime',
+            translation: 'Çeviri bulunamadı',
+            matched: false,
+            selected: false
+          };
+        }
+
+        return {
+          id: word.id.toString(),
+          text: word.name,
+          translation: word.WordTranslations[0]?.mean || 'Çeviri bulunamadı',
+          matched: false,
+          selected: false
+        };
+      });
+
+      console.log('Dönüştürülen kelimeler:', selectedWords);
+
+      // Çevirileri karıştır
+      const translations = selectedWords.map(word => word.translation);
+      const shuffled = [...translations].sort(() => Math.random() - 0.5);
+
+      setMatchingWords(selectedWords);
+      setShuffledTranslations(shuffled);
+      setSelectedWord(null);
+      setSelectedTranslation(null);
+      setTotalMatches(0);
+      setGameCompleted(false);
+      setMatchedPairs([]);
+      setIsLoading(false);
+      console.log('Oyun başlatıldı');
+    } catch (error) {
+      console.error('Oyun başlatma hatası:', error);
+      Alert.alert(t('common.error'), t('wordMatching.gameStartError'));
+      setIsLoading(false);
+    }
+  };
+
+  // Sayfa yüklendiğinde oyunu başlat — mount'ta veri çekme (startNewGame
+  // async olup setState içeriyor), React docs'un "Fetching data" örneğiyle
+  // aynı, geçerli bir effect kullanımı.
   useEffect(() => {
     // Sayfa yüklendiğinde otomatik olarak oyunu başlat
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mount'ta veri çekme; render sırasında türetilemez
     startNewGame();
     // Timestamp güncelle
     if (user?.id) {
@@ -200,63 +320,6 @@ export default function WordMatchingScreen() {
   }, [gameCompleted]); // gameCompleted değiştiğinde çalışır
   
   // Yeni oyun başlat
-  const startNewGame = async () => {
-    setIsLoading(true);
-    try {
-      
-      // Rastgele 5 kelime çek
-      const randomWords = await getRandomWordsWithTranslations(i18n.language);      
-      if (!randomWords || randomWords.length === 0) {
-        console.error('Kelime bulunamadı veya boş dizi döndü');
-        Alert.alert(t('common.error'), t('wordMatching.wordsLoadError'));
-        setIsLoading(false);
-        return;
-      }
-      
-      // Word tipinden MatchingWord tipine dönüştür
-      const selectedWords: MatchingWord[] = randomWords.map(word => {
-        if (!word || !word.WordTranslations || word.WordTranslations.length === 0) {
-          console.error('Kelime veya çevirisi eksik:', word);
-          return {
-            id: word?.id?.toString() || Math.random().toString(),
-            text: word?.name || 'Bilinmeyen kelime',
-            translation: 'Çeviri bulunamadı',
-            matched: false,
-            selected: false
-          };
-        }
-        
-        return {
-          id: word.id.toString(),
-          text: word.name,
-          translation: word.WordTranslations[0]?.mean || 'Çeviri bulunamadı',
-          matched: false,
-          selected: false
-        };
-      });
-      
-      console.log('Dönüştürülen kelimeler:', selectedWords);
-      
-      // Çevirileri karıştır
-      const translations = selectedWords.map(word => word.translation);
-      const shuffled = [...translations].sort(() => Math.random() - 0.5);
-      
-      setMatchingWords(selectedWords);
-      setShuffledTranslations(shuffled);
-      setSelectedWord(null);
-      setSelectedTranslation(null);
-      setTotalMatches(0);
-      setGameCompleted(false);
-      setMatchedPairs([]);
-      setIsLoading(false);
-      console.log('Oyun başlatıldı');
-    } catch (error) {
-      console.error('Oyun başlatma hatası:', error);
-      Alert.alert(t('common.error'), t('wordMatching.gameStartError'));
-      setIsLoading(false);
-    }
-  };
-  
   // Kelime seçimi
   const handleWordSelect = (wordId: string) => {
     if (gameCompleted) return;
@@ -315,12 +378,12 @@ export default function WordMatchingScreen() {
   
   // Kelime pozisyonunu kaydet
   const saveWordPosition = (wordId: string, position: { x: number, y: number, width: number, height: number }) => {
-    wordPositions[wordId] = position;
+    setWordPositions(prev => ({ ...prev, [wordId]: position }));
   };
-  
+
   // Çeviri pozisyonunu kaydet
   const saveTranslationPosition = (translation: string, position: { x: number, y: number, width: number, height: number }) => {
-    translationPositions[translation] = position;
+    setTranslationPositions(prev => ({ ...prev, [translation]: position }));
   };
   
   // Eşleşme kontrolü
@@ -424,57 +487,15 @@ export default function WordMatchingScreen() {
     // Yanlış eşleşme durumunda ise setTimeout içinde sıfırlama yapılıyor
   };
   
-  // Profesyonel tamamlanma ekranı fonksiyonu
-  const CompletionView = () => {
-    return (
-      <View style={[styles.container, {backgroundColor: 'transparent'}]}>
-        <Image 
-          source={gameBackgroundImage} // Import edilen değişkeni kullan
-          style={styles.backgroundImage} 
-          resizeMode="cover"
-        />
-        <LinearGradient
-          colors={["#e0ffe8", "#f6fafd"]}
-          style={styles.completionGradient}
-        >
-          <View style={styles.completionCard}>
-            <View style={styles.completionIconCircle}>
-              <Ionicons name="trophy" size={64} color="#4CAF50" />
-            </View>
-            <Text style={styles.completionTitle}>{t('wordMatching.congratulations')}</Text>
-            <Text style={styles.completionMessage}>{t('wordMatching.allMatched')}</Text>
-            
-            {/* Puan göstergesi */}
-            <View style={styles.pointContainerCompletion}>
-              <View style={styles.pointIconWrapper}>
-                <Ionicons
-                  name="water-outline"
-                  size={ICON_SIZE.sm}
-                  color="#FFFFFF"
-                />
-              </View>
-              <Text style={styles.pointText}>+{earnedPoints}</Text>
-            </View>
-            
-            <Text style={styles.rewardMessage}>{t('wordMatching.earnedPoints', 'Kazandınız')}</Text>
-            
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => {
-                router.replace('/');
-              }}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.backButtonText}>{t('common.goBack')}</Text>
-            </TouchableOpacity>
-          </View>
-        </LinearGradient>
-      </View>
-    );
-  };
 
   if (gameCompleted) {
-    return <CompletionView />;
+    return (
+      <CompletionView
+        t={t}
+        earnedPoints={earnedPoints}
+        onGoBack={() => router.replace('/')}
+      />
+    );
   }
 
   return (

@@ -5,7 +5,7 @@ import {
   ViewStyle,
   GestureResponderEvent,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
@@ -19,7 +19,9 @@ const PressableOpacity = ({
   onPress,
   ...props
 }: PressableOpacityProps) => {
-  const [isOpacity, setIsOpacity] = useState(false);
+  // isOpacity yalnızca variant === 'active' olduğunda true olan bir kopyaydı;
+  // ayrı bir state/effect yerine doğrudan türetilen değer olarak kullanılıyor.
+  const isOpacity = variant === 'active';
   const handlePress = React.useCallback(
     (event: GestureResponderEvent) => {
       if (Platform.OS !== 'web') {
@@ -29,12 +31,6 @@ const PressableOpacity = ({
     },
     [onPress]
   );
-
-  useEffect(() => {
-    if (variant === 'active') {
-      setIsOpacity(true);
-    }
-  }, [variant]);
 
   return (
     <Pressable

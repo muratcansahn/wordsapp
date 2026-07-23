@@ -77,16 +77,23 @@ const RippleButton: React.FC<RippleButtonProps> = ({
   const rippleX = useSharedValue<number>(0);
   const rippleY = useSharedValue<number>(0);
 
+  // Reanimated SharedValue'ların `.value` ataması kütüphanenin dokümante
+  // edilmiş, bilinçli olarak mutable API'sidir (React state değildir);
+  // react-hooks/immutability bunu useCallback içinde tanımıyor.
   const resetRipple = useCallback(() => {
+    // eslint-disable-next-line react-hooks/immutability -- Reanimated SharedValue.value ataması
     rippleScale.value = 0;
+    // eslint-disable-next-line react-hooks/immutability -- Reanimated SharedValue.value ataması
     rippleOpacity.value = 1;
   }, [rippleScale, rippleOpacity]);
 
   const startRipple = useCallback(() => {
+    // eslint-disable-next-line react-hooks/immutability -- Reanimated SharedValue.value ataması
     rippleScale.value = withTiming(1, {
       duration,
       easing: Easing.out(Easing.ease),
     });
+    // eslint-disable-next-line react-hooks/immutability -- Reanimated SharedValue.value ataması
     rippleOpacity.value = withTiming(
       0,
       {

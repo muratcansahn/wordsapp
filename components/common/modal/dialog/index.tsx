@@ -54,8 +54,12 @@ const Dialog = ({
   const animationValue = useSharedValue(0);
   const { mode } = useTheme();
 
+  // Reanimated SharedValue'ların `.value` ataması kütüphanenin dokümante
+  // edilmiş, bilinçli olarak mutable API'sidir (React state değildir);
+  // react-hooks/immutability bunu useCallback içinde tanımıyor.
   const openModal = useCallback(() => {
     cancelAnimation(animationValue);
+    // eslint-disable-next-line react-hooks/immutability -- Reanimated SharedValue.value ataması
     animationValue.value = withTiming(1, {
       duration: animationDuration,
       easing: Easing.out(Easing.exp),
@@ -64,6 +68,7 @@ const Dialog = ({
 
   const closeModal = useCallback(() => {
     cancelAnimation(animationValue);
+    // eslint-disable-next-line react-hooks/immutability -- Reanimated SharedValue.value ataması
     animationValue.value = withTiming(
       0,
       {

@@ -23,78 +23,74 @@ export default function ShareModal() {
   const viewShotRef = useRef<ViewShot>(null);
   const colors = ['#7209b7', '#000000'];
 
-  const SpotifyShareScreen = () => (
-    <ThemedView style={styles.container}>
-      <LinearGradient
-        colors={colors as [string, string]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1.0 }}
-        style={[styles.gradientBackground]}
-      >
-        <ViewShot ref={viewShotRef} style={styles.spotifyContainer}>
-          <Image
-            source={require('@/assets/images/logo.png')}
-            style={styles.logo}
-          />
-          <View style={styles.cardContainer}>
+  return (
+    <>
+      <ThemedView style={styles.container}>
+        <LinearGradient
+          colors={colors as [string, string]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1.0 }}
+          style={[styles.gradientBackground]}
+        >
+          <ViewShot ref={viewShotRef} style={styles.spotifyContainer}>
             <Image
-              source={{
-                uri: 'https://i.scdn.co/image/ab67616d00001e02c31d3c870a3dbaf7b53186cc',
-              }}
-              style={styles.albumCover}
-              contentFit="contain"
-              cachePolicy="memory-disk"
+              source={require('@/assets/images/logo.png')}
+              style={styles.logo}
             />
-            <View>
-              <ThemedText
-                style={styles.songTitle}
-                lightColor={Colors.light.white}
-                darkColor={Colors.dark.white}
-                type="title"
-              >
-                Gangsta's Paradise
-              </ThemedText>
-              <ThemedText
-                style={styles.artistName}
-                lightColor={Colors.light.white}
-                darkColor={Colors.dark.white}
-              >
-                Coolio, L.V.
-              </ThemedText>
-              <View style={styles.spotifyLogoContainer}>
-                <FontAwesome6
-                  name="spotify"
-                  size={ICON_SIZE.xs}
-                  color={Colors.light.white}
-                />
+            <View style={styles.cardContainer}>
+              <Image
+                source={{
+                  uri: 'https://i.scdn.co/image/ab67616d00001e02c31d3c870a3dbaf7b53186cc',
+                }}
+                style={styles.albumCover}
+                contentFit="contain"
+                cachePolicy="memory-disk"
+              />
+              <View>
                 <ThemedText
-                  style={styles.spotifyText}
+                  style={styles.songTitle}
+                  lightColor={Colors.light.white}
+                  darkColor={Colors.dark.white}
+                  type="title"
+                >
+                  Gangsta's Paradise
+                </ThemedText>
+                <ThemedText
+                  style={styles.artistName}
                   lightColor={Colors.light.white}
                   darkColor={Colors.dark.white}
                 >
-                  Spotify
+                  Coolio, L.V.
                 </ThemedText>
+                <View style={styles.spotifyLogoContainer}>
+                  <FontAwesome6
+                    name="spotify"
+                    size={ICON_SIZE.xs}
+                    color={Colors.light.white}
+                  />
+                  <ThemedText
+                    style={styles.spotifyText}
+                    lightColor={Colors.light.white}
+                    darkColor={Colors.dark.white}
+                  >
+                    Spotify
+                  </ThemedText>
+                </View>
               </View>
             </View>
-          </View>
-          <View style={styles.footer}>
-            <ThemedText
-              style={styles.withLove}
-              numberOfLines={2}
-              lightColor={Colors.light.white}
-              darkColor={Colors.dark.white}
-            >
-              With ❤️, developed for Ship Mobile Fast
-            </ThemedText>
-          </View>
-        </ViewShot>
-      </LinearGradient>
-    </ThemedView>
-  );
-
-  return (
-    <>
-      <SpotifyShareScreen />
+            <View style={styles.footer}>
+              <ThemedText
+                style={styles.withLove}
+                numberOfLines={2}
+                lightColor={Colors.light.white}
+                darkColor={Colors.dark.white}
+              >
+                With ❤️, developed for Ship Mobile Fast
+              </ThemedText>
+            </View>
+          </ViewShot>
+        </LinearGradient>
+      </ThemedView>
       <ShareBottomSheet ref={viewShotRef} colors={colors} />
     </>
   );

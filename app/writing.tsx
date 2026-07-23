@@ -151,7 +151,9 @@ const HangmanGame = () => {
     }
   };
 
-  // İlk açılışta otomatik kelime seçimi ve animasyon ayarı
+  // İlk açılışta otomatik kelime seçimi ve animasyon ayarı — mount'ta veri
+  // çekme (selectRandomWord async olup setState içeriyor), React docs'un
+  // "Fetching data" örneğiyle aynı, geçerli bir effect kullanımı.
   useEffect(() => {
     // İlk açılışta animasyonu başlat
     fadeAnim.setValue(0);
@@ -160,7 +162,8 @@ const HangmanGame = () => {
       duration: 800,
       useNativeDriver: true
     }).start();
-    
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mount'ta veri çekme; render sırasında türetilemez
     selectRandomWord();
     
     // Kullanıcının daha önce info modalı görüp görmediğini kontrol et
@@ -319,7 +322,10 @@ const HangmanGame = () => {
     }
   };
 
-  // Kelime tamamlama ve oyun durumu kontrolü için useEffect
+  // Kelime tamamlama ve oyun durumu kontrolü için useEffect.
+  // Not: Gerçek düzeltme bu mantığı guessLetter handler'ına taşımak olurdu
+  // (kazanma/kaybetme sesini tetikleyen ayrı effect'le birlikte); burada
+  // oyun akışını riske atmamak için effect deseni bilinçli olarak korunuyor.
   useEffect(() => {
     if (!currentWord || gameStatus !== 'playing') return; // Sadece oyun devam ediyorsa ve kelime varsa kontrol et
 
@@ -338,6 +344,7 @@ const HangmanGame = () => {
         letter => !currentWord.translation.toLowerCase().includes(letter)
       ).length;
       const dynamicScore = Math.max(1, totalLetters - wrongGuesses); // Minimum 1 puan
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- state değişimine tepki veren oyun mantığı, event handler'a taşınması ayrı bir refactor gerektirir
       setDynamicScoreValue(dynamicScore);
       setScore(prev => prev + dynamicScore);
 

@@ -12,6 +12,17 @@ import Animated, {
   withDelay
 } from 'react-native-reanimated';
 
+const CONFETTI_COLORS = [
+  '#FFD700', // Altın
+  '#FF6B6B', // Kırmızı
+  '#4CD964', // Yeşil
+  '#5AC8FA', // Mavi
+  '#FF9500', // Turuncu
+  '#AF52DE', // Mor
+  '#FF2D55', // Pembe
+  '#FFFFFF', // Beyaz
+];
+
 interface PointContainerProps {
   onPointAnimation?: () => void;
 }
@@ -30,12 +41,28 @@ const PointContainer = forwardRef<PointContainerRef, PointContainerProps>((props
   const pointRotate = useSharedValue(0);
   const pointColor = useSharedValue(0);
   
-  // Konfeti animasyonu için değerler
-  const confettiOpacity = Array(8).fill(0).map(() => useSharedValue(0));
-  const confettiTranslateX = Array(8).fill(0).map(() => useSharedValue(0));
-  const confettiTranslateY = Array(8).fill(0).map(() => useSharedValue(0));
-  const confettiRotate = Array(8).fill(0).map(() => useSharedValue(0));
-  const confettiScale = Array(8).fill(0).map(() => useSharedValue(0));
+  // Konfeti animasyonu için değerler — sabit 8 parçacık olduğundan hook'lar
+  // .map() içinde değil, kurallara uygun şekilde açık açık (unroll) çağrılıyor.
+  const confettiOpacity = [
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+  ];
+  const confettiTranslateX = [
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+  ];
+  const confettiTranslateY = [
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+  ];
+  const confettiRotate = [
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+  ];
+  const confettiScale = [
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+    useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0),
+  ];
 
   const pointAnimatedStyle = useAnimatedStyle(() => ({
     transform: [
@@ -56,34 +83,92 @@ const PointContainer = forwardRef<PointContainerRef, PointContainerProps>((props
       `rgba(255, 215, 0, ${0.5 + pointColor.value * 0.5})`,
   }));
   
-  // Konfeti animasyon stilleri
-  const confettiAnimatedStyles = Array(8).fill(0).map((_, index) => {
-    return useAnimatedStyle(() => {
-      return {
-        position: 'absolute',
-        width: 8,
-        height: 8,
-        borderRadius: index % 2 === 0 ? 4 : 0,
-        backgroundColor: [
-          '#FFD700', // Altın
-          '#FF6B6B', // Kırmızı
-          '#4CD964', // Yeşil
-          '#5AC8FA', // Mavi
-          '#FF9500', // Turuncu
-          '#AF52DE', // Mor
-          '#FF2D55', // Pembe
-          '#FFFFFF'  // Beyaz
-        ][index],
-        opacity: confettiOpacity[index].value,
-        transform: [
-          { translateX: confettiTranslateX[index].value },
-          { translateY: confettiTranslateY[index].value },
-          { rotate: `${confettiRotate[index].value}deg` },
-          { scale: confettiScale[index].value }
-        ],
-      };
-    });
-  });
+  // Konfeti animasyon stilleri — sabit 8 parçacık olduğundan useAnimatedStyle
+  // .map() içinde değil, her index için ayrı ayrı (unroll) çağrılıyor.
+  const confettiStyle0 = useAnimatedStyle(() => ({
+    position: 'absolute', width: 8, height: 8, borderRadius: 0 % 2 === 0 ? 4 : 0,
+    backgroundColor: CONFETTI_COLORS[0], opacity: confettiOpacity[0].value,
+    transform: [
+      { translateX: confettiTranslateX[0].value },
+      { translateY: confettiTranslateY[0].value },
+      { rotate: `${confettiRotate[0].value}deg` },
+      { scale: confettiScale[0].value },
+    ],
+  }));
+  const confettiStyle1 = useAnimatedStyle(() => ({
+    position: 'absolute', width: 8, height: 8, borderRadius: 1 % 2 === 0 ? 4 : 0,
+    backgroundColor: CONFETTI_COLORS[1], opacity: confettiOpacity[1].value,
+    transform: [
+      { translateX: confettiTranslateX[1].value },
+      { translateY: confettiTranslateY[1].value },
+      { rotate: `${confettiRotate[1].value}deg` },
+      { scale: confettiScale[1].value },
+    ],
+  }));
+  const confettiStyle2 = useAnimatedStyle(() => ({
+    position: 'absolute', width: 8, height: 8, borderRadius: 2 % 2 === 0 ? 4 : 0,
+    backgroundColor: CONFETTI_COLORS[2], opacity: confettiOpacity[2].value,
+    transform: [
+      { translateX: confettiTranslateX[2].value },
+      { translateY: confettiTranslateY[2].value },
+      { rotate: `${confettiRotate[2].value}deg` },
+      { scale: confettiScale[2].value },
+    ],
+  }));
+  const confettiStyle3 = useAnimatedStyle(() => ({
+    position: 'absolute', width: 8, height: 8, borderRadius: 3 % 2 === 0 ? 4 : 0,
+    backgroundColor: CONFETTI_COLORS[3], opacity: confettiOpacity[3].value,
+    transform: [
+      { translateX: confettiTranslateX[3].value },
+      { translateY: confettiTranslateY[3].value },
+      { rotate: `${confettiRotate[3].value}deg` },
+      { scale: confettiScale[3].value },
+    ],
+  }));
+  const confettiStyle4 = useAnimatedStyle(() => ({
+    position: 'absolute', width: 8, height: 8, borderRadius: 4 % 2 === 0 ? 4 : 0,
+    backgroundColor: CONFETTI_COLORS[4], opacity: confettiOpacity[4].value,
+    transform: [
+      { translateX: confettiTranslateX[4].value },
+      { translateY: confettiTranslateY[4].value },
+      { rotate: `${confettiRotate[4].value}deg` },
+      { scale: confettiScale[4].value },
+    ],
+  }));
+  const confettiStyle5 = useAnimatedStyle(() => ({
+    position: 'absolute', width: 8, height: 8, borderRadius: 5 % 2 === 0 ? 4 : 0,
+    backgroundColor: CONFETTI_COLORS[5], opacity: confettiOpacity[5].value,
+    transform: [
+      { translateX: confettiTranslateX[5].value },
+      { translateY: confettiTranslateY[5].value },
+      { rotate: `${confettiRotate[5].value}deg` },
+      { scale: confettiScale[5].value },
+    ],
+  }));
+  const confettiStyle6 = useAnimatedStyle(() => ({
+    position: 'absolute', width: 8, height: 8, borderRadius: 6 % 2 === 0 ? 4 : 0,
+    backgroundColor: CONFETTI_COLORS[6], opacity: confettiOpacity[6].value,
+    transform: [
+      { translateX: confettiTranslateX[6].value },
+      { translateY: confettiTranslateY[6].value },
+      { rotate: `${confettiRotate[6].value}deg` },
+      { scale: confettiScale[6].value },
+    ],
+  }));
+  const confettiStyle7 = useAnimatedStyle(() => ({
+    position: 'absolute', width: 8, height: 8, borderRadius: 7 % 2 === 0 ? 4 : 0,
+    backgroundColor: CONFETTI_COLORS[7], opacity: confettiOpacity[7].value,
+    transform: [
+      { translateX: confettiTranslateX[7].value },
+      { translateY: confettiTranslateY[7].value },
+      { rotate: `${confettiRotate[7].value}deg` },
+      { scale: confettiScale[7].value },
+    ],
+  }));
+  const confettiAnimatedStyles = [
+    confettiStyle0, confettiStyle1, confettiStyle2, confettiStyle3,
+    confettiStyle4, confettiStyle5, confettiStyle6, confettiStyle7,
+  ];
 
   const animatePoint = () => {
     // Patlamalı ölçeklendirme animasyonu

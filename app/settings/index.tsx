@@ -5,6 +5,36 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import { PRIVACY_POLICY_URL } from '@/constants/Legal';
 
+const SettingItem = ({
+  icon,
+  title,
+  onPress,
+  color,
+}: {
+  icon: string;
+  title: string;
+  onPress: () => void;
+  color?: string;
+}) => (
+  <View style={styles.settingItem}>
+    <View style={[styles.iconContainer, { backgroundColor: color }]}>
+      <MaterialCommunityIcons
+        name={icon as any}
+        size={24}
+        color="#FFFFFF"
+      />
+    </View>
+    <View style={styles.settingTextContainer}>
+      <Text style={styles.settingText}>{title}</Text>
+    </View>
+    <MaterialCommunityIcons
+      name="chevron-right"
+      size={24}
+      color="#666"
+    />
+  </View>
+);
+
 const SettingsScreen = () => {
   const router = useRouter();
 
@@ -39,36 +69,6 @@ const SettingsScreen = () => {
       color: '#5856D6',
     },
   ];
-
-  const SettingItem = ({
-    icon,
-    title,
-    onPress,
-    color,
-  }: {
-    icon: string;
-    title: string;
-    onPress: () => void;
-    color?: string;
-  }) => (
-    <View style={styles.settingItem}>
-      <View style={[styles.iconContainer, { backgroundColor: color }]}>
-        <MaterialCommunityIcons
-          name={icon as any}
-          size={24}
-          color="#FFFFFF"
-        />
-      </View>
-      <View style={styles.settingTextContainer}>
-        <Text style={styles.settingText}>{title}</Text>
-      </View>
-      <MaterialCommunityIcons
-        name="chevron-right"
-        size={24}
-        color="#666"
-      />
-    </View>
-  );
 
   return (
     <View style={styles.container}>

@@ -40,6 +40,52 @@ interface QuizQuestion {
   options: string[];
 }
 
+// Flashcardlardan quiz soruları oluşturur — component state'ine bağlı olmayan
+// saf bir fonksiyon olduğundan modül seviyesinde tanımlanıyor (component
+// içindeyken bir effect'ten kendisi tanımlanmadan önce çağrılıyordu).
+const generateQuizQuestions = (cards: FlashCard[]): QuizQuestion[] => {
+  // Her kelime için bir soru oluştur
+  return cards.map(card => {
+    // Doğru cevap (hedef dilde çeviri)
+    const correctAnswer = card.translation;
+
+    // Yanlış cevaplar için diğer kelimelerin çevirilerinden rastgele 3 tane seç
+    const otherTranslations = cards
+      .filter(c => c.id !== card.id)
+      .map(c => c.translation);
+
+    // Rastgele 3 yanlış cevap seç (eğer yeterli sayıda kelime varsa)
+    let wrongAnswers: string[] = [];
+
+    // Yeterli sayıda farklı çeviri yoksa, mevcut olanları kullan
+    if (otherTranslations.length >= 3) {
+      // Çevirileri karıştır
+      const shuffled = [...otherTranslations].sort(() => 0.5 - Math.random());
+      wrongAnswers = shuffled.slice(0, 3);
+    } else {
+      // Mevcut tüm farklı çevirileri kullan
+      wrongAnswers = [...otherTranslations];
+
+      // Eksik kalan şıklar için varsayılan değerler ekle
+      const defaultAnswers = ['Çeviri bulunamadı 1', 'Çeviri bulunamadı 2', 'Çeviri bulunamadı 3'];
+
+      for (let i = wrongAnswers.length; i < 3; i++) {
+        wrongAnswers.push(defaultAnswers[i]);
+      }
+    }
+
+    // Tüm şıkları birleştir ve karıştır
+    const allOptions = [correctAnswer, ...wrongAnswers].sort(() => 0.5 - Math.random());
+
+    return {
+      id: card.id,
+      word: card.word, // Soru kısmında İngilizce kelimeyi göster
+      correctAnswer,
+      options: allOptions
+    };
+  });
+};
+
 export default function QuizPage() {
   const { t, i18n } = useTranslation();
   const { listId } = useLocalSearchParams();
@@ -56,7 +102,6 @@ export default function QuizPage() {
   const userPoint = useSelector((state: RootState) => state.user.point);
   const [wordList, setWordList] = useState<WordListWithItems | null>(null);
   const [showInfoModal, setShowInfoModal] = useState(false); // Bilgilendirme modalı için state
-  const [currentLanguage, setCurrentLanguage] = useState<string>(i18n.language);
 
   const dispatch = useDispatch();
   // Puan konteynerı için referans
@@ -155,24 +200,16 @@ export default function QuizPage() {
     }
   };
 
-  // Dil değişikliklerini izle
-  useEffect(() => {
-    // Dil değiştiğinde currentLanguage'i güncelle
-    if (i18n.language !== currentLanguage) {
-      setCurrentLanguage(i18n.language);
-    }
-  }, [i18n.language]);
-
   // Flashcardları çek
   useEffect(() => {
     const loadFlashcards = async () => {
       if (!listId) return;
-      
+
       try {
         setLoading(true);
-        
+
         // Her durumda kelime listesini çek
-        const wordList = await fetchWordListItems(listId as string, currentLanguage);
+        const wordList = await fetchWordListItems(listId as string, i18n.language);
         setFlashcards(wordList.cards);
         setWordList(wordList);
         
@@ -217,56 +254,9 @@ export default function QuizPage() {
     };
     
     checkInfoModalShown();
-  }, [listId, currentLanguage]);
+  }, [listId, i18n.language]);
   
   // Flashcardlardan quiz soruları oluştur
-  const generateQuizQuestions = (cards: FlashCard[]): QuizQuestion[] => {
-    // Her kelime için bir soru oluştur
-    return cards.map(card => {
-      // Doğru cevap (hedef dilde çeviri)
-      const correctAnswer = card.translation;
-      
-      console.log('Kelime:', card.word, 'Doğru cevap:', correctAnswer);
-      
-      // Yanlış cevaplar için diğer kelimelerin çevirilerinden rastgele 3 tane seç
-      const otherTranslations = cards
-        .filter(c => c.id !== card.id)
-        .map(c => c.translation);
-      
-      // Rastgele 3 yanlış cevap seç (eğer yeterli sayıda kelime varsa)
-      let wrongAnswers: string[] = [];
-      
-      // Yeterli sayıda farklı çeviri yoksa, mevcut olanları kullan
-      if (otherTranslations.length >= 3) {
-        // Çevirileri karıştır
-        const shuffled = [...otherTranslations].sort(() => 0.5 - Math.random());
-        wrongAnswers = shuffled.slice(0, 3);
-      } else {
-        // Mevcut tüm farklı çevirileri kullan
-        wrongAnswers = [...otherTranslations];
-        
-        // Eksik kalan şıklar için varsayılan değerler ekle
-        const defaultAnswers = ['Çeviri bulunamadı 1', 'Çeviri bulunamadı 2', 'Çeviri bulunamadı 3'];
-        
-        for (let i = wrongAnswers.length; i < 3; i++) {
-          wrongAnswers.push(defaultAnswers[i]);
-        }
-      }
-      
-      // Tüm şıkları birleştir ve karıştır
-      const allOptions = [correctAnswer, ...wrongAnswers].sort(() => 0.5 - Math.random());
-      
-      console.log('Tüm şıklar:', allOptions);
-      
-      return {
-        id: card.id,
-        word: card.word, // Soru kısmında İngilizce kelimeyi göster
-        correctAnswer,
-        options: allOptions
-      };
-    });
-  };
-  
   const currentQuestion = questions[currentQuestionIndex];
   
   // Ses dosyalarını çalmak için fonksiyon

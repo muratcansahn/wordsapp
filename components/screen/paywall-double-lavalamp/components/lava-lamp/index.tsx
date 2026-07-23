@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, StyleSheet, useWindowDimensions } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -20,8 +20,12 @@ interface BlobProps {
 
 const Blob: React.FC<BlobProps> = React.memo(({ color, size, index }) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const translateY = useSharedValue(Math.random() * screenHeight);
-  const translateX = useSharedValue(Math.random() * screenWidth);
+  // Math.random() render body'de doğrudan çağrılmasın diye (React purity kuralı)
+  // başlangıç konumu useState'in lazy initializer'ında bir kere hesaplanıyor.
+  const [initialY] = useState(() => Math.random() * screenHeight);
+  const [initialX] = useState(() => Math.random() * screenWidth);
+  const translateY = useSharedValue(initialY);
+  const translateX = useSharedValue(initialX);
   const scale = useSharedValue(1);
   const rotate = useSharedValue(0);
 

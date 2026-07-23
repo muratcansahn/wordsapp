@@ -40,7 +40,6 @@ const OnboardingScreen: React.FC = () => {
   const scrollX = useSharedValue<number>(0);
   const flatListRef = useRef<Animated.FlatList<OnboardingItem>>(null);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [buttonText, setButtonText] = useState<string>(t('buttons.next'));
   const { mode } = useTheme();
   
   // Ekran boyutlarını al
@@ -70,13 +69,12 @@ const OnboardingScreen: React.FC = () => {
 
   const keyExtractor = useCallback((item: OnboardingItem) => item.id, []);
 
-  useEffect(() => {
-    setButtonText(
-      currentIndex === onboardingData.length - 1
-        ? t('buttons.getStarted')
-        : t('buttons.next')
-    );
-  }, [currentIndex, t]);
+  // buttonText tamamen currentIndex + t'den türetildiğinden ayrı bir state/effect
+  // yerine render sırasında doğrudan hesaplanıyor.
+  const buttonText =
+    currentIndex === onboardingData.length - 1
+      ? t('buttons.getStarted')
+      : t('buttons.next');
 
   const onMomentumScrollEnd = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {

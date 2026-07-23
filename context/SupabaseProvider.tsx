@@ -472,6 +472,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
   // Aynı deep-link URL'i birden fazla kez işlememek için (ör. session state'i
   // henüz güncellenmeden effect tekrar tetiklenirse) işlenen URL'i takip ediyoruz.
   const handledUrlRef = useRef<string | null>(null);
+  // Dış sistemle (deep-link URL) senkronizasyon — render sırasında türetilemez.
   useEffect(() => {
     if (url && handledUrlRef.current !== url) {
       const parsedUrl = parseSupabaseUrl(url);
@@ -482,6 +483,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
           parsedUrl?.queryParams?.type === 'magiclink')
       ) {
         handledUrlRef.current = url;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- harici URL event'ine tepki veren auth akışı
         createSessionFromUrl(url);
       }
     }
