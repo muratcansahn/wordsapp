@@ -4,6 +4,8 @@ import React, {
   useEffect,
   useState,
   useCallback,
+  useMemo,
+  useRef,
 } from 'react';
 import { Session, User, AuthError, UserMetadata } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -37,19 +39,26 @@ type AuthContextType = {
   handleError: (error: AuthError | Error) => void;
 };
 
-// TODO: 1.Uncomment GoogleSignin 
+// TODO: 1.Uncomment GoogleSignin
 // !! This doesn't work on web and EXPO GO.
 const androidGoogleClientId = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID;
 if (!androidGoogleClientId) {
   console.warn('EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID is not configured');
 }
 
-GoogleSignin.configure({
-  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID,
-  // Keep androidGoogleClientId available for native Android OAuth setup.
-  // @react-native-google-signin/google-signin does not accept androidClientId in configure().
-  webClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID,
-});
+// Boot sırasında native modülü tetiklememek için configure() ilk Google
+// girişi denendiğinde bir kez çalıştırılır (bkz. signInWithGoogle).
+let googleSigninConfigured = false;
+const ensureGoogleSigninConfigured = () => {
+  if (googleSigninConfigured) return;
+  GoogleSignin.configure({
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID,
+    // Keep androidGoogleClientId available for native Android OAuth setup.
+    // @react-native-google-signin/google-signin does not accept androidClientId in configure().
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID,
+  });
+  googleSigninConfigured = true;
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<React.PropsWithChildren> = ({
@@ -239,50 +248,67 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
   }, []);
   
 
+  // saveUserToDatabase + Users tablosundan güncel veriyi çekip Redux'a yazma
+  // işlemi onAuthStateChange, handleAuthAction ve createSessionFromUrl'de
+  // aynı şekilde tekrarlanıyordu; tek yerden yönetiliyor.
+  const syncUserToStore = useCallback(
+    async (authUser: User) => {
+      await saveUserToDatabase(authUser);
+
+      const { data: userData, error: userError } = await supabase
+        .from('Users')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (userError) {
+        console.error('Kullanıcı verileri çekilirken hata:', userError);
+        return;
+      }
+      if (userData) {
+        const userState = {
+          full_name: userData.full_name || '',
+          point: userData.point || 0,
+          last_login_datetime: userData.last_login_datetime || '',
+          streak_count: userData.streak_count || 0,
+          id: authUser.id,
+          wordStatusUpdateCounter: 0,
+        };
+        dispatch(setReduxUser(userState));
+      }
+    },
+    [saveUserToDatabase, dispatch]
+  );
+
   useEffect(() => {
-    setIsLoading(true);
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         setIsAuthenticated(!!session);
         setUser(session?.user ?? null);
         setSession(session);
-        setInitialized(true)
-        if (session?.user) {
-          // Önce veritabanına kaydet
-          await saveUserToDatabase(session.user);
-          
-          // Sonra güncel verileri çek
-          const { data: userData, error: userError } = await supabase
-            .from('Users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (userError) {
-            console.error('Kullanıcı verileri çekilirken hata:', userError);
-          } else if (userData) {
-            // Users tablosundan çekilen verileri Redux'a aktar
-            const userState = {
-              full_name: userData.full_name || '',
-              point: userData.point || 0,
-              last_login_datetime: userData.last_login_datetime || '',
-              streak_count: userData.streak_count || 0,
-              id: session.user.id,
-              wordStatusUpdateCounter: 0
-            };
-            dispatch(setReduxUser(userState));
-          }
-        } else {
+        setInitialized(true);
+
+        if (!session?.user) {
           dispatch(clearReduxUser());
+          return;
         }
+
+        // TOKEN_REFRESHED (autoRefreshToken sayesinde saatte bir tetiklenir)
+        // kullanıcı verisini değiştirmez; bu event'te DB write + fetch +
+        // dispatch tekrarını atlıyoruz. Diğer event'lerde (SIGNED_IN,
+        // INITIAL_SESSION, USER_UPDATED vb.) veriyi senkronize ediyoruz.
+        if (event === 'TOKEN_REFRESHED') {
+          return;
+        }
+
+        await syncUserToStore(session.user);
       }
     );
-    setIsLoading(false);
-  
+
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [saveUserToDatabase, dispatch]);
+  }, [syncUserToStore, dispatch]);
 
   const handleError = useCallback((error: AuthError | Error) => {
     console.error('Detaylı hata:', {
@@ -313,30 +339,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         
         // Kullanıcı oturumu varsa, Users tablosundan bilgileri çekelim
         if (data.session?.user) {
-          // Önce veritabanına kaydet (varsa güncelle, yoksa oluştur)
-          await saveUserToDatabase(data.session.user);
-          
-          // Sonra Users tablosundan güncel verileri çek
-          const { data: userData, error: userError } = await supabase
-            .from('Users')
-            .select('*')
-            .eq('id', data.session.user.id)
-            .single();
-          
-          if (userError) {
-            console.error('Kullanıcı verileri çekilirken hata:', userError);
-          } else if (userData) {
-            // Users tablosundan çekilen verileri Redux'a aktar
-            const userState = {
-              full_name: userData.full_name || '',
-              point: userData.point || 0,
-              last_login_datetime: userData.last_login_datetime || '',
-              streak_count: userData.streak_count || 0,
-              id: data.session.user.id,
-              wordStatusUpdateCounter: 0
-            };
-            dispatch(setReduxUser(userState));
-          }
+          await syncUserToStore(data.session.user);
         } else {
           dispatch(clearReduxUser());
         }
@@ -348,7 +351,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         Toast.hide(toast);
       }
     },
-    [handleError, saveUserToDatabase, dispatch]
+    [handleError, syncUserToStore, dispatch]
   );
   
   
@@ -376,6 +379,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
     );
     try {
       setIsLoading(true);
+      ensureGoogleSigninConfigured();
       // TODO: 2. Uncomment this :
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
@@ -446,36 +450,11 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         });
         if (error) throw error;
 
-        console.log("Apple signin başarılı111", data)
         if (data.session) {
           setSession(data.session);
           setUser(data.session.user);
           setIsAuthenticated(true);
-          
-          // Önce veritabanına kaydet
-          await saveUserToDatabase(data.session.user);
-          
-          // Sonra güncel verileri çek
-          const { data: userData, error: userError } = await supabase
-            .from('Users')
-            .select('*')
-            .eq('id', data.session.user.id)
-            .single();
-          
-          if (userError) {
-            console.error('Kullanıcı verileri çekilirken hata:', userError);
-          } else if (userData) {
-            // Users tablosundan çekilen verileri Redux'a aktar
-            const userState = {
-              full_name: userData.full_name || '',
-              point: userData.point || 0,
-              last_login_datetime: userData.last_login_datetime || '',
-              streak_count: userData.streak_count || 0,
-              id: data.session.user.id,
-              wordStatusUpdateCounter: 0
-            };
-            dispatch(setReduxUser(userState));
-          }
+          await syncUserToStore(data.session.user);
         }
       } catch (error) {
         handleError(error as AuthError);
@@ -483,15 +462,18 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         setIsLoading(false);
       }
     },
-    [handleError, saveUserToDatabase, dispatch]
+    [handleError, syncUserToStore]
   );
 
-  
+
 
   
 
+  // Aynı deep-link URL'i birden fazla kez işlememek için (ör. session state'i
+  // henüz güncellenmeden effect tekrar tetiklenirse) işlenen URL'i takip ediyoruz.
+  const handledUrlRef = useRef<string | null>(null);
   useEffect(() => {
-    if (url) {
+    if (url && handledUrlRef.current !== url) {
       const parsedUrl = parseSupabaseUrl(url);
       if (
         !session &&
@@ -499,26 +481,40 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
           parsedUrl?.queryParams?.type === 'recovery' ||
           parsedUrl?.queryParams?.type === 'magiclink')
       ) {
+        handledUrlRef.current = url;
         createSessionFromUrl(url);
       }
     }
   }, [url, session, createSessionFromUrl]);
 
-  const value = {
-    user,
-    session,
-    initialized,
-    signOut,
-    signInWithGoogle,
-    signInWithApple,
-    createSessionFromUrl,
-    isLoading,
-    error,
-    isAuthenticated,
-    handleError,
-    
-    
-  };
+  const value = useMemo(
+    () => ({
+      user,
+      session,
+      initialized,
+      signOut,
+      signInWithGoogle,
+      signInWithApple,
+      createSessionFromUrl,
+      isLoading,
+      error,
+      isAuthenticated,
+      handleError,
+    }),
+    [
+      user,
+      session,
+      initialized,
+      signOut,
+      signInWithGoogle,
+      signInWithApple,
+      createSessionFromUrl,
+      isLoading,
+      error,
+      isAuthenticated,
+      handleError,
+    ]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -6,6 +6,7 @@ import Animated, {
   withRepeat,
   withTiming,
   Easing,
+  cancelAnimation,
 } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { useTheme } from '@/hooks/theme/useTheme';
@@ -65,6 +66,15 @@ const Blob: React.FC<BlobProps> = React.memo(({ color, size, index }) => {
       -1,
       true
     );
+
+    // Boyut/ekran değişince yeni sonsuz döngüler başlatılmadan önce eskilerini
+    // iptal ediyoruz; unmount'ta da UI thread'de çalışmaya devam etmesinler.
+    return () => {
+      cancelAnimation(translateY);
+      cancelAnimation(translateX);
+      cancelAnimation(scale);
+      cancelAnimation(rotate);
+    };
   }, [
     size,
     screenWidth,

@@ -7,6 +7,7 @@ import { useFonts } from 'expo-font';
 import { Slot, Stack, ThemeProvider, useRouter, useSegments } from 'expo-router';
 import { SplashScreen } from 'expo-router';
 import React, { useEffect } from 'react';
+import { InteractionManager } from 'react-native';
 import '@/i18n';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Provider } from 'react-redux';
@@ -58,10 +59,7 @@ class AppErrorBoundary extends React.Component<
   }
 }
 
-import {
-  RevenueCatProvider,
-  useRevenueCat,
-} from '@/context/RevenueCatProvider';
+import { RevenueCatProvider } from '@/context/RevenueCatProvider';
 
 //* If you want to use Admob, uncomment the following lines 👇
 import { useAdmob } from '@/hooks/useAdmob';
@@ -74,42 +72,45 @@ SplashScreen.preventAutoHideAsync();
 
 function MainLayout() {
   usePushNotification();
-  const { statusBarStyle, statusBarBackgroundColor, theme } = useTheme();
+  const { statusBarStyle, theme } = useTheme();
 
-  const { initializeRevenueCat } = useRevenueCat();
   //* If you want to use Admob, uncomment the following lines 👇
-  const { admobState, initializeAdmobService } = useAdmob();
+  const { initializeAdmobService } = useAdmob();
 
   const segments = useSegments();
   const router = useRouter();
   const { session, initialized } = useAuth();
-  const [loaded] = useFonts({
+  // Not: SpaceMono şu an hiçbir yerde render edilmiyor; arka planda yüklenmeye
+  // devam eder ama splash/first-paint artık buna bağlı değil (bkz. aşağıdaki effect).
+  useFonts({
     SpaceMono: require('@/assets/fonts/SpaceMono-Regular.ttf'),
     // Add more fonts here if needed
   });
 
   useEffect(() => {
-    // Get user tracking permission
-    // This function is important for compliance with privacy regulations
-    try {
-      //* If you want to use Admob, uncomment the following lines 👇
-      initializeAdmobService();
-      // Dont remove it , because Apple will reject the app if this is not implemented
-      // You should configure this function according to your needs.
-      getUserTrackingPermission();
-      initializeRevenueCat();
-    } catch (error) {
-      console.error('Initialization error:', error);
-    }
+    // AdMob init ve ATT izin isteği ilk boyama ile yarışmasın diye
+    // etkileşimler tamamlandıktan sonra çalıştırılır (açılış süresini bloklamaz).
+    const task = InteractionManager.runAfterInteractions(() => {
+      try {
+        //* If you want to use Admob, uncomment the following lines 👇
+        initializeAdmobService();
+        // Dont remove it , because Apple will reject the app if this is not implemented
+        // You should configure this function according to your needs.
+        getUserTrackingPermission();
+      } catch (error) {
+        console.error('Initialization error:', error);
+      }
+    });
+    return () => task.cancel();
   }, []);
 
   useEffect(() => {
-    // Daha güvenli splash screen kontrolü
-    const isReady = loaded && initialized && (admobState.admobReady.isLoaded || !admobState.admobReady.isLoaded);
-    if (isReady) {
+    // SpaceMono şu an UI'da kullanılmadığından splash'ı font yüklemesiyle bloklamıyoruz;
+    // sadece auth hidrasyonu (initialized) bekleniyor.
+    if (initialized) {
       SplashScreen.hideAsync().catch(console.error);
     }
-  }, [loaded, initialized, admobState.admobReady.isLoaded]); 
+  }, [initialized]);
 
   useEffect(() => {
     if (!session && segments[0] !== '(no-auth)') {
@@ -120,7 +121,7 @@ function MainLayout() {
   }, [segments, router, session]);
 
   // Daha güvenli loading kontrolü
-  if (!loaded || !initialized) {
+  if (!initialized) {
     return <Slot />;
   }
 
@@ -129,7 +130,6 @@ function MainLayout() {
       <StatusBar
         style={statusBarStyle}
         animated={true}
-        backgroundColor={statusBarBackgroundColor}
       />
       <Stack initialRouteName="(auth)" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />

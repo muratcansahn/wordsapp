@@ -19,6 +19,14 @@ export const useAdmobRewarded = (adIndex: 0 | 1 = 0) => {
   const earnedRewardRef = useRef(false);
   const dispatch = useDispatch<AppDispatch>();
   const userIdFromRedux = useSelector((state: RootState) => state.user.id);
+  // EARNED_REWARD handler'ının en güncel user id'yi görmesi için ref'te tutuyoruz;
+  // böylece puan güncellemesi ana reklam kurulum effect'ini yeniden tetiklemiyor
+  // (aksi halde her puan değişiminde reklam nesnesi + 4 listener yeniden oluşturulup
+  // yeniden network'ten yükleniyordu).
+  const userIdRef = useRef(userIdFromRedux);
+  useEffect(() => {
+    userIdRef.current = userIdFromRedux;
+  }, [userIdFromRedux]);
 
   useEffect(() => {
     const rewarded = RewardedAd.createForAdRequest(adUnitId, {
@@ -41,7 +49,7 @@ export const useAdmobRewarded = (adIndex: 0 | 1 = 0) => {
           return;
         }
 
-        let userId: string | undefined = userIdFromRedux;
+        let userId: string | undefined = userIdRef.current;
 
         if (!userId) {
           try {
@@ -86,7 +94,7 @@ export const useAdmobRewarded = (adIndex: 0 | 1 = 0) => {
       closeListener();
       errorListener();
     };
-  }, [adIndex, adUnitId, dispatch, userIdFromRedux]);
+  }, [adIndex, adUnitId, dispatch]);
 
   const showRewarded = useCallback((): Promise<boolean> => {
     return new Promise<boolean>((resolve) => {
@@ -98,9 +106,18 @@ export const useAdmobRewarded = (adIndex: 0 | 1 = 0) => {
 
       const show = () => {
         earnedRewardRef.current = false;
+        // CLOSED normal akış; ERROR ise reklam gösterilirken/gösterildikten sonra
+        // bir şeyler ters giderse promise'in sonsuza dek askıda kalmaması ve
+        // listener'ın sızmaması için fallback.
         const closeListener = ad.addAdEventListener(AdEventType.CLOSED, () => {
-          resolve(earnedRewardRef.current);
           closeListener();
+          showErrorListener();
+          resolve(earnedRewardRef.current);
+        });
+        const showErrorListener = ad.addAdEventListener(AdEventType.ERROR, () => {
+          closeListener();
+          showErrorListener();
+          resolve(earnedRewardRef.current);
         });
         ad.show();
         isLoadedRef.current = false;

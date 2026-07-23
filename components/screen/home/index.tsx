@@ -1,3 +1,4 @@
+import React, { useCallback } from 'react';
 import { StyleSheet, FlatList } from 'react-native';
 import { ThemedText } from '@/components/common/typography';
 import { ThemedView } from '@/components/common/view';
@@ -21,45 +22,66 @@ import { useTheme } from '@/hooks/theme/useTheme';
 interface FeatureItemProps {
   icon: string;
   route: string;
-  name: string;
+  buttonColor: string;
+  textColor: string;
+  label: string;
 }
 
-const FeatureItem: React.FC<FeatureItemProps> = ({ icon, route, name }) => {
-  const { mode } = useTheme();
+// Grid hücresi her item için ayrı ayrı useTheme/useTranslation'a abone olmasın
+// diye theme/i18n değerleri parent'tan prop olarak geçiliyor; React.memo ile
+// theme/dil değişmediği sürece diğer hücrelerin gereksiz yeniden render'ı önleniyor.
+const FeatureItem: React.FC<FeatureItemProps> = React.memo(
+  ({ icon, route, buttonColor, textColor, label }) => {
+    const handlePress = useCallback(() => {
+      router.push(`/${route}` as Href);
+    }, [route]);
 
-  const { t } = useTranslation();
-
-  const handlePress = () => {
-    router.push(`/${route}` as Href);
-  };
-
-  return (
-    <ThemedView style={styles.themedView}>
-      <PressableOpacity
-        onPress={handlePress}
-        style={[styles.gridItem, { backgroundColor: Colors[mode].button }]}
-      >
-        <Ionicons
-          name={icon as keyof typeof Ionicons.glyphMap}
-          size={ICON_SIZE.sm}
-          color={Colors[mode].text}
-        />
-        <ThemedText style={styles.gridItemText}>{t(name)}</ThemedText>
-      </PressableOpacity>
-    </ThemedView>
-  );
-};
+    return (
+      <ThemedView style={styles.themedView}>
+        <PressableOpacity
+          onPress={handlePress}
+          style={[styles.gridItem, { backgroundColor: buttonColor }]}
+        >
+          <Ionicons
+            name={icon as keyof typeof Ionicons.glyphMap}
+            size={ICON_SIZE.sm}
+            color={textColor}
+          />
+          <ThemedText style={styles.gridItemText}>{label}</ThemedText>
+        </PressableOpacity>
+      </ThemedView>
+    );
+  }
+);
 
 export default function HomeScreen() {
+  const { mode } = useTheme();
+  const { t } = useTranslation();
+  const buttonColor = Colors[mode].button;
+  const textColor = Colors[mode].text;
+
+  const renderItem = useCallback(
+    ({ item }: { item: (typeof features)[number] }) => (
+      <FeatureItem
+        icon={item.icon}
+        route={item.route}
+        buttonColor={buttonColor}
+        textColor={textColor}
+        label={t(item.name)}
+      />
+    ),
+    [buttonColor, textColor, t]
+  );
+
+  const keyExtractor = useCallback((item: (typeof features)[number]) => item.id, []);
+
   return (
     <ThemedView style={styles.container}>
       <FlatList
         data={features}
-        renderItem={({ item }) => (
-          <FeatureItem icon={item.icon} route={item.route} name={item.name} />
-        )}
+        renderItem={renderItem}
         showsVerticalScrollIndicator={false}
-        keyExtractor={(item) => item.id}
+        keyExtractor={keyExtractor}
         numColumns={2}
         contentContainerStyle={styles.gridContainer}
       />

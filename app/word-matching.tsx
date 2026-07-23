@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -52,6 +52,12 @@ interface MatchingWord {
 // Ekran genişliğini al
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+// Seçim kartlarındaki gradient renkleri her render'da yeniden allocate
+// edilmesin diye modül seviyesinde sabit tutuluyor.
+const SELECTED_WRONG_GRADIENT = ['#ff9aa2', '#ffb7b2', '#ffdac1'] as const;
+const SELECTED_CORRECT_GRADIENT = ['#b5ead7', '#c7ceea', '#e2f0cb', '#ffdac1'] as const;
+const UNSELECTED_GRADIENT = ['transparent', 'transparent'] as const;
+
 export default function WordMatchingScreen() {
   const router = useRouter();
   const { mode } = useTheme();
@@ -86,7 +92,34 @@ export default function WordMatchingScreen() {
   
   // Eşleşmiş kelime-çeviri çiftlerini tutmak için state
   const [matchedPairs, setMatchedPairs] = useState<{wordId: string, translation: string, word: string}[]>([]);
-  
+
+  // Eşleşmemiş kelime/çeviri listeleri her render'da (özellikle her seçimde)
+  // yeniden filtrelenmesin diye memoize ediliyor. Çeviriler için O(n²) olan
+  // .some() taraması yerine eşleşmiş çevirilerin Set'i kullanılıyor.
+  const unmatchedWords = useMemo(
+    () => matchingWords.filter(word => !word.matched),
+    [matchingWords]
+  );
+  const matchedTranslationSet = useMemo(
+    () => new Set(matchingWords.filter(w => w.matched).map(w => w.translation)),
+    [matchingWords]
+  );
+  const unmatchedTranslations = useMemo(
+    () => shuffledTranslations.filter(translation => !matchedTranslationSet.has(translation)),
+    [shuffledTranslations, matchedTranslationSet]
+  );
+
+  // Ekrandan çıkıldığında unmount sonrası setState olmaması için bekleyen
+  // timeout'ları takip edip cleanup'ta temizliyoruz.
+  const infoModalTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wrongMatchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (infoModalTimeoutRef.current) clearTimeout(infoModalTimeoutRef.current);
+      if (wrongMatchTimeoutRef.current) clearTimeout(wrongMatchTimeoutRef.current);
+    };
+  }, []);
+
   // Sayfa yüklendiğinde oyunu başlat
   useEffect(() => {
     // Sayfa yüklendiğinde otomatik olarak oyunu başlat
@@ -103,14 +136,14 @@ export default function WordMatchingScreen() {
         
         // Eğer kullanıcı daha önce modalı görmemişse göster
         if (hasSeenInfoModal === null) {
-          setTimeout(() => {
+          infoModalTimeoutRef.current = setTimeout(() => {
             setShowInfoModal(true);
           }, 500);
         }
       } catch (error) {
         console.error('AsyncStorage okuma hatası:', error);
         // Hata durumunda modalı göster
-        setTimeout(() => {
+        infoModalTimeoutRef.current = setTimeout(() => {
           setShowInfoModal(true);
         }, 500);
       }
@@ -378,7 +411,7 @@ export default function WordMatchingScreen() {
       setWrongMatch(true);
       
       // Kısa bir süre göster ve sonra seçimleri sıfırla
-      setTimeout(() => {
+      wrongMatchTimeoutRef.current = setTimeout(() => {
         // Yanlış eşleşme durumunu kapat
         setWrongMatch(false);
         // Sadece yanlış eşleşme durumunda seçimleri sıfırla
@@ -520,8 +553,7 @@ export default function WordMatchingScreen() {
                 {/* Sol taraf - Eşleşmemiş İngilizce kelimeler */}
                 <View style={styles.wordsColumn}>
                   <ThemedText style={styles.sectionTitle}>{t('wordMatching.english')}</ThemedText>
-                  {matchingWords
-                    .filter(word => !word.matched) // Sadece eşleşmemiş kelimeleri göster
+                  {unmatchedWords
                     .map((word) => {
                       const isSelected = word.id === selectedWord;
                       return (
@@ -540,11 +572,11 @@ export default function WordMatchingScreen() {
                           }}
                         >
                           <LinearGradient
-                            colors={isSelected ? 
-                              (wrongMatch ? 
-                                ['#ff9aa2', '#ffb7b2', '#ffdac1'] : 
-                                ['#b5ead7', '#c7ceea', '#e2f0cb', '#ffdac1']) : 
-                              ['transparent', 'transparent']
+                            colors={isSelected ?
+                              (wrongMatch ?
+                                SELECTED_WRONG_GRADIENT :
+                                SELECTED_CORRECT_GRADIENT) :
+                              UNSELECTED_GRADIENT
                             }
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
@@ -571,11 +603,10 @@ export default function WordMatchingScreen() {
                 {/* Sağ taraf - Eşleşmemiş Türkçe anlamlar */}
                 <View style={styles.translationsColumn}>
                   <ThemedText style={styles.sectionTitle}>{t('wordMatching.language')}</ThemedText>
-                  {shuffledTranslations
-                    .filter(translation => !matchingWords.some(w => w.translation === translation && w.matched)) // Sadece eşleşmemiş çevirileri göster
+                  {unmatchedTranslations
                     .map((translation, index) => {
                       const isSelected = selectedTranslation === translation;
-                      
+
                       return (
                         <TouchableOpacity
                           key={index}
@@ -592,11 +623,11 @@ export default function WordMatchingScreen() {
                           }}
                         >
                           <LinearGradient
-                            colors={isSelected ? 
-                              (wrongMatch ? 
-                                ['#ff9aa2', '#ffb7b2', '#ffdac1'] : 
-                                ['#b5ead7', '#c7ceea', '#e2f0cb', '#ffdac1']) : 
-                              ['transparent', 'transparent']
+                            colors={isSelected ?
+                              (wrongMatch ?
+                                SELECTED_WRONG_GRADIENT :
+                                SELECTED_CORRECT_GRADIENT) :
+                              UNSELECTED_GRADIENT
                             }
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}

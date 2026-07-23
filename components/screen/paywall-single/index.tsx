@@ -21,6 +21,7 @@ import Animated, {
   useSharedValue,
   withRepeat,
   withTiming,
+  cancelAnimation,
 } from 'react-native-reanimated';
 import {
   Bolt,
@@ -110,6 +111,7 @@ const PaywallSingle: React.FC = () => {
       -1,
       true
     );
+    return () => cancelAnimation(animated);
   }, [animated]);
 
   return (

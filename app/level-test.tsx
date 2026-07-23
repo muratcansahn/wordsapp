@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -36,6 +36,15 @@ export default function LevelTestScreen() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [showResult, setShowResult] = useState(false);
+  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleAnswer = (answer: string) => {
     setSelectedAnswers({
@@ -72,7 +81,7 @@ export default function LevelTestScreen() {
     }
 
     // Seviye bilgisini kaydet ve ana sayfaya dön
-    setTimeout(() => {
+    redirectTimeoutRef.current = setTimeout(() => {
       router.replace('/');
     }, 3000);
   };

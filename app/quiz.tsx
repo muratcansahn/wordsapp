@@ -61,6 +61,16 @@ export default function QuizPage() {
   const dispatch = useDispatch();
   // Puan konteynerı için referans
   const pointContainerRef = React.useRef<any>(null);
+  // Ekrandan çıkıldığında unmount sonrası setState/navigasyon olmaması için
+  // bekleyen timeout'ları takip edip cleanup'ta temizliyoruz.
+  const infoModalTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const nextQuestionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (infoModalTimeoutRef.current) clearTimeout(infoModalTimeoutRef.current);
+      if (nextQuestionTimeoutRef.current) clearTimeout(nextQuestionTimeoutRef.current);
+    };
+  }, []);
   useEffect(() => {
     const sendSkippedList = async () => {
       if (showResult && listId) {
@@ -193,14 +203,14 @@ export default function QuizPage() {
         
         // Eğer kullanıcı daha önce modalı görmemişse göster
         if (hasSeenInfoModal === null) {
-          setTimeout(() => {
+          infoModalTimeoutRef.current = setTimeout(() => {
             setShowInfoModal(true);
           }, 500);
         }
       } catch (error) {
         console.error('AsyncStorage okuma hatası:', error);
         // Hata durumunda modalı göster
-        setTimeout(() => {
+        infoModalTimeoutRef.current = setTimeout(() => {
           setShowInfoModal(true);
         }, 500);
       }
@@ -317,7 +327,7 @@ export default function QuizPage() {
     await saveQuizProgress(currentQuestionIndex, newScore);
     
     // Move to next question after delay
-    setTimeout(async () => {
+    nextQuestionTimeoutRef.current = setTimeout(async () => {
       if (currentQuestionIndex < questions.length - 1) {
         const nextIndex = currentQuestionIndex + 1;
         setCurrentQuestionIndex(nextIndex);
@@ -346,7 +356,6 @@ export default function QuizPage() {
       }
     }, 1500);
   };
-  console.log(wordList)
   const handleBackToStudyMode = async () => {
     // Sonuç ekranından çıkarken ilerlemeyi temizle
     if (showResult) {

@@ -5,6 +5,8 @@ interface UserState {
   full_name: string;
   point: number;
   streak_count: number;
+  known_words?: number;
+  unknown_words?: number;
   wordStatusUpdateCounter: number;
 }
 

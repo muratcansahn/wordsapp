@@ -203,7 +203,13 @@ export default function FlashcardsScreen() {
   const translationAnim = useRef(new RNAnimated.Value(0)).current;
   const cardOpacity = useRef(new RNAnimated.Value(1)).current;
   const pointContainerRef = useRef<any>(null);
-  
+  const infoModalTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (infoModalTimeoutRef.current) clearTimeout(infoModalTimeoutRef.current);
+    };
+  }, []);
+
   // Ses havuzu
   const soundPoolRef = useRef<SoundPool>({
     knownSound: null,
@@ -455,10 +461,10 @@ export default function FlashcardsScreen() {
       try {
         const hasSeenInfoModal = await AsyncStorage.getItem('hasSeenFlashcardsInfoModal');
         if (hasSeenInfoModal === null) {
-          setTimeout(() => setShowInfoModal(true), 500);
+          infoModalTimeoutRef.current = setTimeout(() => setShowInfoModal(true), 500);
         }
       } catch (error) {
-        setTimeout(() => setShowInfoModal(true), 500);
+        infoModalTimeoutRef.current = setTimeout(() => setShowInfoModal(true), 500);
       }
     };
     

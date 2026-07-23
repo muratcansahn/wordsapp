@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, TouchableOpacity,StatusBar, Image, ActivityIndicator, RefreshControl, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity,StatusBar, ActivityIndicator, RefreshControl, Animated } from 'react-native';
+import { Image } from 'expo-image';
 import React, { memo, useEffect, useRef } from 'react';
 import { BORDER_RADIUS, PADDING, MARGIN } from '@/constants/AppConstants';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,7 +10,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/SupabaseProvider';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { getWordListsPaginatedWithGroupBy, WordStatus } from '@/services/wordListService';
+import { getWordListsPaginatedWithGroupBy } from '@/services/wordListService';
 import { supabase } from '@/lib/supabase';
 
 type MaterialIconName = 'book-open-page-variant' | 'briefcase' | 'airplane' | 'check-circle' | 'chevron-right' | 'star';
@@ -57,8 +58,6 @@ export default function LearnPage() {
   const [knownUnknownMap, setKnownUnknownMap] = useState<Record<number, { biliyorum: number; bilmiyorum: number }>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [userWordStatuses, setUserWordStatuses] = useState<WordStatus[]>([]);
-  const [userWordStatusesLoading, setUserWordStatusesLoading] = useState(false);
   
   const { user } = useAuth();
   const wordStatusUpdateCounter = useSelector((state: RootState) => state.user.wordStatusUpdateCounter);
@@ -110,11 +109,6 @@ export default function LearnPage() {
         // State'leri güncelle
         setKnownUnknownMap(prev => ({ ...prev, ...updatedKnownUnknownMap }));
         
-        // Kelime durumlarını güncelle
-        if (data.progress) {
-          setUserWordStatuses(prev => [...prev, ...data.progress]);
-        }
-        
         // Kelime listelerini güncelle
         setWordLists(prevLists => 
           prevLists.map(list => {
@@ -139,8 +133,7 @@ export default function LearnPage() {
     
     isDataFetching.current = true;
     setLoading(true);
-    setUserWordStatusesLoading(true);
-    
+
     try {
       // Mevcut dili i18n'den al
       const currentLanguage = i18n.language.split('-')[0]; // 'tr-TR' -> 'tr'
@@ -162,7 +155,6 @@ export default function LearnPage() {
       console.error('Veri yüklenirken hata:', error);
     } finally {
       setLoading(false);
-      setUserWordStatusesLoading(false);
       isDataFetching.current = false;
     }
   }, [user, getUserWordListProgress]);
@@ -223,8 +215,7 @@ export default function LearnPage() {
     setHasMore(true);
     setWordLists([]);
     setKnownUnknownMap({});
-    setUserWordStatuses([]);
-    
+
     try {
       await fetchInitialData();
     } finally {
@@ -251,21 +242,6 @@ export default function LearnPage() {
     }
   }, [wordStatusUpdateCounter, user, wordLists, getUserWordListProgress]);
 
-  // Scroll handler - throttled
-  const scrollHandler = useCallback((event: any) => {
-    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-    const paddingToBottom = 100; // Daha büyük threshold
-    
-    if (layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom) {
-      // Debounce için timeout kullan
-      setTimeout(() => {
-        if (!loadingMoreRef.current) {
-          loadMoreData();
-        }
-      }, 300);
-    }
-  }, [loadMoreData]);
-
   const handleListSelect = useCallback((listId: number) => {
     router.push({
       pathname: '/learn/study-mode',
@@ -288,7 +264,7 @@ export default function LearnPage() {
     }]
   };
 
-  const renderLoadingIndicator = () => {
+  const renderLoadingIndicator = useCallback(() => {
     if (!loadingMore) return null;
     
     return (
@@ -296,17 +272,26 @@ export default function LearnPage() {
         <ActivityIndicator size="small" color="#6366F1" />
       </View>
     );
-  };
+  }, [loadingMore]);
   
-  const renderFooter = () => {
+  const renderFooter = useCallback(() => {
     if (!hasMore && wordLists.length > 0) {
       return (
         <View style={styles.endOfListContainer}>
         </View>
       );
     }
-    return null;
-  };
+    return renderLoadingIndicator();
+  }, [hasMore, renderLoadingIndicator, wordLists.length]);
+
+  const renderWordListItem = useCallback(({ item }: { item: WordList }) => (
+    <WordListItem
+      list={item}
+      progress={knownUnknownMap[item.id]}
+      onPress={handleListSelect}
+      t={t}
+    />
+  ), [handleListSelect, knownUnknownMap, t]);
 
   if (loading) {
     return (
@@ -321,11 +306,10 @@ export default function LearnPage() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
-      <Animated.View style={[styles.header, headerAnimatedStyle]}>
-        <Text style={styles.title}>{t('learnIndex.wordListsTitle')}</Text>
-      </Animated.View>
-      
-      <Animated.ScrollView 
+      <Animated.FlatList
+        data={wordLists}
+        renderItem={renderWordListItem}
+        keyExtractor={(item) => String(item.id)}
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -333,10 +317,21 @@ export default function LearnPage() {
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { 
             useNativeDriver: true,
-            listener: scrollHandler
           }
         )}
-        scrollEventThrottle={400} // Daha az sıklıkta çağır
+        scrollEventThrottle={16}
+        ListHeaderComponent={
+          <Animated.View style={[styles.header, headerAnimatedStyle]}>
+            <Text style={styles.title}>{t('learnIndex.wordListsTitle')}</Text>
+          </Animated.View>
+        }
+        ListFooterComponent={renderFooter}
+        onEndReached={loadMoreData}
+        onEndReachedThreshold={0.4}
+        initialNumToRender={6}
+        maxToRenderPerBatch={6}
+        windowSize={7}
+        removeClippedSubviews
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -345,34 +340,27 @@ export default function LearnPage() {
             tintColor="#6366F1"
           />
         }
-      >
-        <View style={styles.listContainer}>
-          {wordLists.map((list) => (
-            <WordListItem 
-              key={list.id} 
-              list={list} 
-              knownUnknownMap={knownUnknownMap} 
-              onPress={handleListSelect} 
-              t={t} 
-            />
-          ))}
-          {renderLoadingIndicator()}
-          {renderFooter()}
-        </View>
-      </Animated.ScrollView>
+      />
     </View>
   );
 }
 
 // Optimize edilmiş liste öğesi bileşeni
-const WordListItem = memo(({ list, knownUnknownMap, onPress, t }: { 
+const WordListItem = memo(({ list, progress, onPress, t }: { 
   list: WordList; 
-  knownUnknownMap: Record<number, { biliyorum: number; bilmiyorum: number }>; 
+  progress?: { biliyorum: number; bilmiyorum: number }; 
   onPress: (id: number) => void;
   t: (key: string) => string;
 }) => {
   const opacity = React.useMemo(() => new Animated.Value(1), []);
   const translateY = React.useMemo(() => new Animated.Value(0), []);
+  const known = progress?.biliyorum || 0;
+  const unknown = progress?.bilmiyorum || 0;
+  const remaining = Math.max(0, list.total_words - unknown - known);
+  const markedWords = known + unknown;
+  const statusText = markedWords > 0
+    ? `%${list.total_words > 0 ? Math.round((markedWords / list.total_words) * 100) : 0}`
+    : t('learnIndex.notStarted');
 
   const handlePress = useCallback(() => {
     onPress(list.id);
@@ -399,10 +387,12 @@ const WordListItem = memo(({ list, knownUnknownMap, onPress, t }: {
           <View style={styles.cardContent}>
             <View style={styles.topRow}>
               <View style={styles.imageContainer}>
-                <Image 
-                  source={{ uri: list.image }} 
+                <Image
+                  source={{ uri: list.image }}
                   style={styles.listImage}
-                  resizeMode="cover"
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                  recyclingKey={list.image}
                 />
               </View>
               <View style={styles.textContainer}>
@@ -421,21 +411,21 @@ const WordListItem = memo(({ list, knownUnknownMap, onPress, t }: {
                     {/* Bilinen kelimeler */}
                     <View style={[styles.wordCountBadge, styles.knownWordBadge]}>
                       <Text style={styles.knownWordText}>
-                        {knownUnknownMap[list.id]?.biliyorum || 0}
+                        {known}
                       </Text>
                     </View>
                     
                     {/* Bilinmeyen kelimeler */}
                     <View style={[styles.wordCountBadge, styles.unknownWordBadge]}>
                       <Text style={styles.unknownWordText}>
-                        {knownUnknownMap[list.id]?.bilmiyorum || 0}
+                        {unknown}
                       </Text>
                     </View>
                     
                     {/* Kalan kelimeler */}
                     <View style={[styles.wordCountBadge, styles.remainingWordBadge]}>
                       <Text style={styles.remainingWordText}>
-                        {Math.max(0, list.total_words - (knownUnknownMap[list.id]?.bilmiyorum || 0) - (knownUnknownMap[list.id]?.biliyorum || 0))}
+                        {remaining}
                       </Text>
                     </View>
                   </View>
@@ -443,21 +433,7 @@ const WordListItem = memo(({ list, knownUnknownMap, onPress, t }: {
               </View>
               <View style={styles.statusContainer}>
                 <Text style={styles.statusText}>
-                  {(() => {
-                    const known = knownUnknownMap[list.id]?.biliyorum || 0;
-                    const unknown = knownUnknownMap[list.id]?.bilmiyorum || 0;
-                    const total = list.total_words;
-                    const markedWords = known + unknown;
-                    
-                    // Eğer listeye başlanmışsa (en az bir kelime işaretlenmişse) yüzdeyi göster
-                    if (markedWords > 0) {
-                      const progress = total > 0 ? Math.round((markedWords / total) * 100) : 0;
-                      return `%${progress}`;
-                    } else {
-                      // Listeye henüz başlanmamışsa
-                      return t('learnIndex.notStarted');
-                    }
-                  })()}
+                  {statusText}
                 </Text>
               </View>
             </View>
@@ -467,16 +443,13 @@ const WordListItem = memo(({ list, knownUnknownMap, onPress, t }: {
     </Animated.View>
   );
 }, (prevProps, nextProps) => {
-  const prevKnown = prevProps.knownUnknownMap[prevProps.list.id]?.biliyorum || 0;
-  const nextKnown = nextProps.knownUnknownMap[nextProps.list.id]?.biliyorum || 0;
-  const prevUnknown = prevProps.knownUnknownMap[prevProps.list.id]?.bilmiyorum || 0;
-  const nextUnknown = nextProps.knownUnknownMap[nextProps.list.id]?.bilmiyorum || 0;
-  
   return (
     prevProps.list.id === nextProps.list.id &&
     prevProps.list.total_words === nextProps.list.total_words &&
-    prevKnown === nextKnown &&
-    prevUnknown === nextUnknown
+    prevProps.list.description === nextProps.list.description &&
+    prevProps.list.image === nextProps.list.image &&
+    prevProps.progress?.biliyorum === nextProps.progress?.biliyorum &&
+    prevProps.progress?.bilmiyorum === nextProps.progress?.bilmiyorum
   );
 });
 
@@ -507,12 +480,16 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingVertical: PADDING.lg,
-  },
-  listContainer: {
     paddingHorizontal: PADDING.lg,
   },
   listItem: {
     marginBottom: MARGIN.md,
+    borderRadius: BORDER_RADIUS.lg,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
   },
   listItemTouchable: {
     borderRadius: BORDER_RADIUS.lg,
@@ -521,11 +498,6 @@ const styles = StyleSheet.create({
   gradientContainer: {
     borderRadius: BORDER_RADIUS.lg,
     padding: PADDING.md,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   cardContent: {
     gap: MARGIN.sm,
@@ -565,17 +537,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  progressInfo: {
+    flex: 1,
+  },
 
   progressContainer: {
     flexDirection: 'column',
     backgroundColor: 'rgb(255, 255, 255)',
     padding: 8,
     borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
     marginTop: 8,
 
   },

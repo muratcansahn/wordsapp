@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import { ThemedView } from '@/components/common/view';
 import { ThemedText } from '@/components/common/typography';
@@ -41,6 +41,19 @@ interface MergedMenuItem {
   isLucide: boolean;
 }
 
+// İstenmeyen sekmeleri filtrelemek için sabit liste; component durumuna bağlı
+// olmadığından modül seviyesinde tutuluyor.
+const HIDDEN_TITLES = [
+  'profile.editProfile',
+  'profile.theme',
+  'settings.titles.theme',
+  'profile.help',
+  'settings.titles.help',
+  'profile.settings',
+  'settings.titles.settings',
+  'settings.titles.deleteAccount',
+];
+
 
 const ProfileScreen = () => {
   const { mode } = useTheme();
@@ -63,72 +76,68 @@ const ProfileScreen = () => {
   };
 
   // Ayarlar menüsündeki öğeler (her biri isLucide: false)
-  const settings: MergedMenuItem[] = [
-    {
-      icon: 'language',
-      title: 'settings.titles.language',
-      route: '/settings/language',
-      color: '#007AFF',
-      isLucide: false,
-    },
-    {
-      icon: 'sunny',
-      title: 'profile.theme',
-      route: '/settings/theme',
-      color: '#FF9500',
-      isLucide: false,
-    },
-    {
-      icon: 'lock-closed',
-      title: 'settings.titles.privacy',
-      onPress: handlePrivacyPolicy,
-      color: '#FF3B30',
-      isLucide: false,
-    },
-    {
-      icon: 'help-circle',
-      title: 'profile.help',
-      route: '/settings/help',
-      color: '#34C759',
-      isLucide: false,
-    },
-    {
-      icon: 'notifications',
-      title: 'profile.notifications',
-      route: '/settings/notifications',
-      color: '#5856D6',
-      isLucide: false,
-    },
-  ];
+  const settings: MergedMenuItem[] = useMemo(
+    () => [
+      {
+        icon: 'language',
+        title: 'settings.titles.language',
+        route: '/settings/language',
+        color: '#007AFF',
+        isLucide: false,
+      },
+      {
+        icon: 'sunny',
+        title: 'profile.theme',
+        route: '/settings/theme',
+        color: '#FF9500',
+        isLucide: false,
+      },
+      {
+        icon: 'lock-closed',
+        title: 'settings.titles.privacy',
+        onPress: handlePrivacyPolicy,
+        color: '#FF3B30',
+        isLucide: false,
+      },
+      {
+        icon: 'help-circle',
+        title: 'profile.help',
+        route: '/settings/help',
+        color: '#34C759',
+        isLucide: false,
+      },
+      {
+        icon: 'notifications',
+        title: 'profile.notifications',
+        route: '/settings/notifications',
+        color: '#5856D6',
+        isLucide: false,
+      },
+    ],
+    []
+  );
 
-  // Profil menüsündeki tüm öğeleri ve ayarlar menüsündeki tüm öğeleri birleştiriyoruz
-  // İstenmeyen sekmeleri filtrele (yoruma alma)
-  const hiddenTitles = [
-    'profile.editProfile',
-    'profile.theme',
-    'settings.titles.theme',
-    'profile.help',
-    'settings.titles.help',
-    'profile.settings',
-    'settings.titles.settings',
-    'settings.titles.deleteAccount',
-  ];
-
-  const mergedMenu: MergedMenuItem[] = [
-    ...menuItems.map((item) => ({
-      icon: item.icon,
-      title: item.text,
-      route: item.route,
-      isLucide: true,
-    })),
-    ...settings,
-  ]
-    // Tekilleştir (aynı title ve route olanları birleştir)
-    .filter((item, index, arr) =>
-      index === arr.findIndex((i) => i.title === item.title && i.route === item.route)
-    )
-    // İstenmeyen sekmeleri gösterme
-    .filter((item) => !hiddenTitles.includes(item.title));
+  // Profil menüsündeki tüm öğeleri ve ayarlar menüsündeki tüm öğeleri birleştiriyoruz;
+  // her render'da yeniden hesaplanmasın diye memoize ediliyor.
+  const mergedMenu: MergedMenuItem[] = useMemo(
+    () =>
+      [
+        ...menuItems.map((item) => ({
+          icon: item.icon,
+          title: item.text,
+          route: item.route,
+          isLucide: true,
+        })),
+        ...settings,
+      ]
+        // Tekilleştir (aynı title ve route olanları birleştir)
+        .filter((item, index, arr) =>
+          index === arr.findIndex((i) => i.title === item.title && i.route === item.route)
+        )
+        // İstenmeyen sekmeleri gösterme
+        .filter((item) => !HIDDEN_TITLES.includes(item.title)),
+    [settings]
+  );
 
   const handlePress = useCallback(
     (route: Href) => {
@@ -138,7 +147,7 @@ const ProfileScreen = () => {
   );
 
   // Hem Lucide hem Ionicons ikonlarını destekleyen render fonksiyonu
-  const renderMenuItem = (item: MergedMenuItem) => (
+  const renderMenuItem = useCallback((item: MergedMenuItem) => (
     <PressableOpacity
       key={item.title}
       style={styles.menuItem}
@@ -163,7 +172,7 @@ const ProfileScreen = () => {
         color={Colors.light.placeholderColor}
       />
     </PressableOpacity>
-  );
+  ), [handlePress, t]);
 
 
   return (
@@ -177,6 +186,7 @@ const ProfileScreen = () => {
               placeholder={placeholder}
               placeholderContentFit="contain"
               contentFit="contain"
+              cachePolicy="memory-disk"
             />
           </Animated.View>
           <ThemedView style={styles.nameContainer}>

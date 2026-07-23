@@ -1,6 +1,5 @@
 import React, { FC, useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Animated, Dimensions, Easing, Text, AppState } from 'react-native';
-import Reanimated, { useSharedValue, useAnimatedStyle, withTiming, withRepeat, withSequence, withDelay, Easing as ReanimatedEasing } from 'react-native-reanimated';
+import { View, StyleSheet, Animated, Easing, AppState } from 'react-native';
 import { FishComponent } from '@/components/fish/FishComponent';
 
 interface AquariumProps {
@@ -24,13 +23,12 @@ export const Aquarium: FC<AquariumProps> = ({
   // Başlangıç pozisyonunu direction'a göre ayarla
   const boundaryWidth = 110; // Animasyonun kullandığı sınır değeriyle aynı olmalı
   const initialX = direction === 1 ? -boundaryWidth : boundaryWidth;
-  const fishPositionX = useRef(new Animated.Value(initialX)).current;
-  const fishRotation = useRef(new Animated.Value(0)).current;
+  const [fishPositionX] = useState(() => new Animated.Value(initialX));
+  const [fishRotation] = useState(() => new Animated.Value(0));
   const [fishDirection, setFishDirection] = useState<"right" | "left">(direction === 1 ? "right" : "left"); // Başlangıç yönünü direction prop'una göre ayarla
-  const [isTurning, setIsTurning] = useState(false);
   
   // Baloncuklar için standart React Native Animated API kullanıyoruz
-  const bubbles = useRef([...Array(15)].map(() => ({
+  const [bubbles] = useState(() => [...Array(15)].map(() => ({
     xPos: Math.random() * 320 * 0.8,
     yPos: Math.random() * 200,
     size: Math.random() * 12 + 3,
@@ -41,7 +39,7 @@ export const Aquarium: FC<AquariumProps> = ({
     opacity: new Animated.Value(Math.random() * 0.4 + 0.2),
     scale: new Animated.Value(1),
     color: Math.random() > 0.7 ? 'rgba(255, 255, 255, 0.5)' : 'rgba(220, 240, 255, 0.4)',
-  }))).current;
+  })));
   
   // fishData'dan gerekli değerleri çıkar
   const hungerLevel = fishData?.hunger_level;
@@ -133,118 +131,55 @@ export const Aquarium: FC<AquariumProps> = ({
   
   // Balık yüzmesi için basit animasyon
   useEffect(() => {
-    // Sınırlar - akvaryumun sınırları
     const boundaryWidth = 110; // Sınır mesafesi
-    
-    // Hız değeri - çok daha yavaş hareket için düşük bir değer
-    const speed = 0.3; // Çok daha yavaş hareket
-    
-    // X pozisyonu - başlangıç pozisyonu direction prop'una göre ayarla
-    let xPosition = direction === 1 ? -boundaryWidth : boundaryWidth;
-    let xVelocity = direction === 1 ? speed : -speed; // Başlangıç yönü direction prop'una göre ayarla
-    let isFacingRight = direction === 1;
-    
-    // Başlangıç pozisyonunu ayarla
-    fishPositionX.setValue(xPosition);
-    
-    // Animasyon interval referansı
-    let animationInterval: NodeJS.Timeout | null = null;
-    
-    // Animasyonu başlatan fonksiyon
+    let stopped = false;
+    let currentDirection = direction === 1 ? 1 : -1;
+
     const startAnimation = () => {
-      // Eğer zaten çalışan bir animasyon varsa, önce onu temizle
-      if (animationInterval) {
-        clearInterval(animationInterval);
-      }
-      
-      // Sabit framerate ile animasyon (setInterval kullanıyoruz)
-      animationInterval = setInterval(() => {
-        // Pozisyonu güncelle
-        xPosition += xVelocity;
-        
-        // Sınırları kontrol et
-        if (xPosition >= boundaryWidth) {
-          // Sağ kenara çarptı - sola dön
-          xVelocity = -speed;
-          xPosition = boundaryWidth; // Sınırda tut
-          
-          if (isFacingRight && !isTurning) {
-            // Dönüş animasyonu başlat
-            setIsTurning(true);
-            
-            // Önce hafifçe geri geri git, sonra dön
-            Animated.sequence([
-              // Hafifçe geri çekil
-              Animated.timing(fishPositionX, {
-                toValue: boundaryWidth - 15,
-                duration: 300,
-                easing: Easing.out(Easing.cubic),
-                useNativeDriver: true
-              }),
-              // Dönüş sırasında hafifçe aşağı yukarı hareket
-              Animated.timing(fishRotation, {
-                toValue: 1,
-                duration: 400,
-                easing: Easing.inOut(Easing.cubic),
-                useNativeDriver: true
-              })
-            ]).start(() => {
-              // Dönüş tamamlandı
-              setFishDirection("left");
-              isFacingRight = false;
-              setIsTurning(false);
-              fishRotation.setValue(0);
-            });
-          }
-        } else if (xPosition <= -boundaryWidth) {
-          // Sol kenara çarptı - sağa dön
-          xVelocity = speed;
-          xPosition = -boundaryWidth; // Sınırda tut
-          
-          if (!isFacingRight && !isTurning) {
-            // Dönüş animasyonu başlat
-            setIsTurning(true);
-            
-            // Önce hafifçe geri geri git, sonra dön
-            Animated.sequence([
-              // Hafifçe geri çekil
-              Animated.timing(fishPositionX, {
-                toValue: -boundaryWidth + 15,
-                duration: 300,
-                easing: Easing.out(Easing.cubic),
-                useNativeDriver: true
-              }),
-              // Dönüş sırasında hafifçe aşağı yukarı hareket
-              Animated.timing(fishRotation, {
-                toValue: 1,
-                duration: 400,
-                easing: Easing.inOut(Easing.cubic),
-                useNativeDriver: true
-              })
-            ]).start(() => {
-              // Dönüş tamamlandı
-              setFishDirection("right");
-              isFacingRight = true;
-              setIsTurning(false);
-              fishRotation.setValue(0);
-            });
-          }
-        }
-        
-        // Hareket halindeyse ve dönüş yapmıyorsa pozisyonu güncelle
-        if (!isTurning) {
-          fishPositionX.setValue(xPosition);
-        }
-        
-      }, 1000/60); // 60 FPS
+      stopped = false;
+      fishPositionX.stopAnimation();
+      fishRotation.stopAnimation();
+
+      const swim = () => {
+        if (stopped) return;
+
+        const nextX = currentDirection === 1 ? boundaryWidth : -boundaryWidth;
+        setFishDirection(currentDirection === 1 ? "right" : "left");
+
+        Animated.timing(fishPositionX, {
+          toValue: nextX,
+          duration: 12000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }).start(({ finished }) => {
+          if (!finished || stopped) return;
+
+          currentDirection *= -1;
+          Animated.sequence([
+            Animated.timing(fishRotation, {
+              toValue: 1,
+              duration: 350,
+              easing: Easing.inOut(Easing.cubic),
+              useNativeDriver: true,
+            }),
+            Animated.timing(fishRotation, {
+              toValue: 0,
+              duration: 350,
+              easing: Easing.inOut(Easing.cubic),
+              useNativeDriver: true,
+            }),
+          ]).start(() => swim());
+        });
+      };
+
+      fishPositionX.setValue(currentDirection === 1 ? -boundaryWidth : boundaryWidth);
+      swim();
     };
-    
-    // Animasyonu durduran fonksiyon
+
     const stopAnimation = () => {
-      if (animationInterval) {
-        clearInterval(animationInterval);
-        animationInterval = null;
-      }
+      stopped = true;
+      fishPositionX.stopAnimation();
+      fishRotation.stopAnimation();
     };
     
     // AppState değişimini dinle

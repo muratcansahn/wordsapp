@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSelector, useDispatch } from 'react-redux';
@@ -6,7 +6,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { ThemedText } from '@/components/common/typography';
 import { ThemedView } from '@/components/common/view';
-import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-root-toast';
 import { RootState } from '@/store';
@@ -14,45 +13,76 @@ import { supabase } from '@/lib/supabase';
 import { fetchWordStatuses, updateWordStatus } from '@/services/userWordStatusService';
 import { updateUserStats, incrementWordStatusCounter } from '@/store/userSlice';
 import { Colors } from '@/constants/Colors';
-import { BORDER_RADIUS, FLEX, FONT_SIZE, ICON_SIZE, MARGIN, PADDING } from '@/constants/AppConstants';
+import { FLEX, FONT_SIZE, ICON_SIZE, MARGIN, PADDING } from '@/constants/AppConstants';
 import { useTheme } from '@/hooks/theme/useTheme';
 import NativeLoader from '@/components/common/loader/native-loader';
-
-// Kelime tipi tanımı
-interface WordItem {
-  id: number;
-  text: string;
-  translation: string;
-  example: string;
-  example_original: string;
-  status: number;
-}
+import { buildWordItems, WordItem } from '@/utils/word-list-utils';
 
 export default function WordListScreen() {
   const { mode } = useTheme();
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { type } = params;
-  
-  const [title, setTitle] = useState('');
+  const title = typeof params.title === 'string' ? params.title : '';
   
   // Redux'tan kullanıcı bilgilerini al
   const { id: userId } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   
-  // Sayfa yüklendiğinde title parametresini al
-  useEffect(() => {
-    if (params.title) {
-      setTitle(params.title as string);
-    }
-  }, [params]);
-  console.log(params)
-  
   // Kelime durumlarını saklamak için state
-  const [userWordStatuses, setUserWordStatuses] = useState<any[]>([]);
   const [words, setWords] = useState<WordItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Ekrandan çıkıldığında devam eden fetch'lerin unmount sonrası setState
+  // yapmaması için basit bir mounted guard.
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // Kelime detaylarını çek
+  const fetchWordDetails = useCallback(async (wordStatuses: any[]) => {
+    try {
+      // Kelime ID'lerini al
+      const wordIds = wordStatuses.map(status => status.word_id);
+      
+      // Words tablosundan kelime bilgilerini çek
+      const { data: wordsData, error: wordsError } = await supabase
+        .from('Words')
+        .select('id, name')
+        .in('id', wordIds)
+
+      if (!isMountedRef.current) return;
+      if (wordsError) {
+        console.error('Kelimeler çekilirken hata:', wordsError);
+        setIsLoading(false);
+        return;
+      }
+
+      // WordTranslations tablosundan çevirileri çek
+      const { data: translationsData, error: translationsError } = await supabase
+      .from('WordTranslations')
+      .select('word_id, mean, example_translated, example_original')
+      .in('word_id', wordIds)
+      .eq('language_code', i18n.language)
+
+      if (!isMountedRef.current) return;
+      if (translationsError) {
+        console.error('Çeviriler çekilirken hata:', translationsError);
+        setIsLoading(false);
+        return;
+      }
+
+      setWords(buildWordItems(wordsData || [], translationsData || [], wordStatuses));
+    } catch (error) {
+      console.error('Kelime detayları çekilirken beklenmeyen hata:', error);
+    } finally {
+      if (isMountedRef.current) setIsLoading(false);
+    }
+  }, [i18n.language]);
 
   // Sayfa yüklendiğinde kelime durumlarını çek
   useEffect(() => {
@@ -63,15 +93,12 @@ export default function WordListScreen() {
           .from('UserWordStatuses')
           .select('*')
           .eq('user_id', userId).eq('status', params.id)
+        if (!isMountedRef.current) return;
         if (error) {
           console.error('Kelime durumları çekilirken hata:', error);
           setIsLoading(false);
           return;
         }
-        console.log('Kelime durumları:', data);
-        
-        setUserWordStatuses(data || []);
-        
         // Kelime durumları alındıktan sonra kelime detaylarını çek
         if (data && data.length > 0) {
           await fetchWordDetails(data);
@@ -80,79 +107,19 @@ export default function WordListScreen() {
         }
       } catch (error) {
         console.error('Kelime durumları çekilirken beklenmeyen hata:', error);
-        setIsLoading(false);
+        if (isMountedRef.current) setIsLoading(false);
       }
     };
 
     if (userId && params.id) {
       fetchUserWordStatuses();
     } else {
-      setIsLoading(false);
+      Promise.resolve().then(() => setIsLoading(false));
     }
-  }, [userId, params.id, i18n.language]);
-
-  // Kelime detaylarını çek
-  const fetchWordDetails = async (wordStatuses: any[]) => {
-    try {
-      // Kelime ID'lerini al
-      const wordIds = wordStatuses.map(status => status.word_id);
-      
-      // Words tablosundan kelime bilgilerini çek
-      const { data: wordsData, error: wordsError } = await supabase
-        .from('Words')
-        .select('id, name')
-        .in('id', wordIds)
-      
-      
-      if (wordsError) {
-        console.error('Kelimeler çekilirken hata:', wordsError);
-        setIsLoading(false);
-        return;
-      }
-      
-      // WordTranslations tablosundan çevirileri çek
-      const { data: translationsData, error: translationsError } = await supabase
-      .from('WordTranslations')
-      .select('word_id, mean, example_translated, example_original')
-      .in('word_id', wordIds)
-      .eq('language_code', i18n.language)
-      
-      if (translationsError) {
-        console.error('Çeviriler çekilirken hata:', translationsError);
-        setIsLoading(false);
-        return;
-      }
-      
-      // Verileri birleştir
-      const combinedWords: WordItem[] = wordsData.map(word => {
-        // Kelimeye ait çeviriyi bul
-        const translation = translationsData.find(t => t.word_id === word.id)?.mean || '';
-        const example = translationsData.find(t => t.word_id === word.id)?.example_translated || '';
-        const example_original = translationsData.find(t => t.word_id === word.id)?.example_original || '';
-        
-        // Kelimeye ait durumu bul
-        const status = wordStatuses.find(s => s.word_id === word.id)?.status || 0;
-        
-        return {
-          id: word.id,
-          text: word.name,
-          translation,
-          example,
-          example_original,
-          status
-        };
-      });
-      
-      setWords(combinedWords);
-    } catch (error) {
-      console.error('Kelime detayları çekilirken beklenmeyen hata:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [userId, params.id, fetchWordDetails]);
 
   // Kelime durumunu güncelle
-  const handleUpdateStatus = async (wordId: number, newStatus: number) => {
+  const handleUpdateStatus = useCallback(async (wordId: number, newStatus: number) => {
     // Hafif haptic feedback
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const success = await updateWordStatus(wordId, userId, newStatus);
@@ -219,10 +186,10 @@ export default function WordListScreen() {
         delay: 0,
       });
     }
-  };
+  }, [dispatch, t, userId]);
    
   // Kelime kartını render et
-  const renderWordItem = ({ item }: { item: WordItem }) => (
+  const renderWordItem = useCallback(({ item }: { item: WordItem }) => (
   <View style={styles.wordCardModern}>
     <View style={styles.cardHeader}>
       <View style={styles.wordContentModern}>
@@ -259,7 +226,7 @@ export default function WordListScreen() {
       ) : null}
     </View>
   </View>
-);
+), [handleUpdateStatus, t]);
   
   return (
     <ThemedView style={styles.container}>
@@ -283,6 +250,10 @@ export default function WordListScreen() {
             renderItem={renderWordItem}
             keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={styles.listContent}
+            initialNumToRender={8}
+            maxToRenderPerBatch={8}
+            windowSize={7}
+            removeClippedSubviews
           />
         ) : (
           <View style={styles.emptyContainerModern}>

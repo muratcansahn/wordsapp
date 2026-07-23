@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Audio } from '@/utils/audio';
@@ -18,6 +18,35 @@ import { updateUserStats, incrementWordStatusCounter } from '@/store/userSlice';
 import { updateGameTimestamp } from '@/services/gameRequestServices';
 import { useAuth } from '@/context/SupabaseProvider';
 
+
+// Klavye düzeni ve tuş renk paleti her render'da (her harf tahmininde) yeniden
+// allocate edilmesin diye modül seviyesinde sabit tutuluyor.
+const KEYBOARD_LAYOUT_TR = [
+  ['q', 'w', 'e', 'r', 't', 'y', 'u', 'ı', 'o', 'p'],
+  ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'ş', 'i'],
+  ['z', 'x', 'c', 'v', 'b', 'n', 'm', 'ö', 'ç', 'ğ', 'ü'],
+];
+const KEYBOARD_LAYOUT_EN = [
+  ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+  ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
+  ['z', 'x', 'c', 'v', 'b', 'n', 'm'],
+];
+// Pastel ve mavi tonları ağırlıklı renk paleti (kırmızı ve yeşil tonları yok)
+const KEYBOARD_BUTTON_COLORS = [
+  '#87CEEB', // Sky Blue
+  '#ADD8E6', // Light Blue
+  '#B0E0E6', // Powder Blue
+  '#AFEEEE', // Pale Turquoise
+  '#E0FFFF', // Light Cyan
+  '#B0C4DE', // Light Steel Blue
+  '#BCD2EE', // Light Sky Blue
+  '#C6E2FF', // Slate Blue 1
+  '#CAE1FF', // Light Steel Blue 1
+  '#F0F8FF', // Alice Blue
+  '#FFDAB9', // Peach Puff
+  '#FFE4B5', // Moccasin
+  '#D8BFD8', // Thistle
+];
 
 interface FlashCard {
   id: string;
@@ -56,6 +85,24 @@ const HangmanGame = () => {
   const dispatch = useDispatch();
   const { user } = useAuth();
 
+  // Ekrandan çıkıldığında unmount sonrası setState/animasyon çağrısı olmaması
+  // için bekleyen tüm timeout'ları takip edip cleanup'ta temizliyoruz.
+  const pendingTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const trackTimeout = (fn: () => void, delay: number) => {
+    const id = setTimeout(() => {
+      pendingTimeoutsRef.current = pendingTimeoutsRef.current.filter(t => t !== id);
+      fn();
+    }, delay);
+    pendingTimeoutsRef.current.push(id);
+    return id;
+  };
+  useEffect(() => {
+    return () => {
+      pendingTimeoutsRef.current.forEach(clearTimeout);
+      pendingTimeoutsRef.current = [];
+    };
+  }, []);
+
   const selectRandomWord = async () => {
     try {
       setLoading(true);
@@ -90,7 +137,7 @@ const HangmanGame = () => {
       setGuessedLetters(new Set());
       setGameStatus('playing');
       // Yeni kelime yüklendiğinde fade-in efekti
-      setTimeout(() => {
+      trackTimeout(() => {
         Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 500,
@@ -123,14 +170,14 @@ const HangmanGame = () => {
         
         // Eğer kullanıcı daha önce modalı görmemişse göster
         if (hasSeenInfoModal === null) {
-          setTimeout(() => {
+          trackTimeout(() => {
             setShowInfoModal(true);
           }, 500);
         }
       } catch (error) {
         console.error('AsyncStorage okuma hatası:', error);
         // Hata durumunda modalı göster
-        setTimeout(() => {
+        trackTimeout(() => {
           setShowInfoModal(true);
         }, 500);
       }
@@ -311,7 +358,7 @@ const HangmanGame = () => {
         }
 
         // Fade-in animasyonu
-        setTimeout(() => {
+        trackTimeout(() => {
           Animated.timing(fadeAnim, {
             toValue: 1,
             duration: 500,
@@ -335,7 +382,7 @@ const HangmanGame = () => {
         setGameStatus('lost');
 
         // Fade-in animasyonu
-        setTimeout(() => {
+        trackTimeout(() => {
           Animated.timing(fadeAnim, {
             toValue: 1,
             duration: 500,
@@ -354,14 +401,14 @@ const HangmanGame = () => {
       // Kazanma durumunda ses çal
       console.log('Kazanma durumu tespit edildi, ses çalınıyor...');
       // setTimeout kullanarak işlemi sıraya koy
-      setTimeout(() => {
+      trackTimeout(() => {
         playSound('win');
       }, 0);
     } else if (gameStatus === 'lost') {
       // Kaybetme durumunda ses çal
       console.log('Kaybetme durumu tespit edildi, ses çalınıyor...');
       // setTimeout kullanarak işlemi sıraya koy
-      setTimeout(() => {
+      trackTimeout(() => {
         playSound('lose');
       }, 0);
     }
@@ -492,37 +539,12 @@ const HangmanGame = () => {
               />
 
               <View style={styles.keyboardContainer}>
-                {(i18n.language === 'tr' ? [
-                  ['q', 'w', 'e', 'r', 't', 'y', 'u', 'ı', 'o', 'p'],
-                  ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'ş', 'i'],
-                  ['z', 'x', 'c', 'v', 'b', 'n', 'm', 'ö', 'ç', 'ğ', 'ü']
-                ] : [
-                  ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
-                  ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
-                  ['z', 'x', 'c', 'v', 'b', 'n', 'm']
-                ]).map((row, rowIndex) => (
+                {(i18n.language === 'tr' ? KEYBOARD_LAYOUT_TR : KEYBOARD_LAYOUT_EN).map((row, rowIndex) => (
                   <View key={rowIndex} style={styles.keyboardRow}>
                     {row.map((letter, index) => {
-                      // Pastel ve mavi tonları ağırlıklı renk paleti (kırmızı ve yeşil tonları yok)
-                      const buttonColors = [
-                        '#87CEEB', // Sky Blue
-                        '#ADD8E6', // Light Blue
-                        '#B0E0E6', // Powder Blue
-                        '#AFEEEE', // Pale Turquoise
-                        '#E0FFFF', // Light Cyan
-                        '#B0C4DE', // Light Steel Blue
-                        '#BCD2EE', // Light Sky Blue
-                        '#C6E2FF', // Slate Blue 1
-                        '#CAE1FF', // Light Steel Blue 1
-                        '#F0F8FF', // Alice Blue
-                        '#FFDAB9', // Peach Puff
-                        '#FFE4B5', // Moccasin
-                        '#D8BFD8', // Thistle
-                      ];
-                      
                       // Hafif dalgalanma için harf indeksine göre renk seçimi
-                      const colorIndex = (rowIndex * 10 + index) % buttonColors.length;
-                      const buttonColor = buttonColors[colorIndex];
+                      const colorIndex = (rowIndex * 10 + index) % KEYBOARD_BUTTON_COLORS.length;
+                      const buttonColor = KEYBOARD_BUTTON_COLORS[colorIndex];
                       
                       return (
                         <TouchableOpacity

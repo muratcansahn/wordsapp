@@ -43,6 +43,7 @@ export default function ShareModal() {
               }}
               style={styles.albumCover}
               contentFit="contain"
+              cachePolicy="memory-disk"
             />
             <View>
               <ThemedText

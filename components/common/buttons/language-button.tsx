@@ -48,6 +48,7 @@ const LanguageButton = ({
         }}
         style={styles.flagImage}
         contentFit="contain"
+        cachePolicy="memory-disk"
       />
       <ThemedText
         type={isActive ? 'subtitle' : 'default'}

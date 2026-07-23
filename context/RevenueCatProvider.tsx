@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 
 import Purchases, {
@@ -40,8 +40,9 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
   const [error, setError] = useState<string | null | undefined>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
+  const initializedForUserRef = useRef<string | null>(null);
   
-  const checkPremium = async () => {
+  const checkPremium = useCallback(async () => {
     try {
       const customerInfo = await Purchases.getCustomerInfo();
 
@@ -58,9 +59,12 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
       setError(errorMessage);
       return false;
     }
-  };
+  }, []);
 
-  const initializeRevenueCat = async () => {
+  const initializeRevenueCat = useCallback(async () => {
+    const userId = user?.id ?? 'anonymous';
+    if (initializedForUserRef.current === userId) return;
+
     try {
       // API keys kontrolü
       if (!APIKeys.apple || !APIKeys.google) {
@@ -78,6 +82,7 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
       const availablePackages = offerings.current?.availablePackages || [];
       setPackages(availablePackages);
       Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
+      initializedForUserRef.current = userId;
       setIsReady(true);
       setError(null);
       
@@ -89,7 +94,7 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
       // Hata durumunda da isReady'yi true yap ki uygulama çökmesin
       setIsReady(true);
     }
-  };
+  }, [checkPremium, user?.id]);
 
   const purchasePackage = async (pack: PurchasesPackage) => {
     setIsLoading(true);
@@ -122,10 +127,10 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
   };
 
   useEffect(() => {
-    initializeRevenueCat();
-  }, [user]);
+    Promise.resolve().then(initializeRevenueCat);
+  }, [initializeRevenueCat]);
 
-  const value: RevenueCatContextType = {
+  const value: RevenueCatContextType = useMemo(() => ({
     packages,
     isReady,
     error,
@@ -134,7 +139,7 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
     restorePurchases,
     checkPremium,
     isLoading,
-  };
+  }), [packages, isReady, error, initializeRevenueCat, isLoading, checkPremium]);
 
   return (
     <RevenueCatContext.Provider value={value}>

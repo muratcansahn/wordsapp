@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, FlatList, ActivityIndicator, Platform, NativeModules, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +14,12 @@ const LanguageSettings = () => {
   const { i18n, t } = useTranslation();
   const currentLanguage = i18n.language;
   const [isLoading, setIsLoading] = useState(false);
+  const restartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (restartTimeoutRef.current) clearTimeout(restartTimeoutRef.current);
+    };
+  }, []);
 
   // Uygulamayı yeniden başlatma fonksiyonu
   const restartApp = async () => {
@@ -85,7 +91,7 @@ const LanguageSettings = () => {
       await i18n.changeLanguage(lang);
       
       // Kısa bir gecikme ekleyerek dil değişikliğinin uygulanmasını sağla
-      setTimeout(() => {
+      restartTimeoutRef.current = setTimeout(() => {
         // Uygulamayı tamamen yeniden başlat
         restartApp();
       }, 500);

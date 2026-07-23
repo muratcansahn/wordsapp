@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import {
   View, 
   Text,
@@ -637,9 +637,10 @@ export default function DashboardScreen() {
   const [fishData, setFishData] = useState<FishDataType | null>(null);
   const [isFishDataLoading, setIsFishDataLoading] = useState(false); // Balık verilerinin yükleme durumunu takip etmek için
   const [confirmDialogVisible, setConfirmDialogVisible] = useState(false);
-  const [showDirectAnimation, setShowDirectAnimation] = useState(false); // Ekranda doğrudan animasyon göstermek için
-  const foodAnimation = useRef(new Animated.Value(0)).current;
-  const mouthAnimation = useRef(new Animated.Value(0)).current;
+  const [foodAnimation] = useState(() => new Animated.Value(0));
+  const [mouthAnimation] = useState(() => new Animated.Value(0));
+  const feedingResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const feedingDatabaseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   async function playSound() {
     try {
@@ -661,6 +662,19 @@ export default function DashboardScreen() {
         }
       : undefined;
   }, [sound]);
+
+  useEffect(() => {
+    return () => {
+      if (feedingResetTimeoutRef.current) {
+        clearTimeout(feedingResetTimeoutRef.current);
+      }
+      if (feedingDatabaseTimeoutRef.current) {
+        clearTimeout(feedingDatabaseTimeoutRef.current);
+      }
+      foodAnimation.stopAnimation();
+      mouthAnimation.stopAnimation();
+    };
+  }, [foodAnimation, mouthAnimation]);
 
   useEffect(() => {
     const fetchUserFishes = async () => {
@@ -701,7 +715,7 @@ export default function DashboardScreen() {
     }
   }, [id]);
 
-  const startFeedingAnimation = () => {
+  const startFeedingAnimation = useCallback(() => {
     console.log('Besleme animasyonu başlatılıyor');
     // Yem animasyonunu başlangıç konumuna getir
     foodAnimation.setValue(0);
@@ -737,23 +751,18 @@ export default function DashboardScreen() {
       setFeedingSuccess(true);
       playSound(); // Ses çalma buraya taşındı
       // 2.5 saniye sonra animasyonu kapat
-      setTimeout(() => {
-        setShowDirectAnimation(false);
+      if (feedingResetTimeoutRef.current) {
+        clearTimeout(feedingResetTimeoutRef.current);
+      }
+      feedingResetTimeoutRef.current = setTimeout(() => {
         setIsFeeding(false);
         setIsEating(false);
         setFeedingSuccess(false); // Başarı mesajını da kapat
         mouthAnimation.setValue(0); // Balık ağzının animasyonunu sıfırla
+        feedingResetTimeoutRef.current = null;
       }, 2500);
     });
-  };
-
-  useEffect(() => {
-    if (showDirectAnimation && isEating) {
-      // Doğrudan ekranda animasyon gösteriliyor ve besleme işlemi devam ediyor
-      console.log('Doğrudan animasyon gösteriliyor - animasyonu başlatıyorum');
-      startFeedingAnimation();
-    }
-  }, [showDirectAnimation, isEating]);
+  }, [fishData, foodAnimation, mouthAnimation]);
 
   // Açlık seviyesine göre renk döndüren yardımcı fonksiyon
 
@@ -761,11 +770,11 @@ export default function DashboardScreen() {
     // Besleme işlemini başlat
     setIsFeeding(true);
 
-    // Ekranda doğrudan animasyonu göstermek için state değiştir
-    setShowDirectAnimation(true);
-    
     // Veritabanı işlemlerini yapalım
-    setTimeout(async () => {
+    if (feedingDatabaseTimeoutRef.current) {
+      clearTimeout(feedingDatabaseTimeoutRef.current);
+    }
+    feedingDatabaseTimeoutRef.current = setTimeout(async () => {
       try {
         // Önce mevcut hunger_level'i kontrol et
         const { data: currentFish, error: fetchError } = await supabase
@@ -828,12 +837,15 @@ export default function DashboardScreen() {
         // Animasyon başlatmak için isEating'i true yap
         console.log('Veritabanı işlemleri tamamlandı, isEating true yapılıyor');
         setIsEating(true);
+        startFeedingAnimation();
         
         // Doğrudan ekranda animasyon gösteriyoruz, popup modal kullanmıyoruz
         // startFeedingAnimation fonksiyonu useEffect ile otomatik çağrılacak
 
       } catch (err) {
         console.error("Beklenmeyen hata:", err);
+      } finally {
+        feedingDatabaseTimeoutRef.current = null;
       }
     }, 300);
   };

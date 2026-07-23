@@ -59,33 +59,33 @@ export const updateWordStatus = async (wordId: number, userId: string, status: n
  */
 export const fetchWordStatuses = async (userId: string, status?: number): Promise<{knownCount: number, unknownCount: number}> => {
   try {
-    // Bilinen kelimeler (status=1)
-    const { data: knownData, error: knownError } = await supabase
+    // Bilinen kelimeler (status=1) — head:true ile satırlar değil sadece count dönülür
+    const { count: knownCount, error: knownError } = await supabase
       .from('UserWordStatuses')
-      .select('word_id')
+      .select('word_id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('status', 1);
-    
+
     if (knownError) {
       console.error('Bilinen kelimeler çekilirken hata:', knownError);
       return { knownCount: 0, unknownCount: 0 };
     }
-    
+
     // Bilinmeyen kelimeler (status=2)
-    const { data: unknownData, error: unknownError } = await supabase
+    const { count: unknownCount, error: unknownError } = await supabase
       .from('UserWordStatuses')
-      .select('word_id')
+      .select('word_id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('status', 2);
-    
+
     if (unknownError) {
       console.error('Bilinmeyen kelimeler çekilirken hata:', unknownError);
-      return { knownCount: knownData?.length || 0, unknownCount: 0 };
+      return { knownCount: knownCount || 0, unknownCount: 0 };
     }
-    
+
     return {
-      knownCount: knownData?.length || 0,
-      unknownCount: unknownData?.length || 0
+      knownCount: knownCount || 0,
+      unknownCount: unknownCount || 0
     };
   } catch (error) {
     console.error('Kelime istatistikleri çekilirken hata oluştu:', error);
@@ -100,33 +100,33 @@ export const fetchWordStatuses = async (userId: string, status?: number): Promis
  */
 export const fetchWordStatusCounts = async (userId: string): Promise<{known: number, unknown: number}> => {
   try {
-    // Bilinen kelimeler (status=1)
-    const { data: knownData, error: knownError } = await supabase
+    // Bilinen kelimeler (status=1) — head:true ile satırlar değil sadece count dönülür
+    const { count: known, error: knownError } = await supabase
       .from('UserWordStatuses')
-      .select('word_id')
+      .select('word_id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('status', 1);
-    
+
     if (knownError) {
       console.error('Bilinen kelimeler çekilirken hata:', knownError);
       return { known: 0, unknown: 0 };
     }
-    
+
     // Bilinmeyen kelimeler (status=2)
-    const { data: unknownData, error: unknownError } = await supabase
+    const { count: unknown, error: unknownError } = await supabase
       .from('UserWordStatuses')
-      .select('word_id')
+      .select('word_id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('status', 2);
-    
+
     if (unknownError) {
       console.error('Bilinmeyen kelimeler çekilirken hata:', unknownError);
-      return { known: knownData?.length || 0, unknown: 0 };
+      return { known: known || 0, unknown: 0 };
     }
-    
+
     return {
-      known: knownData?.length || 0,
-      unknown: unknownData?.length || 0
+      known: known || 0,
+      unknown: unknown || 0
     };
   } catch (error) {
     console.error('Kelime istatistikleri çekilirken hata oluştu:', error);

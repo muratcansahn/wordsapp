@@ -25,73 +25,46 @@ const DailyActivitiesSection = () => {
     const router = useRouter();
     const { mode } = useTheme();
     const { user } = useAuth();
+    const userId = user?.id;
     const [gameStatus, setGameStatus] = useState<Record<string, GameStatus>>({});
     const [countdown, setCountdown] = useState<Record<string, string>>({});
     const [dialogVisible, setDialogVisible] = useState(false);
     const [adDialogVisible, setAdDialogVisible] = useState(false);
     const [selectedGame, setSelectedGame] = useState<string>('');
       const { showRewarded } = useAdmobRewarded(1); // İkinci reklam ID'sini kullanmak için adIndex=1 olarak ayarlandı
-    
+
+    const fetchGameStatus = useCallback(async () => {
+        if (!userId) return;
+
+        const { data, error } = await supabase
+            .from('UserGameRequestDates')
+            .select('wordguess, wordmatching, wordguess_remaining, wordmatching_remaining')
+            .eq('user_id', userId)
+            .single();
+
+        if (error) {
+            console.error('Oyun durumu getirilemedi:', error);
+            return;
+        }
+
+        setGameStatus({
+            wordguess: {
+                remaining: data.wordguess_remaining || 0,
+                lastPlayed: data.wordguess
+            },
+            wordmatching: {
+                remaining: data.wordmatching_remaining || 0,
+                lastPlayed: data.wordmatching
+            }
+        });
+    }, [userId]);
 
     // Sayfa fokuslandığında oyun haklarını güncelle
     useFocusEffect(
         useCallback(() => {
-            const updateGameStatuses = async () => {
-                if (!user?.id) return;
-                
-                const { data: lastRequests } = await supabase
-                    .from('UserGameRequestDates')
-                    .select('wordguess_remaining, wordmatching_remaining, wordguess, wordmatching')
-                    .eq('user_id', user.id)
-                    .single();
-
-                if (lastRequests) {
-                    setGameStatus({
-                        wordguess: { 
-                            remaining: lastRequests.wordguess_remaining,
-                            lastPlayed: lastRequests.wordguess
-                        },
-                        wordmatching: { 
-                            remaining: lastRequests.wordmatching_remaining,
-                            lastPlayed: lastRequests.wordmatching
-                        }
-                    });
-                }
-            };
-
-            updateGameStatuses();
-        }, [user])
+            fetchGameStatus();
+        }, [fetchGameStatus])
     );
-
-    useEffect(() => {
-        const fetchGameStatus = async () => {
-            if (!user) return;
-
-            const { data, error } = await supabase
-                .from('UserGameRequestDates')
-                .select('wordguess, wordmatching, wordguess_remaining, wordmatching_remaining')
-                .eq('user_id', user.id)
-                .single();
-
-            if (error) {
-                console.error('Oyun durumu getirilemedi:', error);
-                return;
-            }
-
-            setGameStatus({
-                wordguess: {
-                    remaining: data.wordguess_remaining || 0,
-                    lastPlayed: data.wordguess
-                },
-                wordmatching: {
-                    remaining: data.wordmatching_remaining || 0,
-                    lastPlayed: data.wordmatching
-                }
-            });
-        };
-
-        fetchGameStatus();
-    }, [user]);
 
     useEffect(() => {
         const updateCountdown = () => {
@@ -130,7 +103,7 @@ const DailyActivitiesSection = () => {
         updateCountdown();
         const timer = setInterval(updateCountdown, 60000);
         return () => clearInterval(timer);
-    }, [gameStatus]);
+    }, [gameStatus, t]);
 
     const dailyContent = useMemo(() => [
         {
@@ -151,7 +124,7 @@ const DailyActivitiesSection = () => {
           action: 'word-matching',
           gameType: 'wordmatching'
         },
-    ], []);
+    ], [t]);
 
     const handleGamePress = useCallback(async (route: string, gameType: string) => {
         const status = gameStatus[gameType];
@@ -170,7 +143,7 @@ const DailyActivitiesSection = () => {
                 Alert.alert('Hata', 'Oyun başlatılırken bir hata oluştu.');
             }
         }
-    }, [gameStatus, countdown, router, user]);
+    }, [gameStatus, router, user]);
     
  
 
@@ -226,7 +199,7 @@ const DailyActivitiesSection = () => {
                 </LinearGradient>
             </TouchableOpacity>
         );
-    }, [router, gameStatus, countdown, handleGamePress]);
+    }, [gameStatus, countdown, handleGamePress, t]);
 
     return (
         <>
