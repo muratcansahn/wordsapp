@@ -144,10 +144,16 @@
     "monthlyPlan": "Aylık Plan",
     "yearlyPlan": "Yıllık Plan",
     "bestSavings": "EN İYİ TASARRUF",
+    "mostPopular": "EN POPÜLER",
     "subscribe": "Şimdi Başla",
     "billedMonthly": "Aylık faturalandırılır",
     "billedYearly": "Yıllık faturalandırılır",
     "autoRenew": "İstediğiniz zaman iptal edin. Plan otomatik olarak yenilenecektir.",
+    "ctaSubscribe": "Premium'a Geç",
+    "restorePurchases": "Satın alımları geri yükle",
+    "compareTitle": "Ücretsiz mi, Premium mi?",
+    "compareFreeLabel": "Ücretsiz",
+    "comparePremiumLabel": "Premium",
     "cards": {
       "feature1": {
         "title": "Reklamsız Deneyim",
@@ -240,7 +246,8 @@
         "title": "Hesabını silmek istediğine emin misin?",
         "description": "Bu işlem geri alınamaz. Hesabın kalıcı olarak silinecektir ve kurtarılamayacaktır.",
         "confirmDeleteAccount": "Lütfen Hesabını silmeyi onayla."
-      }
+      },
+      "partialFailureError": "Hesap verilerini sildik ama hesabını tamamen kapatamadık. Oturumun kapatıldı - lütfen hesabını silmeyi tekrar dene, sorun devam ederse destek ekibiyle iletişime geç."
     }
   },
   "home": {

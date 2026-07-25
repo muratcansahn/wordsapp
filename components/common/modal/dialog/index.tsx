@@ -40,7 +40,7 @@ const Dialog = ({
 }: {
   title: string;
   description: string;
-  onConfirm?: () => void;
+  onConfirm?: () => void | Promise<void>;
   children: React.ReactNode;
   bgColor: string;
   rightButton: string;
@@ -98,8 +98,8 @@ const Dialog = ({
     }
   }, [visible, openModal]);
 
-  const handleConfirm = useCallback(() => {
-    onConfirm();
+  const handleConfirm = useCallback(async () => {
+    await onConfirm();
     closeModal();
   }, [onConfirm, closeModal]);
 

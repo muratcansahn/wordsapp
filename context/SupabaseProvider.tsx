@@ -372,10 +372,12 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
   
 
   const deleteAccount = useCallback(async () => {
-    try {
-      const currentUserId = session?.user?.id;
-      if (!currentUserId) return;
+    const currentUserId = session?.user?.id;
+    if (!currentUserId) return;
 
+    try {
+      // Not: satır zaten yoksa Supabase delete hata döndürmez (0 satır silinir),
+      // bu yüzden bu adım tekrar denemelerde güvenle no-op olur.
       const { error: deleteRowError } = await supabase
         .from('Users')
         .delete()
@@ -392,7 +394,15 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
       const { error: fnError } = await supabase.functions.invoke('delete-account');
       if (fnError) {
         console.error('Auth hesabı silinirken hata:', fnError.message);
-        throw fnError;
+        // Users satırı zaten silindi; kullanıcıyı yarı silinmiş ama hâlâ oturum
+        // açık bir durumda bırakmamak için oturumu yine de kapatıyoruz ve
+        // net bir hata gösteriyoruz. Burada throw ETMİYORUZ: signOut zaten
+        // gerçekleşti, çağıran taraf (delete-account ekranı) yine de
+        // sign-in'e yönlendirebilir; ikinci kez handleError tetiklenmesini
+        // (çift toast) önlemek için fonksiyonu burada normal şekilde bitiriyoruz.
+        await signOut();
+        handleError(new Error(t('settings.deleteAccount.partialFailureError')));
+        return;
       }
 
       await signOut();
@@ -400,7 +410,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
       handleError(err as Error);
       throw err;
     }
-  }, [session, signOut, handleError]);
+  }, [session, signOut, handleError, t]);
 
   const signInWithGoogle = useCallback(async () => {
     console.log("Google signin başlatılıyor")

@@ -130,6 +130,12 @@
     "subtitle": "More messages on our most powerful model with premium features",
     "info": "Auto renews for {{price}} / {{period}}. Cancel anytime. Includes 7-day money back guarantee.",
     "lifetime-info": "Lifetime access for {{price}}. Includes 7-day money back guarantee.",
+    "mostPopular": "MOST POPULAR",
+    "ctaSubscribe": "Go Premium",
+    "restorePurchases": "Restore purchases",
+    "compareTitle": "Free vs. Premium",
+    "compareFreeLabel": "Free",
+    "comparePremiumLabel": "Premium",
     "cards": {
       "feature1": {
         "title": "Feature Title 1",
@@ -210,7 +216,8 @@
         "title": "Are you sure you want to delete your account?",
         "description": "This action cannot be undone. Your account will be permanently deleted and you will not be able to recover it.",
         "confirmDeleteAccount": "Please confirm delete your account."
-      }
+      },
+      "partialFailureError": "We deleted your account data, but couldn't finish closing your account. You've been signed out - please try deleting your account again, or contact support if this keeps happening."
     }
   },
   "home": {

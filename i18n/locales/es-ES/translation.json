@@ -132,6 +132,12 @@
     "subtitle": "Más mensajes en nuestro modelo más potente con funciones premium",
     "info": "Se renueva solo por {{price}} cada {{period}}. Cancela cuando quieras. Si no te convence, te devolvemos la lana en 7 días.",
     "lifetime-info": "Acceso de por vida por {{price}}. Incluye garantía de devolución de dinero de 7 días.",
+    "mostPopular": "MÁS POPULAR",
+    "ctaSubscribe": "Hazte Premium",
+    "restorePurchases": "Restaurar compras",
+    "compareTitle": "Gratis vs. Premium",
+    "compareFreeLabel": "Gratis",
+    "comparePremiumLabel": "Premium",
     "cards": {
       "feature1": {
         "title": "Feature Title 1",
@@ -212,7 +218,8 @@
         "title": "¿Estás seguro de que quieres eliminar tu cuenta?",
         "description": "Esta acción no se puede deshacer. Tu cuenta se eliminará permanentemente y no podrá ser recuperada.",
         "confirmDeleteAccount": "Por favor, confirma la eliminación de tu cuenta."
-      }
+      },
+      "partialFailureError": "Eliminamos los datos de tu cuenta, pero no pudimos terminar de cerrarla. Se ha cerrado tu sesión - por favor, intenta eliminar tu cuenta de nuevo o contacta con soporte si esto persiste."
     }
   },
   "home": {

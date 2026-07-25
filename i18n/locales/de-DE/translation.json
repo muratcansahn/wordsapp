@@ -132,6 +132,12 @@
     "subtitle": "Mehr Nachrichten auf unserem leistungsstärksten Modell mit Premium-Funktionen",
     "info": "Läuft automatisch weiter für {{price}} pro {{period}}. Kannst jederzeit stornieren. Kriegst dein Geld 7 Tage zurück, ist safe.",
     "lifetime-info": "Läuft automatisch weiter für {{price}} pro {{period}}. Kannst jederzeit stornieren. Kriegst dein Geld 7 Tage zurück, ist safe.",
+    "mostPopular": "AM BELIEBTESTEN",
+    "ctaSubscribe": "Jetzt Premium holen",
+    "restorePurchases": "Käufe wiederherstellen",
+    "compareTitle": "Kostenlos vs. Premium",
+    "compareFreeLabel": "Kostenlos",
+    "comparePremiumLabel": "Premium",
     "cards": {
       "feature1": {
         "title": "Feature Title 1",
@@ -212,7 +218,8 @@
         "title": "Sind Sie sicher, dass Sie Ihr Konto löschen möchten?",
         "description": "Diese Aktion kann nicht rückgängig gemacht werden. Ihr Konto wird dauerhaft gelöscht und kann nicht wiederhergestellt werden.",
         "confirmDeleteAccount": "Bitte bestätigen Sie die Löschung Ihres Kontos."
-      }
+      },
+      "partialFailureError": "Wir haben Ihre Kontodaten gelöscht, konnten aber die Schließung Ihres Kontos nicht abschließen. Sie wurden abgemeldet - bitte versuchen Sie erneut, Ihr Konto zu löschen, oder kontaktieren Sie den Support, falls dies weiterhin auftritt."
     }
   },
   "home": {
