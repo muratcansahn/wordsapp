@@ -188,7 +188,9 @@
     "notifications": {
       "pushToken": "Push Token",
       "receivedNotifications": "Received Notifications",
-      "noNotifications": "No notifications yet"
+      "noNotifications": "No notifications yet",
+      "dailyReminderTitle": "Daily Reminder",
+      "dailyReminderBody": "Don't forget to learn today's words!"
     },
     "deleteAccount": {
       "title": "Delete Account",

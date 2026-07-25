@@ -218,7 +218,9 @@
     "notifications": {
       "pushToken": "Push Token",
       "receivedNotifications": "Alınan bildirimler",
-      "noNotifications": "Henüz bildirim yok"
+      "noNotifications": "Henüz bildirim yok",
+      "dailyReminderTitle": "Günlük Hatırlatma",
+      "dailyReminderBody": "Bugünkü kelimelerini öğrenmeyi unutma!"
     },
     "deleteAccount": {
       "title": "Hesabı sil",

@@ -190,7 +190,9 @@
     "notifications": {
       "pushToken": "Token de push",
       "receivedNotifications": "Notificaciones recibidas",
-      "noNotifications": "Aún no hay notificaciones"
+      "noNotifications": "Aún no hay notificaciones",
+      "dailyReminderTitle": "Recordatorio diario",
+      "dailyReminderBody": "¡No olvides aprender las palabras de hoy!"
     },
     "deleteAccount": {
       "title": "Eliminar cuenta",
