@@ -68,3 +68,10 @@ yarn-error.*
 
 # @end expo-cli
 .env.local
+google-play-service-account.json
+
+# Subagent-driven-development scratch workspace
+.superpowers/
+
+# Supabase CLI local cache
+supabase/.temp/
