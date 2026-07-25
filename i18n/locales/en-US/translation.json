@@ -84,7 +84,7 @@
     "signUp": "Sign Up",
     "continueWithApple": "Continue with Apple",
     "continueWithGoogle": "Continue with Google",
-    "continueWithEmail": "Continue with Email",
+    "continueAsGuest": "Continue as guest",
     "alreadyHaveAccount": "Already have an account?",
     "enterEmailToResetPassword": "Enter your email to send a magic link",
     "pleaseEnterEmail": "Please enter your email",
@@ -218,6 +218,10 @@
         "confirmDeleteAccount": "Please confirm delete your account."
       },
       "partialFailureError": "We deleted your account data, but couldn't finish closing your account. You've been signed out - please try deleting your account again, or contact support if this keeps happening."
+    },
+    "linkAccount": {
+      "title": "Save your account with Google",
+      "success": "Your account is now linked with Google"
     }
   },
   "home": {

@@ -22,7 +22,7 @@ const SignUpScreen = () => {
   const router = useRouter();
   const { t } = useTranslation();
   const { mode } = useTheme();
-  const { signInWithGoogle, signInWithApple, isLoading } = useAuth();
+  const { signInWithGoogle, signInWithApple, signInAsGuest, isLoading } = useAuth();
 
   return (
     <ScrollView
@@ -70,10 +70,11 @@ const SignUpScreen = () => {
 
           <Animated.View entering={FadeInDown.duration(ANIMATION_DURATION.D5)}>
             <AuthButton
-              onPress={() => router.push('/(no-auth)/sign-up-with-email')}
-              icon="mail"
-              text={t('auth.continueWithEmail')}
+              onPress={signInAsGuest}
+              icon="person-outline"
+              text={t('auth.continueAsGuest')}
               disabled={isLoading}
+              loading={isLoading}
             />
           </Animated.View>
         </ThemedView>

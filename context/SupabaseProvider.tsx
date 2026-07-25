@@ -33,6 +33,8 @@ type AuthContextType = {
   deleteAccount: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signInWithApple: () => Promise<void>;
+  signInAsGuest: () => Promise<void>;
+  linkGoogleAccount: () => Promise<void>;
   createSessionFromUrl: (url: string) => Promise<void>;
   isLoading: boolean;
   error: string | null;
@@ -481,6 +483,48 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
     }
   }, [handleError, handleAuthAction, t]);
 
+  const signInAsGuest = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const { data, error: anonError } = await supabase.auth.signInAnonymously();
+      if (anonError) throw anonError;
+      if (data.session?.user) {
+        await syncUserToStore(data.session.user);
+      }
+    } catch (err) {
+      handleError(err as Error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [syncUserToStore, handleError]);
+
+  const linkGoogleAccount = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      ensureGoogleSigninConfigured();
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      const idToken = userInfo.data?.idToken;
+      if (!idToken) throw new Error('Google idToken alınamadı');
+
+      const { data, error: linkError } = await supabase.auth.linkIdentity({
+        provider: 'google',
+        token: idToken,
+      });
+      if (linkError) throw linkError;
+      if (data.session?.user) {
+        await syncUserToStore(data.session.user);
+      }
+      showToast(t('settings.linkAccount.success'), false, Colors.light.primary);
+    } catch (err) {
+      handleError(err as Error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [handleError, syncUserToStore, t]);
+
   const createSessionFromUrl = useCallback(
     async (url: string) => {
       setIsLoading(true);
@@ -540,6 +584,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
       deleteAccount,
       signInWithGoogle,
       signInWithApple,
+      signInAsGuest,
+      linkGoogleAccount,
       createSessionFromUrl,
       isLoading,
       error,
@@ -554,6 +600,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
       deleteAccount,
       signInWithGoogle,
       signInWithApple,
+      signInAsGuest,
+      linkGoogleAccount,
       createSessionFromUrl,
       isLoading,
       error,

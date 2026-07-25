@@ -86,7 +86,7 @@
     "signUp": "Hesap oluştur",
     "continueWithApple": "Apple ile devam et",
     "continueWithGoogle": "Google ile devam et",
-    "continueWithEmail": "E-posta ile devam et",
+    "continueAsGuest": "Misafir olarak devam et",
     "alreadyHaveAccount": "Zaten bir hesabın var mı?",
     "enterEmailToResetPassword": "Şifreni sıfırlamak için e-posta adresini gir",
     "pleaseEnterEmail": "Lütfen e-posta adresini gir",
@@ -248,6 +248,10 @@
         "confirmDeleteAccount": "Lütfen Hesabını silmeyi onayla."
       },
       "partialFailureError": "Hesap verilerini sildik ama hesabını tamamen kapatamadık. Oturumun kapatıldı - lütfen hesabını silmeyi tekrar dene, sorun devam ederse destek ekibiyle iletişime geç."
+    },
+    "linkAccount": {
+      "title": "Google ile hesabını kaydet",
+      "success": "Hesabın Google ile bağlandı"
     }
   },
   "home": {

@@ -86,7 +86,7 @@
     "signUp": "Konto erstellen",
     "continueWithApple": "Mit Apple fortfahren",
     "continueWithGoogle": "Mit Google fortfahren",
-    "continueWithEmail": "Mit E-Mail fortfahren",
+    "continueAsGuest": "Als Gast fortfahren",
     "alreadyHaveAccount": "Sie haben bereits ein Konto?",
     "enterEmailToResetPassword": "Geben Sie Ihre E-Mail-Adresse ein, um Ihr Passwort zurückzusetzen",
     "pleaseEnterEmail": "Bitte geben Sie Ihre E-Mail-Adresse ein",
@@ -220,6 +220,10 @@
         "confirmDeleteAccount": "Bitte bestätigen Sie die Löschung Ihres Kontos."
       },
       "partialFailureError": "Wir haben Ihre Kontodaten gelöscht, konnten aber die Schließung Ihres Kontos nicht abschließen. Sie wurden abgemeldet - bitte versuchen Sie erneut, Ihr Konto zu löschen, oder kontaktieren Sie den Support, falls dies weiterhin auftritt."
+    },
+    "linkAccount": {
+      "title": "Konto mit Google speichern",
+      "success": "Ihr Konto wurde mit Google verknüpft"
     }
   },
   "home": {

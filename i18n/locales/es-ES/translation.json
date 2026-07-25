@@ -86,7 +86,7 @@
     "signUp": "Crear cuenta",
     "continueWithApple": "Continuar con Apple",
     "continueWithGoogle": "Continuar con Google",
-    "continueWithEmail": "Continuar con correo electrónico",
+    "continueAsGuest": "Continuar como invitado",
     "alreadyHaveAccount": "¿Ya tienes una cuenta?",
     "enterEmailToResetPassword": "Ingresa tu correo electrónico para restablecer tu contraseña",
     "pleaseEnterEmail": "Por favor, ingresa tu correo electrónico",
@@ -220,6 +220,10 @@
         "confirmDeleteAccount": "Por favor, confirma la eliminación de tu cuenta."
       },
       "partialFailureError": "Eliminamos los datos de tu cuenta, pero no pudimos terminar de cerrarla. Se ha cerrado tu sesión - por favor, intenta eliminar tu cuenta de nuevo o contacta con soporte si esto persiste."
+    },
+    "linkAccount": {
+      "title": "Guarda tu cuenta con Google",
+      "success": "Tu cuenta se ha vinculado con Google"
     }
   },
   "home": {

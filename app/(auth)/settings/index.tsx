@@ -65,7 +65,8 @@ const SettingsScreen = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const { mode } = useTheme();
-  const { signOut } = useAuth();
+  const { signOut, linkGoogleAccount, session } = useAuth();
+  const isAnonymous = !!session?.user?.is_anonymous;
 
   const handleDeleteAccount = () => {
     router.push('/settings/delete-account');
@@ -149,6 +150,18 @@ const SettingsScreen = () => {
             </React.Fragment>
           ))}
         </SettingGroup>
+
+        {isAnonymous && (
+          <SettingGroup>
+            <SettingItem
+              icon="logo-google"
+              title={t('settings.linkAccount.title')}
+              onPress={linkGoogleAccount}
+              color={Colors.light.primary}
+              mode={mode}
+            />
+          </SettingGroup>
+        )}
 
         <SettingGroup>
           <SettingItem

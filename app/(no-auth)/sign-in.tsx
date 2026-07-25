@@ -7,7 +7,6 @@ import { ThemedText } from '@/components/common/typography';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/theme/useTheme';
 import { useAuth } from '@/context/SupabaseProvider';
-import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import AuthButton from '@/components/common/buttons/auth';
 import { authStyles } from '@/constants/AuthStyles';
@@ -21,8 +20,8 @@ const SignIn = () => {
     isLoading,
     signInWithGoogle,
     signInWithApple,
+    signInAsGuest,
   } = useAuth();
-  const router = useRouter();
 
   return (
     <KeyboardAvoidingView
@@ -54,10 +53,11 @@ const SignIn = () => {
             />
           )}
           <AuthButton
-            icon="arrow-forward-outline"
-            text={t('auth.signUp')}
-            onPress={() => router.push('/(no-auth)/sign-up-with-email')}
+            icon="person-outline"
+            text={t('auth.continueAsGuest')}
+            onPress={signInAsGuest}
             disabled={isLoading}
+            loading={isLoading}
           />
         </ThemedView>
       </ScrollView>
