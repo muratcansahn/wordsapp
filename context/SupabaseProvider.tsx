@@ -364,6 +364,10 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
 
   const signOut = useCallback(async () => {
     await handleAuthAction(async () => {
+      const isSignedInWithGoogle = await GoogleSignin.hasPreviousSignIn();
+      if (isSignedInWithGoogle) {
+        await GoogleSignin.signOut();
+      }
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       return { data: { session: null }, error: error };
