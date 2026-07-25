@@ -104,7 +104,7 @@ export default function QuizPage() {
   const userPoint = useSelector((state: RootState) => state.user.point);
   const [wordList, setWordList] = useState<WordListWithItems | null>(null);
   const [showInfoModal, setShowInfoModal] = useState(false); // Bilgilendirme modalı için state
-  const { canAccessList } = usePremiumLimits();
+  const { canAccessList, isReady: isPremiumReady } = usePremiumLimits();
 
   const dispatch = useDispatch();
   // Puan konteynerı için referans
@@ -208,6 +208,12 @@ export default function QuizPage() {
     const loadFlashcards = async () => {
       if (!listId) return;
 
+      // RevenueCat init tamamlanmadan isPremium her zaman false döner; bu
+      // pencerede karar vermek gerçek bir premium kullanıcıyı yanlışlıkla
+      // paywall'a atar. init bitene kadar bekle (effect isPremiumReady
+      // değiştiğinde tekrar çalışır).
+      if (!isPremiumReady) return;
+
       try {
         setLoading(true);
 
@@ -266,7 +272,7 @@ export default function QuizPage() {
     };
     
     checkInfoModalShown();
-  }, [listId, i18n.language]);
+  }, [listId, i18n.language, isPremiumReady]);
   
   // Flashcardlardan quiz soruları oluştur
   const currentQuestion = questions[currentQuestionIndex];

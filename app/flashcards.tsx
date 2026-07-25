@@ -225,7 +225,7 @@ export default function FlashcardsScreen() {
   const { t } = useTranslation();
   const params = useLocalSearchParams();
   const dispatch = useDispatch();
-  const { canAccessList } = usePremiumLimits();
+  const { canAccessList, isReady: isPremiumReady } = usePremiumLimits();
   const { mode } = useTheme();
   const userPoint = useSelector((state: RootState) => state.user.point);
   
@@ -459,10 +459,16 @@ export default function FlashcardsScreen() {
     if (isInitialized) return;
 
     const loadData = async () => {
+      // RevenueCat init tamamlanmadan isPremium her zaman false döner; bu
+      // pencerede karar vermek gerçek bir premium kullanıcıyı yanlışlıkla
+      // paywall'a atar. init bitene kadar bekle (isInitialized hâlâ false
+      // kaldığı için effect isPremiumReady değiştiğinde tekrar çalışır).
+      if (!isPremiumReady) return;
+
       try {
         setIsLoading(true);
         setError(null);
-        
+
         if (!params.listId) {
           setError("Liste ID'si belirtilmedi.");
           return;
@@ -526,7 +532,7 @@ export default function FlashcardsScreen() {
     };
     
     checkInfoModal();
-  }, [params, isInitialized]);
+  }, [params, isInitialized, isPremiumReady, canAccessList]);
 
   // Loading state
   if (isLoading) {

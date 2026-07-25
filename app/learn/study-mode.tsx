@@ -50,7 +50,7 @@ export default function StudyModePage() {
   const { listId } = useLocalSearchParams();
   const router = useRouter();
   const { mode } = useTheme();
-  const { canAccessList } = usePremiumLimits();
+  const { canAccessList, isReady: isPremiumReady } = usePremiumLimits();
   const [freeListId, setFreeListId] = useState<number | undefined>(undefined);
   const [accessChecked, setAccessChecked] = useState(false);
 
@@ -68,12 +68,15 @@ export default function StudyModePage() {
   }, []);
 
   useEffect(() => {
-    if (!accessChecked || !listId) return;
+    // RevenueCat init tamamlanmadan isPremium her zaman false döner; bu
+    // pencerede karar vermek gerçek bir premium kullanıcıyı yanlışlıkla
+    // paywall'a atar. init bitene kadar bekle.
+    if (!accessChecked || !listId || !isPremiumReady) return;
     const numericListId = Number(listId);
     if (!canAccessList(numericListId, freeListId)) {
       router.replace('/paywall-double');
     }
-  }, [accessChecked, listId, freeListId, canAccessList, router]);
+  }, [accessChecked, listId, freeListId, canAccessList, router, isPremiumReady]);
 
   const handleModeSelect = (modeId: string) => {
     const listIdParam = listId ? String(listId) : '1';
