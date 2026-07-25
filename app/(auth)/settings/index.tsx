@@ -157,7 +157,7 @@ const SettingsScreen = () => {
               icon="logo-google"
               title={t('settings.linkAccount.title')}
               onPress={linkGoogleAccount}
-              color={Colors.light.primary}
+              color={Colors[mode].primary}
               mode={mode}
             />
           </SettingGroup>

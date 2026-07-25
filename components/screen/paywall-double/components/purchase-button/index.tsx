@@ -6,18 +6,17 @@ import { Colors } from '@/constants/Colors';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/hooks/theme/useTheme';
 import { ThemedText } from '@/components/common/typography';
-
-//* If you want to use RevenueCat, uncomment the following lines 👇
-// import { useRevenueCat } from '@/context/RevenueCatProvider';
-// import LoaderLucide from '@/components/common/loader/loader-2';
+import { useRevenueCat } from '@/context/RevenueCatProvider';
+import LoaderLucide from '@/components/common/loader/loader-2';
 
 interface PurchaseButtonProps {
   onPress: () => void;
+  disabled?: boolean;
 }
 
-export const PurchaseButton: React.FC<PurchaseButtonProps> = ({ onPress }) => {
+export const PurchaseButton: React.FC<PurchaseButtonProps> = ({ onPress, disabled }) => {
   const { t } = useTranslation();
-  // const { isLoading } = useRevenueCat();
+  const { isLoading } = useRevenueCat();
   const { mode } = useTheme();
 
   return (
@@ -38,22 +37,19 @@ export const PurchaseButton: React.FC<PurchaseButtonProps> = ({ onPress }) => {
           '#FFEE58',
         ]}
         bgColor={'#FFEB3B'}
-        // disabled={isLoading}
+        disabled={disabled || isLoading}
         borderRadius={BORDER_RADIUS.rounded}
       >
-        {/* {isLoading ? (
+        {isLoading ? (
           <LoaderLucide size={24} color={Colors[mode].text} />
         ) : (
           <ThemedText
             type="defaultSemiBold"
-            style={{ color: Colors[mode].text }}
+            style={{ color: '#333333' }}
           >
-            {t('buttons.continue')}
+            {t('inAppPurchases.ctaSubscribe')}
           </ThemedText>
-        )} */}
-        <ThemedText type="defaultSemiBold" style={{ color: '#333333' }}>
-          {t('buttons.continue')}
-        </ThemedText>
+        )}
       </GlowButton>
     </View>
   );

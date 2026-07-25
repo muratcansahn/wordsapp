@@ -139,10 +139,6 @@
         "title": "Werbefreie Erfahrung",
         "description": "Entfernen Sie alle Werbung und genießen Sie unterbrechungsfreies Lernen"
       },
-      "feature2": {
-        "title": "Zusätzliches tägliches Spiel",
-        "description": "Erhalten Sie jeden Tag ein zusätzliches Spiel und üben Sie mehr"
-      },
       "feature3": {
         "title": "Unbegrenzte Wortlisten",
         "description": "Nutzen Sie alle Wortlisten ohne Limits und beschleunigen Sie Ihr Lernen"
@@ -257,6 +253,8 @@
       "pointsRequired": "Punkte, um den Fisch zu füttern.",
       "watchAdOption": "25",
       "watchAdOptionText": "kannst du eine Werbung ansehen für",
+      "premiumBonusText": "erhältst du als Premium-Bonus",
+      "claimPoints": "Punkte einlösen",
       "feed": "Füttern",
       "watchAd": "Anzeigen",
       "adLimitTitle": "Werbungslimit",

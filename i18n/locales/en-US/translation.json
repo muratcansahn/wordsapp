@@ -141,10 +141,6 @@
         "title": "Ad-Free Experience",
         "description": "Remove all ads and enjoy uninterrupted learning"
       },
-      "feature2": {
-        "title": "Extra Daily Games",
-        "description": "Get an extra game every day and practice more"
-      },
       "feature3": {
         "title": "Unlimited Word Lists",
         "description": "Use all word lists without limits and accelerate your learning"
@@ -248,7 +244,11 @@
     "selectFish": "Feed Your Fish",
     "selectFishDescription": "Which fish would you like to feed?",
     "orangeFish": "Orange Fish",
-    "blueFish": "Blue Fish"
+    "blueFish": "Blue Fish",
+    "fishFeeding": {
+      "premiumBonusText": "as a premium bonus",
+      "claimPoints": "Claim Points"
+    }
   },
   "flashcards": {
     "noCards": "No cards to show.",

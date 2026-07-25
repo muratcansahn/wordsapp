@@ -7,6 +7,9 @@ import { useTheme } from '@/hooks/theme/useTheme';
 import { BORDER_RADIUS, PADDING, MARGIN } from '@/constants/AppConstants';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInUp, FadeInRight } from 'react-native-reanimated';
+import { useEffect, useState } from 'react';
+import { usePremiumLimits } from '@/hooks/usePremiumLimits';
+import { getFreeWordListId } from '@/services/wordListService';
 
 // Constants for styling
 const STYLE_MARGIN = MARGIN.md;
@@ -47,6 +50,30 @@ export default function StudyModePage() {
   const { listId } = useLocalSearchParams();
   const router = useRouter();
   const { mode } = useTheme();
+  const { canAccessList } = usePremiumLimits();
+  const [freeListId, setFreeListId] = useState<number | undefined>(undefined);
+  const [accessChecked, setAccessChecked] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    getFreeWordListId().then((id) => {
+      if (isMounted) {
+        setFreeListId(id);
+        setAccessChecked(true);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!accessChecked || !listId) return;
+    const numericListId = Number(listId);
+    if (!canAccessList(numericListId, freeListId)) {
+      router.replace('/paywall-double');
+    }
+  }, [accessChecked, listId, freeListId, canAccessList, router]);
 
   const handleModeSelect = (modeId: string) => {
     const listIdParam = listId ? String(listId) : '1';

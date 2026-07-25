@@ -119,6 +119,19 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
       }
 
       Purchases.setLogLevel(Purchases.LOG_LEVEL.DEBUG);
+
+      // checkPremium, Purchases.getCustomerInfo() üzerinden ayrı ve genelde
+      // cache'lenmiş bir SDK yolu kullanır; bu yüzden getOfferings()'in
+      // (paket/ağ bağımlı) başarısız olmasından tamamen bağımsız olarak,
+      // kendi try/catch'i içinde çağrılır. Aksi halde geçici bir
+      // getOfferings hatası gerçek bir abonenin isPremium'unu sessizce
+      // false'a düşürür (reklamlar gösterilir, kelime listeleri kilitlenir).
+      try {
+        await checkPremium();
+      } catch (premiumErr) {
+        console.error('checkPremium error during init:', premiumErr);
+      }
+
       const offerings = await withTimeout(
         Purchases.getOfferings(),
         'RevenueCat getOfferings timed out. Check Play Store billing setup and device network.'
@@ -141,9 +154,6 @@ export const RevenueCatProvider: React.FC<React.PropsWithChildren> = ({
       initializedForUserRef.current = revenueCatUserId;
       setIsReady(true);
       setError(null);
-      
-      // checkPremium'u initialize'dan sonra çağır
-      await checkPremium();
     } catch (err) {
       const errorMessage = getErrorMessage(err);
       console.error('RevenueCat init error:', err);

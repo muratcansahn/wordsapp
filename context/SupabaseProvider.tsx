@@ -364,9 +364,18 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
 
   const signOut = useCallback(async () => {
     await handleAuthAction(async () => {
-      const isSignedInWithGoogle = await GoogleSignin.hasPreviousSignIn();
-      if (isSignedInWithGoogle) {
-        await GoogleSignin.signOut();
+      // Google native oturumunu temizlemek Supabase sign-out'u engellememeli:
+      // modül kullanılamıyorsa, Play Services eksikse ya da Expo Go gibi bir
+      // ortamdaysa bu çağrılar throw edebilir; öyle bir durumda bile kullanıcı
+      // Supabase oturumundan çıkabilmeli (aksi halde uygulamadan hiç çıkış
+      // yapılamaz).
+      try {
+        const isSignedInWithGoogle = await GoogleSignin.hasPreviousSignIn();
+        if (isSignedInWithGoogle) {
+          await GoogleSignin.signOut();
+        }
+      } catch (googleSignOutError) {
+        console.error('Google oturumu kapatılırken hata (yok sayılıyor):', googleSignOutError);
       }
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -380,9 +389,26 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
 
   const deleteAccount = useCallback(async () => {
     const currentUserId = session?.user?.id;
-    if (!currentUserId) return;
+    if (!currentUserId) {
+      const noSessionError = new Error('deleteAccount called with no active session');
+      handleError(noSessionError);
+      throw noSessionError;
+    }
 
     try {
+      // Auth kullanıcısını silmek admin yetkisi ister; bu yüzden bir Supabase Edge
+      // Function üzerinden service-role ile siliyoruz (anon/public key ile
+      // auth.admin.deleteUser çağrılamaz). Bunu Users satırını silmeden ÖNCE
+      // çağırıyoruz: fonksiyon henüz deploy edilmemişse veya geçici bir
+      // sebeple başarısız olursa, kullanıcının profil verisi (Users satırı)
+      // hâlâ canlı olan auth kimliğinden önce yok edilmemiş olur.
+      const { error: fnError } = await supabase.functions.invoke('delete-account');
+      if (fnError) {
+        console.error('Auth hesabı silinirken hata:', fnError.message);
+        throw fnError;
+      }
+
+      // Auth kimliği başarıyla silindi; şimdi Users satırını temizleyebiliriz.
       // Not: satır zaten yoksa Supabase delete hata döndürmez (0 satır silinir),
       // bu yüzden bu adım tekrar denemelerde güvenle no-op olur.
       const { error: deleteRowError } = await supabase
@@ -392,16 +418,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
 
       if (deleteRowError) {
         console.error('Hesap verisi silinirken hata:', deleteRowError.message);
-        throw deleteRowError;
-      }
-
-      // Auth kullanıcısını silmek admin yetkisi ister; bu yüzden bir Supabase Edge
-      // Function üzerinden service-role ile siliyoruz (anon/public key ile
-      // auth.admin.deleteUser çağrılamaz).
-      const { error: fnError } = await supabase.functions.invoke('delete-account');
-      if (fnError) {
-        console.error('Auth hesabı silinirken hata:', fnError.message);
-        // Users satırı zaten silindi; kullanıcıyı yarı silinmiş ama hâlâ oturum
+        // Auth kimliği zaten silindi; kullanıcıyı yarı silinmiş ama hâlâ oturum
         // açık bir durumda bırakmamak için oturumu yine de kapatıyoruz ve
         // net bir hata gösteriyoruz. Burada throw ETMİYORUZ: signOut zaten
         // gerçekleşti, çağıran taraf (delete-account ekranı) yine de

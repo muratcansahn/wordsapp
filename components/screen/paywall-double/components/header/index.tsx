@@ -8,14 +8,20 @@ import {
   PADDING,
 } from '@/constants/AppConstants';
 import { useTranslation } from 'react-i18next';
+import { Colors } from '@/constants/Colors';
+import { useTheme } from '@/hooks/theme/useTheme';
 
 export const Header: React.FC = () => {
   const { t } = useTranslation();
+  const { mode } = useTheme();
 
   return (
     <View style={styles.header}>
       <Image source={require('@/assets/images/game-screen-fish.png')} style={styles.logo} />
-      <ThemedText style={styles.title}>{t('inAppPurchases.title')}</ThemedText>
+      <ThemedText style={[styles.title, { color: Colors[mode].text }]}>{t('inAppPurchases.title')}</ThemedText>
+      <ThemedText style={[styles.subtitle, { color: Colors[mode].text }]}>
+        {t('inAppPurchases.subtitle')}
+      </ThemedText>
     </View>
   );
 };
@@ -37,6 +43,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: PADDING.lg,
     fontWeight: '900',
     lineHeight: 30,
-    color: '#FFFFFF', // Yazı rengini beyaz yaptık
+  },
+  subtitle: {
+    fontSize: FONT_SIZE.md,
+    textAlign: 'center',
+    paddingHorizontal: PADDING.lg,
+    marginTop: MARGIN.xs,
+    opacity: 0.7,
   },
 });

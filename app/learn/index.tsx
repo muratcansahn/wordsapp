@@ -10,7 +10,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/SupabaseProvider';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { getWordListsPaginatedWithGroupBy } from '@/services/wordListService';
+import { getWordListsPaginatedWithGroupBy, getFreeWordListId } from '@/services/wordListService';
 import { supabase } from '@/lib/supabase';
 import { usePremiumLimits } from '@/hooks/usePremiumLimits';
 
@@ -59,9 +59,17 @@ export default function LearnPage() {
   const [knownUnknownMap, setKnownUnknownMap] = useState<Record<number, { biliyorum: number; bilmiyorum: number }>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  
+  const [freeListId, setFreeListId] = useState<number | undefined>(undefined);
+
   const { user } = useAuth();
   const { canAccessList } = usePremiumLimits();
+
+  // "Ücretsiz liste" her zaman en düşük id'li liste olarak sabitlenir; bu,
+  // sayfalanmış RPC'nin ilk döndürdüğü listeye (wordLists[0]) güvenmekten
+  // daha kararlıdır.
+  useEffect(() => {
+    getFreeWordListId().then(setFreeListId);
+  }, []);
   const wordStatusUpdateCounter = useSelector((state: RootState) => state.user.wordStatusUpdateCounter);
   
   // Ref'ler - gereksiz çağrıları önlemek için
@@ -245,7 +253,7 @@ export default function LearnPage() {
   }, [wordStatusUpdateCounter, user, wordLists, getUserWordListProgress]);
 
   const handleListSelect = useCallback((listId: number) => {
-    if (!canAccessList(listId, wordLists[0]?.id)) {
+    if (!canAccessList(listId, freeListId)) {
       router.push('/paywall-double');
       return;
     }
@@ -254,7 +262,7 @@ export default function LearnPage() {
       pathname: '/learn/study-mode',
       params: { listId: String(listId) }
     });
-  }, [router, canAccessList, wordLists]);
+  }, [router, canAccessList, freeListId]);
 
   const headerAnimatedStyle = {
     opacity: scrollY.interpolate({

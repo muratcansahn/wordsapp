@@ -1,53 +1,38 @@
 import React, { useState ,useMemo,useCallback} from 'react';
-import { StyleSheet, ScrollView, View, TouchableOpacity, Text, StatusBar } from 'react-native';
-import Container from '@/components/common/container';
+import { StyleSheet, ScrollView, View, TouchableOpacity, Text } from 'react-native';
 import {
   BORDER_RADIUS,
-  BUTTON_HEIGHT,
   FLEX,
   FONT_SIZE,
   MARGIN,
   PADDING,
-  Z_INDEX,
 } from '@/constants/AppConstants';
 import { Header } from '@/components/screen/paywall-double/components/header';
 import { FeatureList } from '@/components/screen/paywall-double/components/feature-list';
 import { TermsText } from '@/components/screen/paywall-double/components/terms-text';
 import { PurchaseButton } from '@/components/screen/paywall-double/components/purchase-button';
-import RadioButton from '@/components/common/buttons/radio-button';
-import { Colors } from '@/constants/Colors';
-import { useTheme } from '@/hooks/theme/useTheme';
 
-// 1. Uncomment: 👇
-import { ThemedText } from '@/components/common/typography';
-// import { useRevenueCat } from '@/context/RevenueCatProvider';
-import PressableOpacity from '@/components/common/buttons/pressable-opacity';
+import { useRevenueCat } from '@/context/RevenueCatProvider';
 import WaveBackground from '@/components/screen/paywall-double/components/wave-background';
 
 export default function IOSInAppPurchases() {
-  const { mode } = useTheme();
   const [selectedPlan, setSelectedPlan] = useState<
     '$rc_monthly' | '$rc_annual' | '$rc_lifetime'
   >('$rc_annual');
 
-  // 2. Uncomment: 👇
-  // const { packages, purchasePackage } = useRevenueCat();
-  const packages: any[] = [];
-  const purchasePackage = async (..._args: any[]) => {};
+  const { packages, purchasePackage, isReady } = useRevenueCat();
 
-  // // 3. Uncomment plans: 👇
   const plans = useMemo(() => {
     const monthlyPackage = packages.find(
-      (pkg) => pkg.identifier === '$rc_monthly'
+      (pkg) => pkg.identifier === '$rc_monthly' || pkg.packageType === 'MONTHLY'
     );
     const yearlyPackage = packages.find(
-      (pkg) => pkg.identifier === '$rc_annual'
+      (pkg) => pkg.identifier === '$rc_annual' || pkg.packageType === 'ANNUAL'
     );
     const lifetimePackage = packages.find(
-      (pkg) => pkg.identifier === '$rc_lifetime'
+      (pkg) => pkg.identifier === '$rc_lifetime' || pkg.packageType === 'LIFETIME'
     );
 
-  //   // Early return if packages are not available
     if (!monthlyPackage || !yearlyPackage) {
       return {
         $rc_monthly: {},
@@ -56,7 +41,6 @@ export default function IOSInAppPurchases() {
       };
     }
 
-  //   // Safely calculate savings percentage
     const calculateSavings = () => {
       const monthlyPricePerYear = monthlyPackage.product.pricePerYear ?? 0;
       const yearlyPrice = yearlyPackage.product.price ?? 0;
@@ -101,7 +85,6 @@ export default function IOSInAppPurchases() {
     };
   }, [packages]);
 
-  // TODO: Uncomment this 👇:
   const handlePurchase = useCallback(async () => {
     const selectedPackage = plans[selectedPlan]?.package;
 
@@ -116,11 +99,6 @@ export default function IOSInAppPurchases() {
       console.error('Purchase failed:', error);
     }
   }, [selectedPlan, plans, purchasePackage]);
-
-  // Delete this function 👇:
-  // const handlePurchase = () => {
-  //   console.log('Purchase');
-  // };
 
   return (
     <WaveBackground edges={['top', 'bottom', 'left', 'right']}>
@@ -188,15 +166,11 @@ export default function IOSInAppPurchases() {
           </View>
         </View>
         <View style={styles.purchaseButtonContainer}>
-          <PurchaseButton onPress={handlePurchase} />
+          <PurchaseButton onPress={handlePurchase} disabled={!isReady || !plans[selectedPlan]?.package} />
         </View>
         <TermsText
-          // TODO: Remove this 👇:
-          price="$7.99" // TODO: Remove this
-          period="year" // TODO: Remove this
-          // TODO: Uncomment this 👇:
-          //   price={plans[selectedPlan]?.price ?? ''}
-          //   period={plans[selectedPlan]?.period ?? ''}
+          price={plans[selectedPlan]?.price ?? ''}
+          period={plans[selectedPlan]?.period ?? ''}
         />
       </View>
     </WaveBackground>
@@ -274,27 +248,5 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: FONT_SIZE.xs,
     fontWeight: 'bold',
-  },
-  radioButton: {
-    marginVertical: MARGIN.md,
-  },
-  savingsContainer: {
-    position: 'relative',
-  },
-  savingsView: {
-    position: 'absolute',
-    top: 15,
-    right: 12,
-    paddingHorizontal: PADDING.sm,
-    paddingVertical: PADDING.xs,
-    borderRadius: BORDER_RADIUS.sm,
-    zIndex: Z_INDEX.top,
-    backgroundColor: Colors.light.purple,
-  },
-  savingsText: {
-    fontSize: FONT_SIZE.sm,
-    fontWeight: '900',
-    color: Colors.dark.text,
-    textAlign: 'center',
   },
 });

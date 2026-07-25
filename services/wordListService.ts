@@ -8,6 +8,28 @@ export interface ApiWordList {
   total_words: number; // Kelime sayısı için
 }
 
+// "Ücretsiz liste" (free-tier'da erişilebilir tek liste) her zaman en düşük
+// numaralı WordLists.id olarak sabitlenir. Bunu, sayfalanmış/grup RPC'lerinin
+// döndürdüğü ilk satıra (`wordLists[0]?.id`) güvenerek belirlemiyoruz; o sıra
+// backend/dil/sayfa değişikliğiyle sessizce değişebilir. Şemada is_free gibi
+// bir kolon yok, bu yüzden en düşük id istemci tarafında açıkça sorgulanıp
+// sabitleniyor.
+export const getFreeWordListId = async (): Promise<number | undefined> => {
+  const { data, error } = await supabase
+    .from('WordLists')
+    .select('id')
+    .order('id', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Ücretsiz liste id\'si alınırken hata:', error);
+    return undefined;
+  }
+
+  return data?.id;
+};
+
 export const getWordLists = async (): Promise<ApiWordList[]> => {
   try {
     // Performans iyileştirmesi:

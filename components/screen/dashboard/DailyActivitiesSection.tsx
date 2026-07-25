@@ -28,7 +28,6 @@ const DailyActivitiesSection = () => {
     const userId = user?.id;
     const [gameStatus, setGameStatus] = useState<Record<string, GameStatus>>({});
     const [countdown, setCountdown] = useState<Record<string, string>>({});
-    const [dialogVisible, setDialogVisible] = useState(false);
     const [adDialogVisible, setAdDialogVisible] = useState(false);
     const [selectedGame, setSelectedGame] = useState<string>('');
       const { showRewarded, isPremium } = useAdmobRewarded(1); // İkinci reklam ID'sini kullanmak için adIndex=1 olarak ayarlandı
@@ -131,8 +130,9 @@ const DailyActivitiesSection = () => {
         if (status && status.remaining === 0) {
             setSelectedGame(gameType);
             if (isPremium) {
-                // Premium kullanıcılara reklam izleme teklifi gösterilmez
-                setDialogVisible(true);
+                // Premium kullanıcılar reklam izlemeden, reklamın verdiği ekstra
+                // oyun hakkının aynısını doğrudan alır.
+                router.push(route);
             } else {
                 setAdDialogVisible(true); // Oyun hakkı kalmadığında reklam izleme dialogunu göster
             }
@@ -217,15 +217,6 @@ const DailyActivitiesSection = () => {
                     {dailyContent.map(renderDailyCard)}
                 </View>
             </View>
-            <ConfirmationDialog
-                visible={dialogVisible}
-                title={t('dashboard.noGameRightTitle')}
-                message={t('dashboard.noGameRightDesc', { time: countdown[selectedGame] || '' })}
-                confirmText={t('dashboard.okButton')}
-                onConfirm={() => setDialogVisible(false)}
-                onCancel={() => setDialogVisible(false)}
-            />
-            
             <ConfirmationDialog
                 visible={adDialogVisible}
                 title="Hiç hakkın kalmadı"

@@ -139,10 +139,6 @@
         "title": "Experiencia Sin Anuncios",
         "description": "Elimina todos los anuncios y disfruta del aprendizaje sin interrupciones"
       },
-      "feature2": {
-        "title": "Juego Diario Extra",
-        "description": "Obtén un juego extra cada día y practica más"
-      },
       "feature3": {
         "title": "Listas de Palabras Ilimitadas",
         "description": "Utiliza todas las listas de palabras sin límites y acelera tu aprendizaje"
@@ -257,6 +253,8 @@
       "pointsRequired": "puntos para alimentar al pez.",
       "watchAdOption": "25",
       "watchAdOptionText": "puedes ver un anuncio por",
+      "premiumBonusText": "puedes obtener como bono premium",
+      "claimPoints": "Reclamar puntos",
       "feed": "Alimentar",
       "watchAd": "Ver anuncio",
       "adLimitTitle": "Límite de Anuncios",

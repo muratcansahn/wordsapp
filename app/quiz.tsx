@@ -29,6 +29,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { PADDING, MARGIN } from '@/constants/AppConstants';
 import { incrementUserPointWithRedux } from '@/services/userService';
 import { supabase } from '@/lib/supabase';
+import { usePremiumLimits } from '@/hooks/usePremiumLimits';
+import { getFreeWordListId } from '@/services/wordListService';
 
 const { width } = Dimensions.get('window');
 
@@ -102,6 +104,7 @@ export default function QuizPage() {
   const userPoint = useSelector((state: RootState) => state.user.point);
   const [wordList, setWordList] = useState<WordListWithItems | null>(null);
   const [showInfoModal, setShowInfoModal] = useState(false); // Bilgilendirme modalı için state
+  const { canAccessList } = usePremiumLimits();
 
   const dispatch = useDispatch();
   // Puan konteynerı için referans
@@ -207,6 +210,15 @@ export default function QuizPage() {
 
       try {
         setLoading(true);
+
+        // Deep-link/route-param ile kilitli bir listeye doğrudan erişimi engelle:
+        // "ücretsiz liste" en düşük id'li liste olarak sabitlenir ve premium
+        // olmayan kullanıcılar için erişilebilirlik burada kontrol edilir.
+        const freeListId = await getFreeWordListId();
+        if (!canAccessList(Number(listId), freeListId)) {
+          router.replace('/paywall-double');
+          return;
+        }
 
         // Her durumda kelime listesini çek
         const wordList = await fetchWordListItems(listId as string, i18n.language);

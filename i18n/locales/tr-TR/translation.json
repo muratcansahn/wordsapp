@@ -159,10 +159,6 @@
         "title": "Reklamsız Deneyim",
         "description": "Tüm reklamlardan kurtulun ve kesintisiz öğrenme deneyimi yaşayın"
       },
-      "feature2": {
-        "title": "Günlük Ekstra Oyun Hakkı",
-        "description": "Her gün ekstra bir oyun hakkı ile daha fazla pratik yapın"
-      },
       "feature3": {
         "title": "Sınırsız Kelime Listesi",
         "description": "Tüm kelime listelerini sınırsız kullanın ve öğrenmenizi hızlandırın"
@@ -289,6 +285,8 @@
       "pointsRequired": "puana ihtiyacınız var.",
       "watchAdOption": "25",
       "watchAdOptionText": "karşılığında reklam izleyebilirsiniz",
+      "premiumBonusText": "premium bonus olarak kazanabilirsiniz",
+      "claimPoints": "Puanları Al",
       "feed": "Besle",
       "watchAd": "İzle",
       "adLimitTitle": "Reklam İzleme Sınırı",

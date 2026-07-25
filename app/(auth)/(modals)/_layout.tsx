@@ -1,6 +1,5 @@
 import React from 'react';
 import { Stack } from 'expo-router';
-import HeaderClose from '@/components/navigation/header/header-close';
 import PaywallHeader from '@/components/navigation/header/paywall-header';
 
 const ModalsLayout = () => {
@@ -17,22 +16,6 @@ const ModalsLayout = () => {
           headerBackVisible: false,
           headerTransparent: true,
           animation: 'slide_from_bottom',
-        }}
-      />
-      <Stack.Screen
-        name="spotify"
-        options={{
-          title: 'Spotify',
-          presentation: 'modal',
-          headerLeft: HeaderClose,
-        }}
-      />
-      <Stack.Screen
-        name="cuul"
-        options={{
-          title: 'Cuul',
-          presentation: 'modal',
-          headerLeft: HeaderClose,
         }}
       />
     </Stack>

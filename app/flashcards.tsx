@@ -30,6 +30,8 @@ import { RootState } from '@/store';
 import { useTheme } from '@/hooks/theme/useTheme';
 import { PointContainer } from '@/components/common/point-container';
 import { useTranslation } from 'react-i18next';
+import { usePremiumLimits } from '@/hooks/usePremiumLimits';
+import { getFreeWordListId } from '@/services/wordListService';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -223,6 +225,7 @@ export default function FlashcardsScreen() {
   const { t } = useTranslation();
   const params = useLocalSearchParams();
   const dispatch = useDispatch();
+  const { canAccessList } = usePremiumLimits();
   const { mode } = useTheme();
   const userPoint = useSelector((state: RootState) => state.user.point);
   
@@ -466,6 +469,13 @@ export default function FlashcardsScreen() {
         }
 
         const listId = String(params.listId);
+
+        const freeListId = await getFreeWordListId();
+        if (!canAccessList(Number(listId), freeListId)) {
+          router.replace('/paywall-double');
+          return;
+        }
+
         const wordList = await fetchWordListItems(listId);
         
         if (!wordList.cards || wordList.cards.length === 0) {

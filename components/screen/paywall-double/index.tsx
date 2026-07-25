@@ -1,4 +1,4 @@
-import React, { useState,useMemo,useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { StyleSheet, ScrollView, View } from 'react-native';
 import Container from '@/components/common/container';
 import {
@@ -8,35 +8,39 @@ import {
   FONT_SIZE,
   MARGIN,
   PADDING,
-  Z_INDEX,
 } from '@/constants/AppConstants';
 import { Header } from '@/components/screen/paywall-double/components/header';
+import { FeatureList } from '@/components/screen/paywall-double/components/feature-list';
+import { ComparisonTable } from '@/components/screen/paywall-double/components/comparison-table';
 import { TermsText } from '@/components/screen/paywall-double/components/terms-text';
 import { PurchaseButton } from '@/components/screen/paywall-double/components/purchase-button';
 import RadioButton from '@/components/common/buttons/radio-button';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
+import { useTranslation } from 'react-i18next';
 
 import { ThemedText } from '@/components/common/typography';
 import PressableOpacity from '@/components/common/buttons/pressable-opacity';
-// import { useRevenueCat } from '@/context/RevenueCatProvider';
+import { useRevenueCat } from '@/context/RevenueCatProvider';
+
+const MIN_SENSIBLE_SAVINGS = 1;
+const MAX_SENSIBLE_SAVINGS = 95;
 
 export default function AndroidInAppPurchases() {
   const { mode } = useTheme();
+  const { t } = useTranslation();
   const [selectedPlan, setSelectedPlan] = useState<
     '$rc_monthly' | '$rc_annual'
   >('$rc_annual');
 
-  // const { packages, purchasePackage } = useRevenueCat();
-  const packages: any[] = [];
-  const purchasePackage = async (..._args: any[]) => {};
+  const { packages, purchasePackage, restorePurchases, isReady, error } = useRevenueCat();
 
   const plans = useMemo(() => {
     const monthlyPackage = packages.find(
-      (pkg) => pkg.identifier === '$rc_monthly'
+      (pkg) => pkg.identifier === '$rc_monthly' || pkg.packageType === 'MONTHLY'
     );
     const yearlyPackage = packages.find(
-      (pkg) => pkg.identifier === '$rc_annual'
+      (pkg) => pkg.identifier === '$rc_annual' || pkg.packageType === 'ANNUAL'
     );
 
     // Early return if packages are not available
@@ -47,12 +51,14 @@ export default function AndroidInAppPurchases() {
       };
     }
 
-  //   // Safely calculate savings percentage
-    const calculateSavings = () => {
-      const monthlyPricePerYear = monthlyPackage.product.pricePerYear ?? 0;
+    // Savings % must come from a real, sane comparison: annualized monthly price vs the yearly price.
+    const calculateSavingsPercent = () => {
+      const monthlyPricePerYear =
+        monthlyPackage.product.pricePerYear ??
+        (monthlyPackage.product.price ? monthlyPackage.product.price * 12 : 0);
       const yearlyPrice = yearlyPackage.product.price ?? 0;
 
-      if (monthlyPricePerYear === 0 || yearlyPrice === 0) {
+      if (!monthlyPricePerYear || !yearlyPrice || yearlyPrice >= monthlyPricePerYear) {
         return null;
       }
 
@@ -60,7 +66,9 @@ export default function AndroidInAppPurchases() {
         ((monthlyPricePerYear - yearlyPrice) / monthlyPricePerYear) * 100
       );
 
-      return savingsPercentage > 0 ? `Save ${savingsPercentage}%` : null;
+      return savingsPercentage >= MIN_SENSIBLE_SAVINGS && savingsPercentage <= MAX_SENSIBLE_SAVINGS
+        ? savingsPercentage
+        : null;
     };
 
     return {
@@ -77,7 +85,8 @@ export default function AndroidInAppPurchases() {
         id: yearlyPackage.identifier,
         package: yearlyPackage,
         pricePerMonth: yearlyPackage.product.pricePerMonthString,
-        savings: calculateSavings(),
+        priceIfBilledMonthly: monthlyPackage.product.pricePerYearString,
+        savingsPercent: calculateSavingsPercent(),
       },
     };
   }, [packages]);
@@ -97,6 +106,14 @@ export default function AndroidInAppPurchases() {
     }
   }, [selectedPlan, plans, purchasePackage]);
 
+  const handleRestore = useCallback(async () => {
+    try {
+      await restorePurchases();
+    } catch (error) {
+      console.error('Restore failed:', error);
+    }
+  }, [restorePurchases]);
+
 
 
   return (
@@ -107,44 +124,76 @@ export default function AndroidInAppPurchases() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* <FeatureList /> */}
+          <FeatureList />
+          <ComparisonTable />
         </ScrollView>
         <View style={styles.pricingContainer}>
+          {error ? (
+            <ThemedText style={styles.errorText}>{error}</ThemedText>
+          ) : null}
           <RadioButton
             selected={selectedPlan === '$rc_monthly'}
             onSelect={() => setSelectedPlan('$rc_monthly')}
-            label="Monthly Plan"
+            label={t('inAppPurchases.monthlyPlan')}
             value={plans['$rc_monthly'].price}
-            description={`Billed monthly (${plans['$rc_monthly'].pricePerMonth}/mo)`}
+            description={
+              plans['$rc_monthly'].pricePerMonth
+                ? t('inAppPurchases.billedMonthly')
+                : t('loading')
+            }
             style={styles.radioButton}
             color={Colors[mode].primary}
             height={BUTTON_HEIGHT.lg}
           />
           <View style={styles.savingsContainer}>
-            {plans['$rc_annual'].savings && (
+            {plans['$rc_annual'].savingsPercent != null && (
               <PressableOpacity
-                style={styles.savingsView}
+                style={styles.mostPopularBadge}
                 variant="active"
                 onPress={() => setSelectedPlan('$rc_annual')}
               >
-                <ThemedText type="defaultSemiBold" style={styles.savingsText}>
-                  {plans['$rc_annual'].savings}
+                <ThemedText type="defaultSemiBold" style={styles.mostPopularText}>
+                  {t('inAppPurchases.mostPopular')}
                 </ThemedText>
               </PressableOpacity>
             )}
             <RadioButton
               selected={selectedPlan === '$rc_annual'}
               onSelect={() => setSelectedPlan('$rc_annual')}
-              label="Yearly Plan"
+              label={t('inAppPurchases.yearlyPlan')}
               value={plans['$rc_annual'].price}
-              description={`Billed yearly (${plans['$rc_annual'].pricePerMonth}/mo)`}
+              description={
+                plans['$rc_annual'].pricePerMonth
+                  ? t('inAppPurchases.billedYearly')
+                  : t('loading')
+              }
               color={Colors[mode].primary}
               height={BUTTON_HEIGHT.lg}
+              style={styles.yearlyRadioButton}
             />
+            {plans['$rc_annual'].savingsPercent != null && (
+              <View style={styles.savingsRow} pointerEvents="none">
+                {plans['$rc_annual'].priceIfBilledMonthly && (
+                  <ThemedText style={styles.strikethroughPrice}>
+                    {plans['$rc_annual'].priceIfBilledMonthly}
+                  </ThemedText>
+                )}
+                <View style={styles.savingsPill}>
+                  <ThemedText type="defaultSemiBold" style={styles.savingsPillText}>
+                    {t('inAppPurchases.bestSavings')} {plans['$rc_annual'].savingsPercent}%
+                  </ThemedText>
+                </View>
+              </View>
+            )}
           </View>
         </View>
         <View style={styles.purchaseButtonContainer}>
-          <PurchaseButton onPress={handlePurchase} />
+          <PurchaseButton onPress={handlePurchase} disabled={!isReady || !plans[selectedPlan]?.package} />
+          <PressableOpacity onPress={handleRestore} style={styles.restoreButton}>
+            <ThemedText style={[styles.restoreText, { color: Colors[mode].text }]}>
+              {t('inAppPurchases.restorePurchases')}
+            </ThemedText>
+          </PressableOpacity>
         </View>
         <TermsText
           price={plans[selectedPlan]?.price || ""}
@@ -174,23 +223,65 @@ const styles = StyleSheet.create({
   radioButton: {
     marginVertical: MARGIN.md,
   },
+  yearlyRadioButton: {
+    marginTop: MARGIN.md,
+    marginBottom: 0,
+  },
   savingsContainer: {
     position: 'relative',
   },
-  savingsView: {
+  mostPopularBadge: {
     position: 'absolute',
-    top: 15,
-    right: 12,
+    top: -10,
+    left: 20,
     paddingHorizontal: PADDING.sm,
-    paddingVertical: PADDING.xs,
+    paddingVertical: 3,
     borderRadius: BORDER_RADIUS.sm,
-    zIndex: Z_INDEX.top,
+    zIndex: 1,
     backgroundColor: Colors.light.primary,
   },
-  savingsText: {
-    fontSize: FONT_SIZE.sm,
+  mostPopularText: {
+    fontSize: FONT_SIZE.xs,
     fontWeight: '900',
     textAlign: 'center',
-    color: Colors.light.text,
+    color: '#333333',
+  },
+  savingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: PADDING.xs,
+    marginTop: MARGIN.sm,
+    paddingHorizontal: PADDING.xs,
+  },
+  strikethroughPrice: {
+    fontSize: FONT_SIZE.sm,
+    textDecorationLine: 'line-through',
+    opacity: 0.5,
+  },
+  savingsPill: {
+    paddingHorizontal: PADDING.sm,
+    paddingVertical: 2,
+    borderRadius: BORDER_RADIUS.sm,
+    backgroundColor: '#E8F5E9',
+  },
+  savingsPillText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '900',
+    color: '#2E7D32',
+  },
+  restoreButton: {
+    marginTop: MARGIN.sm,
+    alignItems: 'center',
+  },
+  restoreText: {
+    fontSize: FONT_SIZE.xs,
+    textDecorationLine: 'underline',
+    opacity: 0.6,
+  },
+  errorText: {
+    color: Colors.light.error,
+    marginBottom: MARGIN.sm,
+    textAlign: 'center',
   },
 });

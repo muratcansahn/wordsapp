@@ -9,7 +9,6 @@ import { BORDER_RADIUS, FONT_SIZE, ICON_SIZE, MARGIN, PADDING } from '@/constant
 
 const ROWS = [
   { labelKey: 'inAppPurchases.cards.feature1.title', free: false },
-  { labelKey: 'inAppPurchases.cards.feature2.title', free: false },
   { labelKey: 'inAppPurchases.cards.feature3.title', free: false },
 ] as const;
 
@@ -27,7 +26,7 @@ export const ComparisonTable: React.FC = () => {
         </ThemedText>
         <ThemedText
           type="defaultSemiBold"
-          style={[styles.columnHeader, styles.premiumColumnHeader, { color: colors.text }]}
+          style={[styles.columnHeader, { color: colors.text }, styles.premiumColumnHeader]}
         >
           {t('inAppPurchases.comparePremiumLabel')}
         </ThemedText>

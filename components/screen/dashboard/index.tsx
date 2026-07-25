@@ -30,12 +30,12 @@ import {
 } from '@/constants/AppConstants';
 import { Colors } from '@/constants/Colors';
 import { RootState } from '@/store';
-import { setReduxUser } from '@/store/userSlice';
+import { setReduxUser, incrementByAmount } from '@/store/userSlice';
 import { supabase } from '@/lib/supabase';
 import { FishTypes } from '@/assets/svg/fish';
 import { FishComponent } from '@/components/fish/FishComponent';
 import DailyActivitiesSection from './DailyActivitiesSection';
-import { fetchWordStatuses } from '@/services/userService';
+import { fetchWordStatuses, incrementUserPointByAmount } from '@/services/userService';
 import { Aquarium } from './Aquarium';
 import { useAdmobRewarded } from '@/hooks/useAdmobRewarded';
 // import { useRevenueCat } from '@/context/RevenueCatProvider';
@@ -917,7 +917,7 @@ export default function DashboardScreen() {
             onPress={() => {
               setConfirmDialogVisible(true);
             }}
-            disabled={isFeeding || point <= 0 || (isPremium && point < 50)}
+            disabled={isFeeding || point <= 0}
           >
             <Ionicons
               name="fish-outline"
@@ -1057,11 +1057,21 @@ export default function DashboardScreen() {
                   </View>
                   <Text style={styles.miniPointText}>25</Text>
                 </View>
-                <Text style={styles.dialogMessageText}>{t('dashboard.fishFeeding.watchAdOptionText')}</Text>
+                <Text style={styles.dialogMessageText}>
+                  {isPremium
+                    ? t('dashboard.fishFeeding.premiumBonusText') || "premium bonus olarak kazanabilirsiniz"
+                    : t('dashboard.fishFeeding.watchAdOptionText')}
+                </Text>
               </View>
             </View>
           )}
-        confirmText={point >= 50 ? t('dashboard.fishFeeding.feed') || "Besle" : t('dashboard.fishFeeding.watchAd') || "İzle"}
+        confirmText={
+          point >= 50
+            ? t('dashboard.fishFeeding.feed') || "Besle"
+            : isPremium
+              ? t('dashboard.fishFeeding.claimPoints') || "Puanları Al"
+              : t('dashboard.fishFeeding.watchAd') || "İzle"
+        }
         cancelText={point >= 50 ? t('buttons.cancel') || "İptal" : undefined}
         iconColor={point >= 50 ? "#1890FF" : "#EF4444"}
         confirmButtonColor={point >= 50 ? "#1890FF" : "#4CAF50"}
@@ -1070,6 +1080,17 @@ export default function DashboardScreen() {
           if (point >= 50) {
             setConfirmDialogVisible(false);
             startFeedingProcess();
+          } else if (isPremium) {
+            // Premium kullanıcılar reklam izlemeden, reklamın verdiği aynı
+            // puan miktarını (25) doğrudan kazanır.
+            if (id) {
+              incrementUserPointByAmount(id, 25).then(({ success }) => {
+                if (success) {
+                  dispatch(incrementByAmount(25));
+                }
+              });
+            }
+            setConfirmDialogVisible(false);
           } else {
             setIsAdLoading(true);
             showRewarded().then((earnedReward) => {
