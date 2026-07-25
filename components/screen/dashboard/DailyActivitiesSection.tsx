@@ -31,7 +31,7 @@ const DailyActivitiesSection = () => {
     const [dialogVisible, setDialogVisible] = useState(false);
     const [adDialogVisible, setAdDialogVisible] = useState(false);
     const [selectedGame, setSelectedGame] = useState<string>('');
-      const { showRewarded } = useAdmobRewarded(1); // İkinci reklam ID'sini kullanmak için adIndex=1 olarak ayarlandı
+      const { showRewarded, isPremium } = useAdmobRewarded(1); // İkinci reklam ID'sini kullanmak için adIndex=1 olarak ayarlandı
 
     const fetchGameStatus = useCallback(async () => {
         if (!userId) return;
@@ -130,7 +130,12 @@ const DailyActivitiesSection = () => {
         const status = gameStatus[gameType];
         if (status && status.remaining === 0) {
             setSelectedGame(gameType);
-            setAdDialogVisible(true); // Oyun hakkı kalmadığında reklam izleme dialogunu göster
+            if (isPremium) {
+                // Premium kullanıcılara reklam izleme teklifi gösterilmez
+                setDialogVisible(true);
+            } else {
+                setAdDialogVisible(true); // Oyun hakkı kalmadığında reklam izleme dialogunu göster
+            }
         } else {
             const userId = user?.id;
             if (!userId) return;
@@ -143,7 +148,7 @@ const DailyActivitiesSection = () => {
                 Alert.alert('Hata', 'Oyun başlatılırken bir hata oluştu.');
             }
         }
-    }, [gameStatus, router, user]);
+    }, [gameStatus, router, user, isPremium]);
     
  
 

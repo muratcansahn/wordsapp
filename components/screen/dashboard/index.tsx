@@ -592,7 +592,7 @@ export default function DashboardScreen() {
   const { t } = useTranslation() ;
   const router = useRouter();
   const dispatch = useDispatch();
-  const { showRewarded } = useAdmobRewarded(0); // Birinci reklam ID'sini kullanmak için adIndex=0 olarak ayarlandı
+  const { showRewarded, isPremium } = useAdmobRewarded(0); // Birinci reklam ID'sini kullanmak için adIndex=0 olarak ayarlandı
 
 
   // Redux'tan kullanıcı bilgilerini al
@@ -917,7 +917,7 @@ export default function DashboardScreen() {
             onPress={() => {
               setConfirmDialogVisible(true);
             }}
-            disabled={isFeeding || point <= 0}
+            disabled={isFeeding || point <= 0 || (isPremium && point < 50)}
           >
             <Ionicons
               name="fish-outline"

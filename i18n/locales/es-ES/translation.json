@@ -150,14 +150,6 @@
       "feature3": {
         "title": "Feature Title 3",
         "description": "Feature Description 3"
-      },
-      "feature4": {
-        "title": "Feature Title 4",
-        "description": "Feature Description 4"
-      },
-      "feature5": {
-        "title": "Feature Title 5",
-        "description": "Feature Description 5"
       }
     }
   },

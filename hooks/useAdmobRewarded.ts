@@ -11,8 +11,10 @@ import { incrementByAmount } from '@/store/userSlice';
 import type { AppDispatch, RootState } from '@/store';
 import { incrementUserPointByAmount } from '@/services/userService';
 import { supabase } from '@/lib/supabase';
+import { useRevenueCat } from '@/context/RevenueCatProvider';
 
 export const useAdmobRewarded = (adIndex: 0 | 1 = 0) => {
+  const { isPremium } = useRevenueCat();
   const adUnitId = __DEV__ ? TestIds.REWARDED : admobConfig.rewardedAdUnitId[adIndex];
   const rewardedRef = useRef<RewardedAd | null>(null);
   const isLoadedRef = useRef<boolean>(false);
@@ -98,6 +100,11 @@ export const useAdmobRewarded = (adIndex: 0 | 1 = 0) => {
 
   const showRewarded = useCallback((): Promise<boolean> => {
     return new Promise<boolean>((resolve) => {
+      if (isPremium) {
+        resolve(false);
+        return;
+      }
+
       const ad = rewardedRef.current;
       if (!ad) {
         resolve(false);
@@ -142,9 +149,10 @@ export const useAdmobRewarded = (adIndex: 0 | 1 = 0) => {
 
       ad.load();
     });
-  }, []);
+  }, [isPremium]);
 
   return {
     showRewarded,
+    isPremium,
   };
 };
