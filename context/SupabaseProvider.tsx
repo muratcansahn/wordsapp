@@ -30,6 +30,7 @@ type AuthContextType = {
   session: Session | null;
   initialized: boolean;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signInWithApple: () => Promise<void>;
   createSessionFromUrl: (url: string) => Promise<void>;
@@ -370,6 +371,37 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
 
   
 
+  const deleteAccount = useCallback(async () => {
+    try {
+      const currentUserId = session?.user?.id;
+      if (!currentUserId) return;
+
+      const { error: deleteRowError } = await supabase
+        .from('Users')
+        .delete()
+        .eq('id', currentUserId);
+
+      if (deleteRowError) {
+        console.error('Hesap verisi silinirken hata:', deleteRowError.message);
+        throw deleteRowError;
+      }
+
+      // Auth kullanıcısını silmek admin yetkisi ister; bu yüzden bir Supabase Edge
+      // Function üzerinden service-role ile siliyoruz (anon/public key ile
+      // auth.admin.deleteUser çağrılamaz).
+      const { error: fnError } = await supabase.functions.invoke('delete-account');
+      if (fnError) {
+        console.error('Auth hesabı silinirken hata:', fnError.message);
+        throw fnError;
+      }
+
+      await signOut();
+    } catch (err) {
+      handleError(err as Error);
+      throw err;
+    }
+  }, [session, signOut, handleError]);
+
   const signInWithGoogle = useCallback(async () => {
     console.log("Google signin başlatılıyor")
     const toast = showToast(
@@ -495,6 +527,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
       session,
       initialized,
       signOut,
+      deleteAccount,
       signInWithGoogle,
       signInWithApple,
       createSessionFromUrl,
@@ -508,6 +541,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
       session,
       initialized,
       signOut,
+      deleteAccount,
       signInWithGoogle,
       signInWithApple,
       createSessionFromUrl,

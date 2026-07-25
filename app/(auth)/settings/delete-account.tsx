@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { StyleSheet, FlatList, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import RadioButton from '@/components/common/buttons/radio-button';
 import { ThemedView } from '@/components/common/view';
 import { ThemedText } from '@/components/common/typography';
@@ -7,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import Dialog from '@/components/common/modal/dialog';
 import { Colors } from '@/constants/Colors';
 import { useTheme } from '@/hooks/theme/useTheme';
+import { useAuth } from '@/context/SupabaseProvider';
 import {
   BORDER_RADIUS,
   BUTTON_HEIGHT,
@@ -21,8 +23,11 @@ import AnimatedBorderButton from '@/components/common/buttons/animated-border-bu
 const DeleteAccountScreen: React.FC = () => {
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { t } = useTranslation();
   const { mode } = useTheme();
+  const { deleteAccount } = useAuth();
+  const router = useRouter();
 
   const handleSelectReason = useCallback((reason: string) => {
     setSelectedReason(reason);
@@ -62,6 +67,18 @@ const DeleteAccountScreen: React.FC = () => {
         rightButton={t('buttons.delete')}
         visible={visible}
         setVisible={setVisible}
+        isLoading={isDeleting}
+        onConfirm={async () => {
+          try {
+            setIsDeleting(true);
+            await deleteAccount();
+            router.replace('/(no-auth)/sign-in');
+          } catch {
+            // handleError inside deleteAccount already surfaces this to the user.
+          } finally {
+            setIsDeleting(false);
+          }
+        }}
       >
         <AnimatedBorderButton
           onPress={() => {
