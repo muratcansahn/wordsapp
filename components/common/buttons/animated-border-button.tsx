@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   innerContainer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     overflow: 'hidden',
   },
   loaderContainer: {

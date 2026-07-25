@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
     },
     cardOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         backgroundColor: 'rgba(0, 0, 0, 0.1)',
     },
     dailyCardContent: {

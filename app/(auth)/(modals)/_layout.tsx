@@ -20,31 +20,6 @@ const ModalsLayout = () => {
         }}
       />
       <Stack.Screen
-        name="paywall-double-lavalamp"
-        options={{
-          title: '',
-          headerTitleAlign: 'center',
-          headerRight: PaywallHeader,
-          presentation: 'fullScreenModal',
-          headerShadowVisible: false,
-          headerBackVisible: false,
-          headerTransparent: true,
-          animation: 'slide_from_bottom',
-        }}
-      />
-      <Stack.Screen
-        name="paywall-single"
-        options={{
-          title: '',
-          presentation: 'fullScreenModal',
-          headerRight: PaywallHeader,
-          headerTitleAlign: 'center',
-          headerShadowVisible: false,
-          headerBackVisible: false,
-          animation: 'slide_from_bottom',
-        }}
-      />
-      <Stack.Screen
         name="spotify"
         options={{
           title: 'Spotify',

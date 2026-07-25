@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   shineContainer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     overflow: 'hidden',
     zIndex: Z_INDEX.hide,
   },

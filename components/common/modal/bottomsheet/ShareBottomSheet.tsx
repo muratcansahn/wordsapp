@@ -63,54 +63,16 @@ const ShareBottomSheet = forwardRef<ViewShot, { colors: string[] }>(
         <View style={styles.shareOptions}>
           <View style={styles.shareOptionsRow}>
             <ShareOption
-              icon="link"
-              label="Copy link"
-              color={Colors[mode].text}
-              onPress={() => {}}
-            />
-            <ShareOption
               icon="instagram"
               label="Stories"
               color={Colors[mode].text}
               onPress={shareStory}
             />
             <ShareOption
-              icon="instagram"
-              label="Post"
-              color={Colors[mode].text}
-              onPress={() => {}}
-            />
-            <ShareOption
-              icon="snapchat"
-              label="Snap"
-              color={Colors[mode].text}
-              onPress={() => {}}
-            />
-          </View>
-          <View style={styles.shareOptionsRow}>
-            <ShareOption
               icon="facebook"
               label="Story"
               color={Colors[mode].text}
               onPress={shareFacebookStory}
-            />
-            <ShareOption
-              icon="facebook"
-              label="Post"
-              color={Colors[mode].text}
-              onPress={() => {}}
-            />
-            <ShareOption
-              icon="reddit"
-              label="Reddit"
-              color={Colors[mode].text}
-              onPress={() => {}}
-            />
-            <ShareOption
-              icon="x-twitter"
-              label="X"
-              color={Colors[mode].text}
-              onPress={() => {}}
             />
           </View>
         </View>

@@ -1019,6 +1019,9 @@ const styles = StyleSheet.create({
   dontKnowButton: {
     backgroundColor: '#F44336',
   },
+  disabledButton: {
+    opacity: 0.5,
+  },
   completionGradient: {
     flex: 1,
     justifyContent: 'center',
