@@ -12,6 +12,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { getWordListsPaginatedWithGroupBy } from '@/services/wordListService';
 import { supabase } from '@/lib/supabase';
+import { usePremiumLimits } from '@/hooks/usePremiumLimits';
 
 type MaterialIconName = 'book-open-page-variant' | 'briefcase' | 'airplane' | 'check-circle' | 'chevron-right' | 'star';
 
@@ -60,6 +61,7 @@ export default function LearnPage() {
   const [hasMore, setHasMore] = useState(true);
   
   const { user } = useAuth();
+  const { canAccessList } = usePremiumLimits();
   const wordStatusUpdateCounter = useSelector((state: RootState) => state.user.wordStatusUpdateCounter);
   
   // Ref'ler - gereksiz çağrıları önlemek için
@@ -243,11 +245,16 @@ export default function LearnPage() {
   }, [wordStatusUpdateCounter, user, wordLists, getUserWordListProgress]);
 
   const handleListSelect = useCallback((listId: number) => {
+    if (!canAccessList(listId, wordLists[0]?.id)) {
+      router.push('/paywall-double');
+      return;
+    }
+
     router.push({
       pathname: '/learn/study-mode',
       params: { listId: String(listId) }
     });
-  }, [router]);
+  }, [router, canAccessList, wordLists]);
 
   const headerAnimatedStyle = {
     opacity: scrollY.interpolate({

@@ -1,13 +1,14 @@
 import { useRevenueCat } from '@/context/RevenueCatProvider';
+import { isListAccessible } from '@/hooks/premiumLimits';
 
-const FREE_CUSTOM_LIST_LIMIT = 2;
-
+/**
+ * Free/normal users get access to only the first word list; premium unlocks all of them.
+ */
 export const usePremiumLimits = () => {
   const { isPremium } = useRevenueCat();
 
-  const customListLimit = isPremium ? Infinity : FREE_CUSTOM_LIST_LIMIT;
+  const canAccessList = (listId: number, firstListId: number | undefined) =>
+    isListAccessible(listId, firstListId, isPremium);
 
-  const canCreateCustomList = (currentCount: number) => currentCount < customListLimit;
-
-  return { isPremium, customListLimit, canCreateCustomList };
+  return { isPremium, canAccessList };
 };
