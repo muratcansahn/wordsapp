@@ -1,5 +1,5 @@
 {
-  "appName": "Ship Mobile Fast",
+  "appName": "WordsApp",
   "common": {
     "goBack": "Go Back",
     "tryAgain": "Try Again",
@@ -126,10 +126,10 @@
     "theme": "Theme"
   },
   "inAppPurchases": {
-    "title": "Try Ship Mobile Fast Pro",
-    "subtitle": "More messages on our most powerful model with premium features",
-    "info": "Auto renews for {{price}} / {{period}}. Cancel anytime. Includes 7-day money back guarantee.",
-    "lifetime-info": "Lifetime access for {{price}}. Includes 7-day money back guarantee.",
+    "title": "Unlock All Features",
+    "subtitle": "Get more with premium features",
+    "info": "Auto renews for {{price}} / {{period}}. Cancel anytime.",
+    "lifetime-info": "Lifetime access for {{price}}.",
     "mostPopular": "MOST POPULAR",
     "ctaSubscribe": "Go Premium",
     "restorePurchases": "Restore purchases",
@@ -138,16 +138,16 @@
     "comparePremiumLabel": "Premium",
     "cards": {
       "feature1": {
-        "title": "Feature Title 1",
-        "description": "Feature Description 1"
+        "title": "Ad-Free Experience",
+        "description": "Remove all ads and enjoy uninterrupted learning"
       },
       "feature2": {
-        "title": "Feature Title 2",
-        "description": "Feature Description 2"
+        "title": "Extra Daily Games",
+        "description": "Get an extra game every day and practice more"
       },
       "feature3": {
-        "title": "Feature Title 3",
-        "description": "Feature Description 3"
+        "title": "Unlimited Word Lists",
+        "description": "Use all word lists without limits and accelerate your learning"
       }
     }
   },

@@ -1,5 +1,5 @@
 {
-  "appName": "Ship Mobile Fast",
+  "appName": "WordsApp",
   "common": {
     "goBack": "Volver",
     "tryAgain": "Inténtalo de nuevo",
@@ -53,16 +53,12 @@
     "deleteAccount": "Eliminar cuenta"
   },
   "onboarding": {
-    "title1": "¡Hola! Bienvenido a Ship Mobile Fast.",
-    "desc1": "Ahorra cientos de horas de programación y completa tu aplicación en solo unos días.",
-    "title2": "¡Todo está listo dentro!",
-    "desc2": "Autenticación, Onboarding, Compras in-app, Sentry, Posthog, Google Admob, Notificaciones, Soporte multilingüe, Temas, Pantallas premium y mucho más.",
-    "title3": "Totalmente personalizable",
-    "desc3": "La aplicación está hecha con componentes completamente personalizables, lo que te permite modificar fácilmente la interfaz de usuario, los componentes y más.",
-    "title4": "¿Estás listo?",
-    "desc4": "Porque nos hemos encargado de todas las cosas aburridas. A ti solo te queda divertirte.",
-    "title5": "Entonces, ¿qué estás esperando?",
-    "desc5": "¡Adelante y empieza a ganar dinero con tu aplicación!"
+    "title1": "Simplifica tu Aprendizaje de Vocabulario",
+    "desc1": "Aprende palabras nuevas de forma divertida y efectiva. Mejora tus habilidades de idioma rápidamente con una experiencia de aprendizaje personalizada.",
+    "title2": "Gestiona tus Listas de Palabras",
+    "desc2": "Realiza un seguimiento fácilmente de las palabras que conoces y que no conoces. Crea listas de palabras personalizadas y organiza tu proceso de aprendizaje.",
+    "title3": "Haz Seguimiento de tu Progreso",
+    "desc3": "Supervisa tu recorrido de aprendizaje con estadísticas detalladas y visualizaciones. Ve qué tan cerca estás de tus objetivos y mantente motivado."
   },
   "onboarding1": {
     "header": "¡Di adiós a los métodos aburridos!",
@@ -128,10 +124,10 @@
     "theme": "Tema"
   },
   "inAppPurchases": {
-    "title": "Prueba Ship Mobile Fast Pro",
-    "subtitle": "Más mensajes en nuestro modelo más potente con funciones premium",
-    "info": "Se renueva solo por {{price}} cada {{period}}. Cancela cuando quieras. Si no te convence, te devolvemos la lana en 7 días.",
-    "lifetime-info": "Acceso de por vida por {{price}}. Incluye garantía de devolución de dinero de 7 días.",
+    "title": "Desbloquea Todas las Funciones",
+    "subtitle": "Obtén más con funciones premium",
+    "info": "Se renueva automáticamente cada {{price}} / {{period}}. Cancela cuando quieras.",
+    "lifetime-info": "Acceso de por vida por {{price}}.",
     "mostPopular": "MÁS POPULAR",
     "ctaSubscribe": "Hazte Premium",
     "restorePurchases": "Restaurar compras",
@@ -140,16 +136,16 @@
     "comparePremiumLabel": "Premium",
     "cards": {
       "feature1": {
-        "title": "Feature Title 1",
-        "description": "Feature Description 1"
+        "title": "Experiencia Sin Anuncios",
+        "description": "Elimina todos los anuncios y disfruta del aprendizaje sin interrupciones"
       },
       "feature2": {
-        "title": "Feature Title 2",
-        "description": "Feature Description 2"
+        "title": "Juego Diario Extra",
+        "description": "Obtén un juego extra cada día y practica más"
       },
       "feature3": {
-        "title": "Feature Title 3",
-        "description": "Feature Description 3"
+        "title": "Listas de Palabras Ilimitadas",
+        "description": "Utiliza todas las listas de palabras sin límites y acelera tu aprendizaje"
       }
     }
   },

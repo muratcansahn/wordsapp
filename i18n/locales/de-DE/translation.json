@@ -1,5 +1,5 @@
 {
-  "appName": "Ship Mobile Fast",
+  "appName": "WordsApp",
   "common": {
     "goBack": "Zurück",
     "tryAgain": "Versuche es erneut",
@@ -53,16 +53,12 @@
     "deleteAccount": "Konto löschen"
   },
   "onboarding": {
-    "title1": "Hey! Willkommen bei Ship Mobile Fast.",
-    "desc1": "Sparen Sie sich hunderte Stunden Programmierarbeit\nund erstellen Sie Ihre App in nur wenigen Tagen.",
-    "title2": "Alles ist schon vorbereitet!",
-    "desc2": "Authentifizierung, Onboarding, In-App-Käufe, Sentry, Posthog, Google Admob, Benachrichtigungen, Mehrsprachigkeit, Designs, Premium-Bildschirme und vieles mehr.",
-    "title3": "Vollständig anpassbar",
-    "desc3": "Wir haben die App aus vollständig anpassbaren Komponenten erstellt, sodass Sie die Benutzeroberfläche, Komponenten und mehr ganz einfach ändern können.",
-    "title4": "Sind Sie bereit?",
-    "desc4": "Denn wir haben uns um all die langweiligen Dinge gekümmert. Sie müssen nur noch Spaß haben.",
-    "title5": "Worauf warten Sie also noch?",
-    "desc5": "Legen Sie los und beginnen Sie, mit Ihrer App Geld zu verdienen!"
+    "title1": "Vereinfachen Sie Ihr Vokabellernen",
+    "desc1": "Lernen Sie neue Wörter auf unterhaltsame und effektive Weise. Verbessern Sie Ihre Sprachkenntnisse schnell mit einer personalisierten Lernerfahrung.",
+    "title2": "Verwalten Sie Ihre Wortlisten",
+    "desc2": "Verfolgen Sie mühelos Wörter, die Sie kennen und nicht kennen. Erstellen Sie benutzerdefinierte Wortlisten und organisieren Sie Ihren Lernprozess.",
+    "title3": "Verfolgen Sie Ihren Fortschritt",
+    "desc3": "Überwachen Sie Ihren Lernfortschritt mit detaillierten Statistiken und Visualisierungen. Sehen Sie, wie nah Sie Ihren Zielen sind und bleiben Sie motiviert."
   },
   "onboarding1": {
     "header": "Verabschiede dich von langweiligen Methoden!",
@@ -128,10 +124,10 @@
     "theme": "Design"
   },
   "inAppPurchases": {
-    "title": "Probieren Sie Ship Mobile Fast Pro",
-    "subtitle": "Mehr Nachrichten auf unserem leistungsstärksten Modell mit Premium-Funktionen",
-    "info": "Läuft automatisch weiter für {{price}} pro {{period}}. Kannst jederzeit stornieren. Kriegst dein Geld 7 Tage zurück, ist safe.",
-    "lifetime-info": "Läuft automatisch weiter für {{price}} pro {{period}}. Kannst jederzeit stornieren. Kriegst dein Geld 7 Tage zurück, ist safe.",
+    "title": "Alle Funktionen freischalten",
+    "subtitle": "Erhalten Sie mehr mit Premium-Funktionen",
+    "info": "Wird automatisch erneuert für {{price}} / {{period}}. Jederzeit kündbar.",
+    "lifetime-info": "Lebenslanger Zugriff für {{price}}.",
     "mostPopular": "AM BELIEBTESTEN",
     "ctaSubscribe": "Jetzt Premium holen",
     "restorePurchases": "Käufe wiederherstellen",
@@ -140,16 +136,16 @@
     "comparePremiumLabel": "Premium",
     "cards": {
       "feature1": {
-        "title": "Feature Title 1",
-        "description": "Feature Description 1"
+        "title": "Werbefreie Erfahrung",
+        "description": "Entfernen Sie alle Werbung und genießen Sie unterbrechungsfreies Lernen"
       },
       "feature2": {
-        "title": "Feature Title 2",
-        "description": "Feature Description 2"
+        "title": "Zusätzliches tägliches Spiel",
+        "description": "Erhalten Sie jeden Tag ein zusätzliches Spiel und üben Sie mehr"
       },
       "feature3": {
-        "title": "Feature Title 3",
-        "description": "Feature Description 3"
+        "title": "Unbegrenzte Wortlisten",
+        "description": "Nutzen Sie alle Wortlisten ohne Limits und beschleunigen Sie Ihr Lernen"
       }
     }
   },
