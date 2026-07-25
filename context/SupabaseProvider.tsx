@@ -35,6 +35,7 @@ type AuthContextType = {
   signInWithApple: () => Promise<void>;
   signInAsGuest: () => Promise<void>;
   linkGoogleAccount: () => Promise<void>;
+  updateUserPassword: (newPassword: string) => Promise<void>;
   createSessionFromUrl: (url: string) => Promise<void>;
   isLoading: boolean;
   error: string | null;
@@ -525,6 +526,20 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
     }
   }, [handleError, syncUserToStore, t]);
 
+  const updateUserPassword = useCallback(async (newPassword: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+      if (updateError) throw updateError;
+    } catch (err) {
+      handleError(err as Error);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [handleError]);
+
   const createSessionFromUrl = useCallback(
     async (url: string) => {
       setIsLoading(true);
@@ -586,6 +601,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
       signInWithApple,
       signInAsGuest,
       linkGoogleAccount,
+      updateUserPassword,
       createSessionFromUrl,
       isLoading,
       error,
@@ -602,6 +618,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
       signInWithApple,
       signInAsGuest,
       linkGoogleAccount,
+      updateUserPassword,
       createSessionFromUrl,
       isLoading,
       error,

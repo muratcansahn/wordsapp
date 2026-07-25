@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   KeyboardAvoidingView,
@@ -48,12 +48,12 @@ const NewPassword = () => {
   const router = useRouter();
   const {
     handleError,
-    showPassword,
-    handleShowPassword,
     session,
     isLoading,
-    setNewPassword,
+    updateUserPassword,
   } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const handleShowPassword = () => setShowPassword((prev) => !prev);
 
   const {
     control,
@@ -68,7 +68,7 @@ const NewPassword = () => {
 
   const onSubmit: SubmitHandler<ForgotPasswordFormInputs> = async (data) => {
     try {
-      await setNewPassword(data.password);
+      await updateUserPassword(data.password);
       reset();
     } catch (error) {
       handleError(error as AuthError);
